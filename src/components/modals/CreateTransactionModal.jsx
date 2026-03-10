@@ -68,7 +68,7 @@ const CreateTransactionModal = ({
 		setLoadingBankDetails(true);
 		try {
 			const data = await apiHelper.get(
-				"/bank/getActiveBankDetails/6995b4bcf65cfbf1e8c20255",
+				"/bank/getActiveBankDetails/69b010749295ebb2368e2747",
 			);
 			setBankDetails(data?.data || data);
 		} catch (err) {
