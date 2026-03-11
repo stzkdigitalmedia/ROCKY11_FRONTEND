@@ -75,6 +75,9 @@ const SABonuses = () => {
       case 'settings':
         navigate('/settings');
         break;
+      case 'referral':
+        navigate('/referral');
+        break;
       default:
         break;
     }
@@ -290,21 +293,19 @@ const SABonuses = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'active'
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'active'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                  }`}
               >
                 Active Bonuses
               </button>
               <button
                 onClick={() => setActiveTab('inactive')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'inactive'
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'inactive'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                  }`}
               >
                 Inactive Bonuses
               </button>

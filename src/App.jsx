@@ -50,6 +50,14 @@ import WhatsAppButton from './components/WhatsAppButton';
 import { useAuth } from './hooks/useAuth';
 import SABonuses from './pages/SABonuses';
 import ActiveUsers from './pages/ActiveUsers';
+import Referral from './pages/Referral';
+import ReferralDepositTransactions from './pages/ReferralDepositTransactions';
+import ReferralWithdrawalTransactions from './pages/ReferralWithdrawalTransactions';
+import ReferralStatusDetails from './pages/ReferralStatusDetails';
+import ReferralUserRegistrations from './pages/ReferralUserRegistrations';
+import ReferralFTDCompleteUsers from './pages/ReferralFTDCompleteUsers';
+import ReferralNoTransactionUsers from './pages/ReferralNoTransactionUsers';
+
 
 const ToastContext = createContext();
 
@@ -98,6 +106,7 @@ function App() {
                 <Withdraw />
               </PeerRoute>
             } />
+            <Route path="/register/:refercode" element={<SimpleRegister />} />
             <Route path="/register" element={<SimpleRegister />} />
             <Route path="/dashboard" element={
               <SuperAdminRoute>
@@ -215,6 +224,41 @@ function App() {
               </SuperAdminRoute>
             } />
 
+            <Route path="/referral" element={
+              <SuperAdminRoute>
+                <Referral />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-deposit-transactions" element={
+              <SuperAdminRoute>
+                <ReferralDepositTransactions />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-withdrawal-transactions" element={
+              <SuperAdminRoute>
+                <ReferralWithdrawalTransactions />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-status-details" element={
+              <SuperAdminRoute>
+                <ReferralStatusDetails />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-user-registrations" element={
+              <SuperAdminRoute>
+                <ReferralUserRegistrations />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-ftd-complete-users" element={
+              <SuperAdminRoute>
+                <ReferralFTDCompleteUsers />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-no-transaction-users" element={
+              <SuperAdminRoute>
+                <ReferralNoTransactionUsers />
+              </SuperAdminRoute>
+            } />
             <Route path="/user-dashboard" element={
               <UserRoute>
                 <UserDashboard />
