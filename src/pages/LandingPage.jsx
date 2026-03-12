@@ -26,14 +26,14 @@ const LandingPage = () => {
   ];
 
   const dummySubAccounts = [
-    {
+      {
       id: 1,
       clientName: '****',
       password: '****',
       status: 'Accept',
       gameId: {
-        name: 'DIAMOND',
-        image: '/logo.png',
+        name: 'WILLSEXCH',
+        image: '/will1.png',
         gameUrl: 'https://****'
       }
     },
@@ -43,8 +43,8 @@ const LandingPage = () => {
       password: '****',
       status: 'Accept',
       gameId: {
-        name: 'ALL',
-        image: '/ALL.png',
+        name: 'R9EXCH',
+        image: '/r9x.png',
         gameUrl: 'https://****'
       }
     },
@@ -54,8 +54,8 @@ const LandingPage = () => {
       password: '****',
       status: 'Accept',
       gameId: {
-        name: 'WILLSWIN',
-        image: '/will.png',
+        name: 'DIAMOND99',
+        image: '/Diamond exch99.png',
         gameUrl: 'https://****'
       }
     },
@@ -65,33 +65,13 @@ const LandingPage = () => {
       password: '****',
       status: 'Accept',
       gameId: {
-        name: 'DURGA',
-        image: '/Durga.png',
+        name: 'ALLPANEL',
+        image: '/ALL.png',
         gameUrl: 'https://****'
       }
     },
-    {
-      id: 5,
-      clientName: '****',
-      password: '****',
-      status: 'Accept',
-      gameId: {
-        name: 'WILLSEXCH',
-        image: '/will .png',
-        gameUrl: 'https://****'
-      }
-    },
-    {
-      id: 6,
-      clientName: '****',
-      password: '****',
-      status: 'Accept',
-      gameId: {
-        name: 'R9EXCH',
-        image: '/r9x.png',
-        gameUrl: 'https://****'
-      }
-    },
+ 
+  
   ];
 
   useEffect(() => {
@@ -256,7 +236,7 @@ const LandingPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2 sm:gap-3">
                             <div className="w-12 h-12 overflow-hidden rounded-full bg-black flex items-center justify-center">
-                              <img src={account.gameId?.image} alt={account.gameId?.name} className="w-full h-full m-auto rounded" />
+                              <img src={account.gameId?.image} alt={account.gameId?.name} className="w-full h-full m-auto  rounded" />
                             </div>
                             <div>
                               <h3 className="font-bold text-sm sm:text-lg notranslate">{game || 'Game'}</h3>
