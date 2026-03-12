@@ -41,7 +41,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
         }`}>
         <div className="p-4">
           <div className="flex justify-center">
-            <img src="/logo.png" alt="RRRPay" className="object-contain bg-black" />
+            <img src="/logo.png" alt="RRRPay" className="object-contain bg-blacklan" />
           </div>
         </div>
 
