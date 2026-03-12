@@ -127,17 +127,20 @@ const Settings = () => {
       case 'transaction-logs':
         navigate('/transaction-logs');
         break;
-      case 'settings':
-        navigate('/settings');
+      case 'tier-management':
+        navigate('/tier-management');
+        break;
+      case 'system-setting':
+        navigate('/system-setting');
         break;
       case 'telegram-otp':
         navigate('/telegram-otp');
         break;
-      case 'tier-management':
-        navigate('/tier-management');
-        break;
       case 'bonuses':
         navigate('/sa-bonuses');
+        break;
+      case 'referral':
+        navigate('/referral');
         break;
       default:
         break;

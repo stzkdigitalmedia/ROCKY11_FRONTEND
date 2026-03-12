@@ -56,7 +56,8 @@ const TelegramOTP = () => {
       'tier-management': '/tier-management',
       'telegram-otp': '/telegram-otp',
       'settings': '/settings',
-      'bonuses': '/sa-bonuses'
+      'bonuses': '/sa-bonuses',
+      'referral':'/referral'
     };
     if (routes[tab]) navigate(routes[tab]);
   };

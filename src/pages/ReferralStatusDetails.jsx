@@ -1,0 +1,337 @@
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { apiHelper } from '../utils/apiHelper';
+import { useToastContext } from '../App';
+import Sidebar from '../components/Sidebar';
+import AdminHeader from '../components/AdminHeader';
+import { ArrowLeft, Calendar, RotateCcw } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { DateRangePicker } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+import axios from 'axios';
+
+const ReferralStatusDetails = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const toast = useToastContext();
+
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [branchNames, setBranchNames] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection'
+    }
+  ]);
+
+  const status = searchParams.get('status');
+
+  const handleLogout = async () => {
+    try {
+      await apiHelper.get('/auth/logout');
+      logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      logout();
+      navigate('/login', { replace: true });
+    }
+  };
+
+  const handleNavigation = (tab) => {
+    switch (tab) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
+      case 'games':
+        navigate('/games');
+        break;
+      case 'panels':
+        navigate('/panels');
+        break;
+      case 'settings':
+        navigate('/settings');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const fetchBranchNames = async () => {
+    try {
+      const response = await apiHelper.get('/referal/getUniqueBranchNames');
+      setBranchNames(response?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch branch names:', error);
+    }
+  };
+
+  const fetchUsersByStatus = async (startDate, endDate) => {
+    setLoading(true);
+    try {
+      const start = startDate || new Date();
+      const end = endDate || new Date();
+
+      const formatDate = (date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        // return `${day}-${month}-${year}`;
+        return `${year}-${month}-${day}`;
+      };
+
+      const payload = {
+        startDate: formatDate(start),
+        endDate: formatDate(end),
+        status: status,
+        platefrom: "PowerPay"
+      };
+
+      const response = await apiHelper.get(`/referal/getUsersByTranxStatus_for_Referal_Dashboard?status=${payload?.status}&startDate=${payload?.startDate}&endDate=${payload?.endDate}&referalCode=${selectedBranch}&page=1&limit=100`);
+      const userData = response?.users || [];
+      setUsers(Array.isArray(userData) ? userData : []);
+
+    } catch (error) {
+      toast.error('Failed to fetch users: ' + error.message);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDateRangeChange = (ranges) => {
+    setDateRange([ranges.selection]);
+  };
+
+  const applyDateFilter = () => {
+    fetchUsersByStatus(dateRange[0].startDate, dateRange[0].endDate);
+    setShowDatePicker(false);
+  };
+
+  const resetFilter = () => {
+    const today = new Date();
+    setDateRange([{
+      startDate: today,
+      endDate: today,
+      key: 'selection'
+    }]);
+    fetchUsersByStatus(today, today);
+  };
+
+  useEffect(() => {
+    fetchBranchNames();
+    if (!status) return;
+
+    // First time call when status changes
+    fetchUsersByStatus();
+
+    // Auto refresh every 30 sec
+    const interval = setInterval(() => {
+      fetchUsersByStatus();
+    }, 30000);
+
+    // Cleanup
+    return () => clearInterval(interval);
+  }, [status]);
+
+  useEffect(() => {
+    if (selectedBranch && status) {
+      fetchUsersByStatus(dateRange[0].startDate, dateRange[0].endDate);
+    }
+  }, [selectedBranch]);
+
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Initial': return 'text-blue-600';
+      case 'Pending': return 'text-yellow-600';
+      case 'Accept': return 'text-green-600';
+      case 'Reject': return 'text-red-600';
+      default: return 'text-gray-900';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar activeTab="" setActiveTab={handleNavigation} onLogout={handleLogout} />
+
+      <div className="flex-1 lg:ml-64">
+        <AdminHeader
+          title={`${status} Status Details`}
+          subtitle={`Users with ${status} transactions`}
+        />
+
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="mb-6 flex justify-between items-center">
+            <button
+              onClick={() => navigate('/referral')}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+            >
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </button>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-w-[150px]"
+              >
+                <option value="">Select Branch</option>
+                {branchNames.map((branch, index) => (
+                  <option key={index} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+              <div className="relative">
+                <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Calendar size={16} />
+                  {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString()
+                    ? dateRange[0].startDate.toDateString()
+                    : `${dateRange[0].startDate.toDateString()} - ${dateRange[0].endDate.toDateString()}`
+                  }
+                </button>
+                {showDatePicker && (
+                  <div className="absolute right-0 top-12 z-50 bg-white shadow-lg rounded-lg border">
+                    <DateRangePicker
+                      ranges={dateRange}
+                      onChange={handleDateRangeChange}
+                      showSelectionPreview={true}
+                      moveRangeOnFirstSelection={false}
+                      months={2}
+                      direction="horizontal"
+                    />
+                    <div className="p-3 border-t flex justify-end gap-2">
+                      <button
+                        onClick={() => setShowDatePicker(false)}
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={applyDateFilter}
+                        className="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={resetFilter}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                <RotateCcw size={16} />
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div className="gaming-card p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className={`text-xl font-semibold ${getStatusColor(status)}`}>
+                {status} Status Transactions
+              </h2>
+              <span className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
+                {users.length} users
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
+                <p className="text-gray-600">Loading users...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg mb-2">No users found</p>
+                <p className="text-sm">No users with {status} status for the selected date range</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="table-header">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Type</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Amount</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Count</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user, index) => (
+                      <tr key={user?.id || user?._id || index} className="border-b border-gray-100">
+                        <td className="py-4 px-4">
+                          <p className="text-sm font-medium text-gray-900">{index + 1}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                              {(user?.clientName || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{user?.clientName}</p>
+                              <p className="text-xs text-gray-500">{user?.fullName}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-900">{user?.phone || 'N/A'}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`badge ${user?.transactionType === 'Deposit' ? 'badge-green' : 'badge-red'}`}>
+                            {user?.transactionType || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm font-semibold text-green-600">
+                            ₹{user?.transactionAmount?.toLocaleString() || 0}
+                          </p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-900">{user?.transactionCount || 0}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm font-semibold text-blue-600">
+                            ₹{user?.balance?.toLocaleString() || 0}
+                          </p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-900">{user?.branchName || 'N/A'}</p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm text-gray-900">
+                            {user?.createdAt ? new Date(user.createdAt).toLocaleString('en-IN') : 'N/A'}
+                          </p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+export default ReferralStatusDetails

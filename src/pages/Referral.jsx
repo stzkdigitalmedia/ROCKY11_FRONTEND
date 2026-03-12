@@ -3,19 +3,36 @@ import { useAuth } from '../hooks/useAuth';
 import { apiHelper } from '../utils/apiHelper';
 import Sidebar from '../components/Sidebar';
 import AdminHeader from '../components/AdminHeader';
-import PanelManagement from '../components/PanelManagement';
+import ReferralDashboardStats from '../components/ReferralDashboardStats';
+import { useState, useEffect } from 'react';
 
-const PanelManagementPage = () => {
+const Referral = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [branchNames, setBranchNames] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
+
+  useEffect(() => {
+    fetchBranchNames();
+  }, []);
+
+  const fetchBranchNames = async () => {
+    try {
+      const response = await apiHelper.get('/referal/getUniqueBranchNames');
+      setBranchNames(response?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch branch names:', error);
+    }
+  };
+
 
   const handleLogout = async () => {
-    try {
-      await logout();
+    const userRole = localStorage.getItem('userRole') || user?.role;
+    await logout();
+    if (userRole === 'SA' || userRole === 'SubAdmin') {
       navigate('/suprime/super-admin', { replace: true });
-    } catch (error) {
-      console.error('Logout error:', error);
-      navigate('/suprime/super-admin', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
     }
   };
 
@@ -26,6 +43,9 @@ const PanelManagementPage = () => {
         break;
       case 'games':
         navigate('/games');
+        break;
+      case 'panels':
+        navigate('/panels');
         break;
       case 'user-registrations':
         navigate('/user-registrations');
@@ -76,20 +96,39 @@ const PanelManagementPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab="panels" setActiveTab={handleNavigation} onLogout={handleLogout} />
+      <Sidebar activeTab="referral" setActiveTab={handleNavigation} onLogout={handleLogout} />
 
       <div className="flex-1 lg:ml-64">
         <AdminHeader
-          title="Panel Management"
-          subtitle="Create and manage exchange panels"
+          title="Referral Management"
+          subtitle="Monitor referral performance and manage users"
         />
 
         <div className="p-4 sm:p-6 lg:p-8">
-          <PanelManagement />
+          {/* Branch Select */}
+          <div className="mb-6 flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900"></h1>
+            <div className="relative">
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-w-[150px] text-gray-900"
+              >
+                <option value="" className="text-gray-500">Select Referrals</option>
+                {branchNames.map((branch, index) => (
+                  <option key={index} value={branch} className="text-gray-900">
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <ReferralDashboardStats selectedReferralCode={selectedBranch} />
         </div>
       </div>
     </div>
   );
 };
 
-export default PanelManagementPage;
+export default Referral;

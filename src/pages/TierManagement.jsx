@@ -90,6 +90,9 @@ const TierManagement = () => {
       case 'bonuses':
         navigate('/sa-bonuses');
         break;
+      case 'referral':
+        navigate('/referral');
+        break;
       case 'settings':
         navigate('/settings');
         break;
@@ -120,7 +123,7 @@ const TierManagement = () => {
 
   const updateTier = async () => {
     if (!editingTier) return;
-    
+
     setEditTierLoading(true);
     try {
       await apiHelper.put(`/tier/updateTierDetails/${editingTier._id}`, editFormData);
@@ -144,7 +147,7 @@ const TierManagement = () => {
 
   const deleteTier = async () => {
     if (!tierToDelete) return;
-    
+
     setDeleteTierLoading(true);
     try {
       await apiHelper.delete(`/tier/deleteTier/${tierToDelete._id}`);
@@ -161,7 +164,7 @@ const TierManagement = () => {
 
   const addBranchToTier = async () => {
     if (!selectedTierId || !newBranchData.branchName.trim()) return;
-    
+
     setAddBranchLoading(true);
     try {
       await apiHelper.put(`/tier/addBranchToTier/${selectedTierId}`, newBranchData);
@@ -179,7 +182,7 @@ const TierManagement = () => {
 
   const removeBranchFromTier = async () => {
     if (!branchToDelete) return;
-    
+
     setDeleteLoading(true);
     try {
       await apiHelper.put(`/tier/removeBranchFromTier/${branchToDelete.tierId}`, {
@@ -258,7 +261,7 @@ const TierManagement = () => {
   const handleCreateTier = async (e) => {
     e.preventDefault();
     setCreateLoading(true);
-    
+
     try {
       const response = await apiHelper.post('/tier/createTier', formData);
       if (response?.success) {
@@ -282,13 +285,13 @@ const TierManagement = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar activeTab="tier-management" setActiveTab={handleNavigation} onLogout={handleLogout} />
-      
+
       <div className="flex-1 lg:ml-64">
-        <AdminHeader 
-          title="Tier Management" 
-          subtitle="Manage system teirs and configurations" 
+        <AdminHeader
+          title="Tier Management"
+          subtitle="Manage system teirs and configurations"
         />
-        
+
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="space-y-6">
             {loading ? (
@@ -337,17 +340,17 @@ const TierManagement = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="grid gap-6">
                   {tiers.map((tier, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
                     >
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-200 rounded-t-xl">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2"  onClick={() => navigate(`/tier-details/${tier._id}`)}>{tier.teirName}</h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2" onClick={() => navigate(`/tier-details/${tier._id}`)}>{tier.teirName}</h3>
                             <div className="flex flex-wrap gap-4 text-sm">
                               <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -411,7 +414,7 @@ const TierManagement = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-lg font-semibold text-gray-800">Branches</h4>
@@ -432,7 +435,7 @@ const TierManagement = () => {
                             </span>
                           </div>
                         </div>
-                        
+
                         {tier.branches && tier.branches.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {tier.branches.map((branch, branchIndex) => (
@@ -450,9 +453,8 @@ const TierManagement = () => {
                                         className="sr-only peer"
                                       />
                                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                      <span className={`ml-3 text-sm font-medium ${
-                                        branch.isActive ? 'text-green-700' : 'text-red-700'
-                                      }`}>
+                                      <span className={`ml-3 text-sm font-medium ${branch.isActive ? 'text-green-700' : 'text-red-700'
+                                        }`}>
                                         {branch.isActive ? 'Active' : 'Inactive'}
                                       </span>
                                     </label>
@@ -499,7 +501,7 @@ const TierManagement = () => {
               <h3 className="text-xl font-bold text-white">Create New Tier</h3>
               <p className="text-blue-100 text-sm mt-1">Configure a new tier with transaction limits</p>
             </div>
-            
+
             <form onSubmit={handleCreateTier} className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -513,12 +515,12 @@ const TierManagement = () => {
                   required
                 >
                   <option value="">Select Tier Level</option>
-                  {['Tier 1', 'Tier 2', 'Tier 3','Tier 4','Tier 5','Tier 6','Tier 7','Tier 8','Tier 9','Tier 10','Tier 11','Tier 12','Tier 13','Tier 14','Tier 15'].filter(tier => !tiers.some(existingTier => existingTier.teirName === tier)).map(tier => (
+                  {['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Tier 5', 'Tier 6', 'Tier 7', 'Tier 8', 'Tier 9', 'Tier 10', 'Tier 11', 'Tier 12', 'Tier 13', 'Tier 14', 'Tier 15'].filter(tier => !tiers.some(existingTier => existingTier.teirName === tier)).map(tier => (
                     <option key={tier} value={tier}>{tier}</option>
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Branches
@@ -562,7 +564,7 @@ const TierManagement = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Transaction Amount Limit
@@ -582,7 +584,7 @@ const TierManagement = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Maximum Transactions
@@ -599,7 +601,7 @@ const TierManagement = () => {
                   required
                 />
               </div>
-              
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -639,7 +641,7 @@ const TierManagement = () => {
               <h3 className="text-xl font-bold text-white">Edit Tier</h3>
               <p className="text-blue-100 text-sm mt-1">Update tier configuration</p>
             </div>
-            
+
             <div className="p-6 space-y-5 max-h-96 overflow-y-auto">
               <div className='hidden'>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -653,7 +655,7 @@ const TierManagement = () => {
                   disabled
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Branches
@@ -680,7 +682,7 @@ const TierManagement = () => {
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Transaction Amount
@@ -695,7 +697,7 @@ const TierManagement = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Number of Transactions
@@ -711,7 +713,7 @@ const TierManagement = () => {
                 />
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-gray-200">
               <div className="flex gap-3">
                 <button
@@ -755,7 +757,7 @@ const TierManagement = () => {
               <h3 className="text-xl font-bold text-white">Delete Tier</h3>
               <p className="text-red-100 text-sm mt-1">This action cannot be undone</p>
             </div>
-            
+
             <div className="p-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
@@ -766,7 +768,7 @@ const TierManagement = () => {
                   You are about to delete tier <span className="font-semibold text-gray-900">"{tierToDelete?.teirName}"</span> and all its branches. This action cannot be undone.
                 </p>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -809,7 +811,7 @@ const TierManagement = () => {
               <h3 className="text-xl font-bold text-white">Add New Branch</h3>
               <p className="text-green-100 text-sm mt-1">Add a branch to this tier</p>
             </div>
-            
+
             <div className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -824,7 +826,7 @@ const TierManagement = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Status
@@ -838,7 +840,7 @@ const TierManagement = () => {
                   <option value={false}>Inactive</option>
                 </select>
               </div>
-              
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -882,7 +884,7 @@ const TierManagement = () => {
               <h3 className="text-xl font-bold text-white">Remove Branch</h3>
               <p className="text-red-100 text-sm mt-1">This action cannot be undone</p>
             </div>
-            
+
             <div className="p-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
@@ -893,7 +895,7 @@ const TierManagement = () => {
                   You are about to remove branch <span className="font-semibold text-gray-900">"{branchToDelete?.branchName}"</span>. This action cannot be undone.
                 </p>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   type="button"

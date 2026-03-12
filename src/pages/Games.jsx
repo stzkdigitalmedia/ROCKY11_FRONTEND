@@ -42,11 +42,14 @@ const Games = () => {
       case 'telegram-otp':
         navigate('/telegram-otp');
         break;
-      case 'settings':
-        navigate('/settings');
-        break;
       case 'bonuses':
         navigate('/sa-bonuses');
+        break;
+      case 'referral':
+        navigate('/referral');
+        break;
+      case 'settings':
+        navigate('/settings');
         break;
       default:
         break;

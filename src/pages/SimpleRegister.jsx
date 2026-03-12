@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useToastContext } from '../App';
 import { apiHelper } from '../utils/apiHelper';
 import { Eye, EyeOff } from 'lucide-react';
@@ -23,6 +23,7 @@ const SimpleRegister = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { refercode } = useParams();
   const toast = useToastContext();
 
   useEffect(() => {
@@ -32,14 +33,14 @@ const SimpleRegister = () => {
   }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(location?.search);
-    const branchName = urlParams?.get('branchname');
+    // Get refercode from URL params first, then from query string
+    const urlReferCode = refercode || new URLSearchParams(location?.search)?.get('refercode');
 
-    if (branchName) {
-      setFormData(prev => ({ ...prev, referralCode: branchName }));
+    if (urlReferCode) {
+      setFormData(prev => ({ ...prev, referralCode: urlReferCode }));
       setIsReferralReadonly(true);
     }
-  }, [location]);
+  }, [location, refercode]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e?.target?.name]: e?.target?.value });
@@ -51,32 +52,32 @@ const SimpleRegister = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData?.clientName?.length > 6) {
       toast.error('Username must be maximum 6 characters');
       return;
     }
-    
+
     if (formData?.clientName?.includes(' ')) {
       toast.error('Username cannot contain spaces');
       return;
     }
-    
+
     if (!/^[a-zA-Z0-9]+$/.test(formData?.clientName)) {
       toast.error('Username can only contain letters and numbers');
       return;
     }
-    
+
     if (formData?.password?.includes(' ')) {
       toast.error('Password cannot contain spaces');
       return;
     }
-    
+
     if (!validatePassword(formData?.password)) {
       toast.error('Password must be at least 8 characters long');
       return;
     }
-    
+
     setLoading(true);
 
     // try {
@@ -90,38 +91,39 @@ const SimpleRegister = () => {
     //     return;
     //   }
 
-      // If verification successful, proceed with registration
+    // If verification successful, proceed with registration
+    try {
+      const payload = {
+        clientName: formData?.clientName,
+        password: formData?.password,
+        phone: formData?.phone,
+        branchName: "Rockybook",
+        otp: formData?.otp,
+        referalCode: formData?.referralCode || ""
+      };
+
+      const response = await apiHelper.post('/auth/userRegister', payload);
+      toast.success('Registration successful! Please login.');
+
+      // Auto login after successful registration
       try {
-        const payload = {
-          clientName: formData?.clientName,
+        const loginPayload = {
+          loginType: formData?.phone,
           password: formData?.password,
-          phone: formData?.phone,
-          branchName: "Rockybook",
-          otp: formData?.otp
         };
 
-        const response = await apiHelper.post('/auth/userRegister', payload);
-        toast.success('Registration successful! Please login.');
-
-        // Auto login after successful registration
-        try {
-          const loginPayload = {
-            loginType: formData?.phone,
-            password: formData?.password,
-          };
-
-          const loginResponse = await apiHelper.post('/auth/login', loginPayload);
-          if (loginResponse) {
-            navigate('/user-dashboard');
-          }
-        } catch (loginError) {
-          toast.error('Registration successful but auto-login failed: ' + (loginError?.message || 'Please login manually'));
+        const loginResponse = await apiHelper.post('/auth/login', loginPayload);
+        if (loginResponse) {
+          navigate('/user-dashboard');
         }
-      } catch (error) {
-        toast.error('Registration failed: ' + (error?.message || 'Unknown error'));
-      } finally {
-        setLoading(false);
+      } catch (loginError) {
+        toast.error('Registration successful but auto-login failed: ' + (loginError?.message || 'Please login manually'));
       }
+    } catch (error) {
+      toast.error('Registration failed: ' + (error?.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
 
     // } catch (error) {
     //   toast.error('Registration failed: ' + error.message);
@@ -136,39 +138,39 @@ const SimpleRegister = () => {
       toast.error('Please enter username');
       return;
     }
-    
+
     if (!formData.password.trim()) {
       toast.error('Please enter password');
       return;
     }
-    
+
     if (!formData.phone || formData.phone.length !== 10) {
       toast.error('Please enter a valid 10-digit phone number');
       return;
     }
-    
+
     // Validate username format
     if (formData.clientName.length > 6) {
       toast.error('Username must be maximum 6 characters');
       return;
     }
-    
+
     if (formData.clientName.includes(' ')) {
       toast.error('Username cannot contain spaces');
       return;
     }
-    
+
     if (!/^[a-zA-Z0-9]+$/.test(formData.clientName)) {
       toast.error('Username can only contain letters and numbers');
       return;
     }
-    
+
     // Validate password
     if (!validatePassword(formData.password)) {
       toast.error('Password must be at least 8 characters long');
       return;
     }
-    
+
     if (formData.password.includes(' ')) {
       toast.error('Password cannot contain spaces');
       return;
@@ -179,7 +181,7 @@ const SimpleRegister = () => {
       const payload = {
         phone: formData.phone
       };
-      
+
       await apiHelper.post('/sms/send-otp', payload);
       setOtpSent(true);
       setCountdown(30);
@@ -265,9 +267,9 @@ const SimpleRegister = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
-              <PhoneInput 
-                value={formData.phone} 
-                onChange={(value) => setFormData({...formData, phone: value})} 
+              <PhoneInput
+                value={formData.phone}
+                onChange={(value) => setFormData({ ...formData, phone: value })}
                 placeholder="Enter mobile number"
                 className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b1b1b] transition-all"
               />
@@ -298,22 +300,6 @@ const SimpleRegister = () => {
                 />
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Referral Code
-              </label>
-              <input
-                name="referralCode"
-                placeholder="Enter referral code"
-                value="Rockybook"
-                onChange={handleChange}
-                readOnly={isReferralReadonly}
-                // className={`w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${isReferralReadonly ? '*/bg-gray-200 cursor-not-allowed' : ''}`}
-                className={`w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1b1b1b] transition-all bg-gray-200 cursor-not-allowed`}
-                required
-              />
-            </div>
 
             <button
               type="submit"
