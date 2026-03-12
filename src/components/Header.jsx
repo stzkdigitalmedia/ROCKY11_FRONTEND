@@ -259,7 +259,7 @@ const Header = () => {
 						<img
 							src="/logoforlogin.png"
 							alt="Logo"
-							className="w-32 object-contain"
+							className="w-25 object-contain"
 						/>
 					</Link>
 				</div>
