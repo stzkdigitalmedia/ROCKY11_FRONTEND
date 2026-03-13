@@ -62,7 +62,7 @@ const AdminLogin = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 pb-10 max-w-[769px] mx-auto bg-[#0e0e0e]">
       <div className="text-center mb-6 max-w-md w-full">
-        <img src="/logoforlogin.png" alt="Logo" className="w-[230px] sm:w-[250px] mx-auto h-auto" />
+        <img src="/logoforlogin.png" alt="Logo" className="w-[230px] sm:w-[250px] mx-auto mt-10 h-auto" />
       </div>
       
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md w-full">
