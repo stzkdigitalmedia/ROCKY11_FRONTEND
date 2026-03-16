@@ -46,7 +46,7 @@ const LandingPage = () => {
       gameId: {
         name: "WILLSEXCH",
         image: "/will1.png",
-        gameUrl: "https://****",
+        gameUrl: "https://**",
       },
     },
     {
@@ -57,7 +57,7 @@ const LandingPage = () => {
       gameId: {
         name: "R9EXCH",
         image: "/r9x.png",
-        gameUrl: "https://****",
+        gameUrl: "https://**",
       },
     },
     {
@@ -68,7 +68,7 @@ const LandingPage = () => {
       gameId: {
         name: "DIAMOND99",
         image: "/diamond.png",
-        gameUrl: "https://****",
+        gameUrl: "https://**",
       },
     },
     {
