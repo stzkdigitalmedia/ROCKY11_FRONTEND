@@ -55,7 +55,7 @@ const LandingPage = () => {
       status: 'Accept',
       gameId: {
         name: 'DIAMOND99',
-        image: '/Diamond exch99.png',
+        image: '/diamond.png',
         gameUrl: 'https://****'
       }
     },
