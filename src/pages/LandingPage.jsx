@@ -83,6 +83,17 @@ const LandingPage = () => {
         gameUrl: "https://****",
       },
     },
+    {
+      id: 5,
+      clientName: "****",
+      password: "****",
+      status: "Accept",
+      gameId: {
+        name: "WILLSWIN",
+        image: "/will1.png",
+        gameUrl: "https://**",
+      },
+    },
   ];
 
   useEffect(() => {
