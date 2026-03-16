@@ -291,7 +291,8 @@ const MyIDs = ({
     try {
       const response = await apiHelper.get('/subAccount/getSubAccounts?page=1&limit=50');
       const accountsList = response?.subAccounts || response?.data || response || [];
-      setLocalSubAccounts(accountsList);
+      const filteredAccounts = accountsList.filter(account => account.status !== 'Reject');
+      setLocalSubAccounts(filteredAccounts);
     } catch (error) {
       console.error('Failed to fetch sub accounts:', error);
       toast.error('Failed to fetch sub accounts: ' + error.message);
@@ -410,7 +411,7 @@ const MyIDs = ({
   useEffect(() => {
     fetchGames();
     fetchSubAccounts();
-    
+
     // Check localStorage for active tab
     const savedTab = safeLocalStorage.getItem('myIdsActiveTab');
     if (savedTab === 'myIds') {
@@ -419,470 +420,470 @@ const MyIDs = ({
   }, []);
 
   return (
-  <div className="bg-[#0e0e0e]">
-    {/* Fixed Header */}
-    <div className="fixed top-0 left-0 right-0 z-50">
-      <Header />
-    </div>
+    <div className="bg-[#0e0e0e]">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Header />
+      </div>
 
-    {/* Fixed Top Tabs */}
-    <div className="fixed top-[55px] mx-auto max-w-[769px] left-0 right-0 z-40 bg-[#0e0e0e] px-3 sm:px-5 py-3 text-white">
-      <div className="max-w-[769px] mx-auto">
-        <div className="flex bg-[#0e0e0e] gap-2 rounded-xl overflow-hidden">
-        <button
-          onClick={() => setActiveTab("myIds")}
-          className={`flex-1 py-2 sm:py-3 text-sm font-semibold rounded-xl transition ${activeTab === "myIds"
-            ? "bg-[#1f1f1f] border-b-2 border-[#005993]"
-            : "text-gray-400 bg-[#161616]"
-            }`}
-        >
-          MY IDs ({(localSubAccounts.length > 0 ? localSubAccounts : subAccounts).length})
-        </button>
+      {/* Fixed Top Tabs */}
+      <div className="fixed top-[55px] mx-auto max-w-[769px] left-0 right-0 z-40 bg-[#0e0e0e] px-3 sm:px-5 py-3 text-white">
+        <div className="max-w-[769px] mx-auto">
+          <div className="flex bg-[#0e0e0e] gap-2 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setActiveTab("myIds")}
+              className={`flex-1 py-2 sm:py-3 text-sm font-semibold rounded-xl transition ${activeTab === "myIds"
+                ? "bg-[#1f1f1f] border-b-2 border-[#005993]"
+                : "text-gray-400 bg-[#161616]"
+                }`}
+            >
+              MY IDs ({(localSubAccounts.length > 0 ? localSubAccounts : subAccounts).length})
+            </button>
 
-        <button
-          onClick={() => {
-            safeLocalStorage.removeItem('myIdsActiveTab');
-            setActiveTab("createId");
-          }}
-          className={`flex-1 py-2 sm:py-3 text-sm font-semibold rounded-xl transition ${activeTab === "createId"
-            ? "bg-[#1f1f1f] border-b-2 border-[#005993]"
-            : "text-gray-400 bg-[#161616]"
-            }`}
-        >
-          CREATE ID
-        </button>
+            <button
+              onClick={() => {
+                safeLocalStorage.removeItem('myIdsActiveTab');
+                setActiveTab("createId");
+              }}
+              className={`flex-1 py-2 sm:py-3 text-sm font-semibold rounded-xl transition ${activeTab === "createId"
+                ? "bg-[#1f1f1f] border-b-2 border-[#005993]"
+                : "text-gray-400 bg-[#161616]"
+                }`}
+            >
+              CREATE ID
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* Scrollable Content */}
-    <div className="pt-[120px] sm:pt-[125px] pb-20 min-h-screen bg-[#0e0e0e] p-3 sm:px-5 max-w-[769px] mx-auto text-white">
-      {/* ================= CREATE ID ================= */}
-      {activeTab === "createId" && (
-        <>
-          {/* CREATE ID LIST */}
-          <div className="space-y-3">
-            {(localGames.length > 0 ? localGames : games).sort((a, b) => a.name.localeCompare(b.name)).map((game) => (
-              <div
-                key={game.id || game._id}
-                className="flex items-center justify-between
+      {/* Scrollable Content */}
+      <div className="pt-[120px] sm:pt-[125px] pb-20 min-h-screen bg-[#0e0e0e] p-3 sm:px-5 max-w-[769px] mx-auto text-white">
+        {/* ================= CREATE ID ================= */}
+        {activeTab === "createId" && (
+          <>
+            {/* CREATE ID LIST */}
+            <div className="space-y-3">
+              {(localGames.length > 0 ? localGames : games).sort((a, b) => a.name.localeCompare(b.name)).map((game) => (
+                <div
+                  key={game.id || game._id}
+                  className="flex items-center justify-between
                 bg-[#1b1b1b] rounded-xl p-4
                 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
-              >
-                {/* LEFT */}
-                <div className="flex items-center gap-4">
-                  {/* LOGO */}
-                  <div className="w-12 h-12 rounded-full bg-black overflow-hidden flex items-center justify-center">
-                    {game.image ? (
-                      <img
-                        src={game.image}
-                        alt={game.name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-xs">LOGO</span>
-                    )}
-                  </div>
-
-                  {/* DETAILS */}
-                  <div>
-                    <p className="font-semibold text-sm">
-                      {game.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {game.gameUrl && game.gameUrl.length > 21
-                        ? `${game.gameUrl.substring(0, 21)}...`
-                        : game.gameUrl}
-                    </p>
-
-                    {game.trending && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-blue-400">
-                        🏆 Trending
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* RIGHT */}
-                <button
-                  onClick={() => {
-                    setLocalFormData({ ...localFormData, gameId: game.id || game._id });
-                    setShowCreateIdLocal(true);
-                  }}
-                  className="px-5 py-1.5 rounded-xl
-                  bg-[#005993]
-                  text-sm font-semibold transition"
                 >
-                  Create
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+                  {/* LEFT */}
+                  <div className="flex items-center gap-4">
+                    {/* LOGO */}
+                    <div className="w-12 h-12 rounded-full bg-black overflow-hidden flex items-center justify-center">
+                      {game.image ? (
+                        <img
+                          src={game.image}
+                          alt={game.name}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-xs">LOGO</span>
+                      )}
+                    </div>
 
-      {/* ================= MY IDS ================= */}
-      {activeTab === "myIds" && (
-        <>
-          {subAccountsLoading ? (
-            <div className="bg-[#1b1b1b] rounded-xl p-8 text-center text-gray-400">
-              Loading IDs...
-            </div>
-          ) : (localSubAccounts.length > 0 ? localSubAccounts : subAccounts).length === 0 ? (
-            <div className="bg-[#1b1b1b] rounded-xl p-8 text-center text-gray-400">
-              No IDs found
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {(localSubAccounts.length > 0 ? localSubAccounts : subAccounts).map((acc) => (
-                <div
-                  key={acc.id || acc._id}
-                  className="flex justify-between items-center bg-[#1b1b1b] align-middle rounded-xl p-4 cursor-pointer
-                  shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
-                  onClick={() => {
-                    safeLocalStorage.setItem('myIdsActiveTab', 'myIds');
-                    const subAccId = acc.id || acc._id;
-                    navigate(`/id-details/${subAccId}`);
-                  }}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 overflow-hidden rounded-full bg-black flex items-center justify-center">
-                        <img src={acc.gameId?.image} alt="" />
-                      </div>
-                      <div className="text-wrap">
-                        <p className="text-xs text-gray-300 text-wrap underline">
-                          {acc.gameId?.gameUrl && acc.gameId.gameUrl.length > 17
-                            ? `${acc.gameId.gameUrl.substring(0, 17)}...`
-                            : acc.gameId?.gameUrl}
-                        </p>
-                        <p className="text-xs text-gray-300">
-                          {acc?.clientName}
-                        </p>
-                      </div>
+                    {/* DETAILS */}
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {game.name}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {game.gameUrl && game.gameUrl.length > 21
+                          ? `${game.gameUrl.substring(0, 21)}...`
+                          : game.gameUrl}
+                      </p>
+
+                      {game.trending && (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-blue-400">
+                          🏆 Trending
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSubUser(acc);
-                        setShowSubUserDeposit(true);
-                      }}
-                      className="rounded-full w-8 h-8 text-xs bg-green-600 hover:bg-green-700"
-                    >
-                      D
-                    </button>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        setSelectedSubUser(acc);
-                        await createBalanceLog(acc?.id || acc?._id);
-                        setShowSubUserWithdraw(true);
-                        fetchSubUserBalance(acc?.id || acc?._id);
-                      }}
-                      className="rounded-full w-8 h-8 text-xs bg-red-600 hover:bg-red-700"
-                    >
-                      W
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSubUser(acc);
-                        setShowResetPassword(true);
-                      }}
-                      className="rounded-full w-8 h-8 text-xs bg-[#005993] hover:bg-[#0b5689]"
-                    >
-                      P
-                    </button>
-                  </div>
+
+                  {/* RIGHT */}
+                  <button
+                    onClick={() => {
+                      setLocalFormData({ ...localFormData, gameId: game.id || game._id });
+                      setShowCreateIdLocal(true);
+                    }}
+                    className="px-5 py-1.5 rounded-xl
+                  bg-[#005993]
+                  text-sm font-semibold transition"
+                  >
+                    Create
+                  </button>
                 </div>
               ))}
             </div>
-          )}
-        </>
-      )}
+          </>
+        )}
 
-      {/* Create ID Modal */}
-      {showCreateIdLocal && (
-        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
-          <div className="gaming-card p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Create New ID</h2>
-                <p className="text-gray-600 text-sm mt-1">Game: {(localGames.length > 0 ? localGames : games).find(g => (g.id || g._id) === localFormData.gameId)?.name || 'Select a game'}</p>
+        {/* ================= MY IDS ================= */}
+        {activeTab === "myIds" && (
+          <>
+            {subAccountsLoading ? (
+              <div className="bg-[#1b1b1b] rounded-xl p-8 text-center text-gray-400">
+                Loading IDs...
               </div>
-              <button onClick={() => setShowCreateIdLocal(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {idCreated ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-8 h-8 text-green-600" />
-                </div>
-                <p className="text-lg font-semibold text-green-600 mb-2">ID Created</p>
-                <p className="text-sm text-gray-600">ID Created Successfully</p>
-              </div>
-            ) : loading ? (
-              <div className="text-center py-8">
-                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
-                <p className="text-lg font-semibold text-gray-900 mb-2">Creating ID</p>
-                <p className="text-sm text-gray-600">Please Wait</p>
+            ) : (localSubAccounts.length > 0 ? localSubAccounts : subAccounts).length === 0 ? (
+              <div className="bg-[#1b1b1b] rounded-xl p-8 text-center text-gray-400">
+                No IDs found
               </div>
             ) : (
-              <form onSubmit={handleCreateId} className="space-y-4">
-                <div className="form-group">
-                  <label className="form-label">Client Name</label>
-                  <input
-                    type="text"
-                    name="clientName"
-                    placeholder="Enter Client Name"
-                    value={localFormData.clientName}
-                    onChange={handleInputChange}
-                    maxLength={6}
-                    className="gaming-input"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Maximum 6 characters</p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button type="submit" className="w-full sm:flex-1 gaming-btn">
-                    Create ID
-                  </button>
-                  <button type="button" onClick={() => setShowCreateIdLocal(false)} className="w-full sm:flex-1 btn-secondary">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modals */}
-      {showSubUserWithdraw && (
-        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
-          <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Withdraw From Sub</h2>
-                <p className="text-gray-600 text-sm mt-1">ID: {selectedSubUser?.clientName || 'N/A'}</p>
-                <div className="mt-2">
-                  {subUserBalanceLoading ? (
-                    <div className="flex items-center gap-3 bg-green-50 px-3 py-2 rounded-xl shadow-sm">
-                      <div className="w-5 h-5 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-700">Balance</span>
-                        <span className="text-sm text-gray-500 animate-pulse">Loading...</span>
+              <div className="space-y-3">
+                {(localSubAccounts.length > 0 ? localSubAccounts : subAccounts).map((acc) => (
+                  <div
+                    key={acc.id || acc._id}
+                    className="flex justify-between items-center bg-[#1b1b1b] align-middle rounded-xl p-4 cursor-pointer
+                  shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+                    onClick={() => {
+                      safeLocalStorage.setItem('myIdsActiveTab', 'myIds');
+                      const subAccId = acc.id || acc._id;
+                      navigate(`/id-details/${subAccId}`);
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 overflow-hidden rounded-full bg-black flex items-center justify-center">
+                          <img src={acc.gameId?.image} alt="" />
+                        </div>
+                        <div className="text-wrap">
+                          <p className="text-xs text-gray-300 text-wrap underline">
+                            {acc.gameId?.gameUrl && acc.gameId.gameUrl.length > 17
+                              ? `${acc.gameId.gameUrl.substring(0, 17)}...`
+                              : acc.gameId?.gameUrl}
+                          </p>
+                          <p className="text-xs text-gray-300">
+                            {acc?.clientName}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-xl shadow-sm">
-                      <span className="text-gray-700 font-medium text-sm">Balance:</span>
-                      <span className="text-lg font-bold text-green-600">
-                        ₹{Number(subUserBalance).toLocaleString("en-IN")}
-                      </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSubUser(acc);
+                          setShowSubUserDeposit(true);
+                        }}
+                        className="rounded-full w-8 h-8 text-xs bg-green-600 hover:bg-green-700"
+                      >
+                        D
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          setSelectedSubUser(acc);
+                          await createBalanceLog(acc?.id || acc?._id);
+                          setShowSubUserWithdraw(true);
+                          fetchSubUserBalance(acc?.id || acc?._id);
+                        }}
+                        className="rounded-full w-8 h-8 text-xs bg-red-600 hover:bg-red-700"
+                      >
+                        W
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSubUser(acc);
+                          setShowResetPassword(true);
+                        }}
+                        className="rounded-full w-8 h-8 text-xs bg-[#005993] hover:bg-[#0b5689]"
+                      >
+                        P
+                      </button>
                     </div>
-                  )}
-                </div>
-              </div>
-              <button onClick={() => setShowSubUserWithdraw(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {subUserBalanceLoading ? (
-              <div className="text-center py-8">
-                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
-                <p className="text-lg font-semibold text-gray-900 mb-2">Loading Balance</p>
-                <p className="text-sm text-gray-600">Please wait while we fetch the current balance</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubUserWithdraw} className="space-y-4">
-                <div className="form-group">
-                  <label className="form-label">Amount</label>
-                  <input
-                    type="number"
-                    placeholder="Enter Amount"
-                    value={subUserWithdrawForm.amount}
-                    onChange={(e) => setSubUserWithdrawForm({ ...subUserWithdrawForm, amount: e.target.value })}
-                    className="gaming-input"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button type="submit" disabled={transactionProcessing} className="w-full sm:flex-1 gaming-btn">
-                    {transactionProcessing ? 'Processing' : 'Withdraw'}
-                  </button>
-                  <button type="button" onClick={() => setShowSubUserWithdraw(false)} className="w-full sm:flex-1 btn-secondary">
-                    Cancel
-                  </button>
-
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-      {/* transection model*/}
-      {showSubUserDeposit && (
-        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
-          <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Deposit To Sub</h2>
-                <p className="text-gray-600 text-sm mt-1">ID: {selectedSubUser?.clientName || 'N/A'}</p>
-              </div>
-              <button onClick={() => setShowSubUserDeposit(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {transactionProcessing ? (
-              <div className="text-center py-8">
-                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
-                <p className="text-lg font-semibold text-gray-900 mb-2">Processing...</p>
-                <p className="text-sm text-gray-600">Please wait while we process your deposit</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubUserDeposit} className="space-y-4">
-                <div className="form-group">
-                  <label className="form-label">Amount</label>
-                  <input
-                    type="number"
-                    placeholder="Enter Amount"
-                    value={subUserDepositForm.amount}
-                    onChange={(e) => setSubUserDepositForm({ ...subUserDepositForm, amount: e.target.value })}
-                    className="gaming-input"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button type="submit" className="w-full sm:flex-1 gaming-btn">
-                    Deposit
-                  </button>
-                  <button type="button" onClick={() => setShowSubUserDeposit(false)} className="w-full sm:flex-1 btn-secondary">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-      {/* Reset Password Modal */}
-      {showResetPassword && (
-        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
-          <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
-
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {t('resetPassword')}
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  ID: {selectedSubUser?.clientName || 'N/A'}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowResetPassword(false);
-                  setResetPasswordForm({ newPassword: '' });
-                  setSelectedSubUser(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {resetPasswordLoading ? (
-              <div className="text-center py-8">
-                <div
-                  className="loading-spinner mx-auto mb-4"
-                  style={{ width: '32px', height: '32px' }}
-                ></div>
-                <p className="text-lg font-semibold text-gray-900 mb-2">
-                  {t('processing')}...
-                </p>
-                <p className="text-sm text-gray-600">
-                  Please wait while we process your password reset
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleResetPassword} className="space-y-4">
-
-                {/* ✅ LOTUSBOOK special case */}
-                {selectedSubUser?.gameName === 'LOTUSBOOK' ? (
-                  <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-200">
-                    <h3 className="text-sm font-semibold text-yellow-800 mb-1">
-                      Confirm Password Reset
-                    </h3>
-                    <p className="text-sm text-yellow-700">
-                      This user belongs to <b>LOTUSBOOK</b>.
-                      Are you sure you want to reset the password to the default password?
-                    </p>
                   </div>
-                ) : (
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Create ID Modal */}
+        {showCreateIdLocal && (
+          <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
+            <div className="gaming-card p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto mx-4">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Create New ID</h2>
+                  <p className="text-gray-600 text-sm mt-1">Game: {(localGames.length > 0 ? localGames : games).find(g => (g.id || g._id) === localFormData.gameId)?.name || 'Select a game'}</p>
+                </div>
+                <button onClick={() => setShowCreateIdLocal(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {idCreated ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-8 h-8 text-green-600" />
+                  </div>
+                  <p className="text-lg font-semibold text-green-600 mb-2">ID Created</p>
+                  <p className="text-sm text-gray-600">ID Created Successfully</p>
+                </div>
+              ) : loading ? (
+                <div className="text-center py-8">
+                  <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">Creating ID</p>
+                  <p className="text-sm text-gray-600">Please Wait</p>
+                </div>
+              ) : (
+                <form onSubmit={handleCreateId} className="space-y-4">
                   <div className="form-group">
-                    <label className="form-label">{t('newPassword')}</label>
-                    <PasswordInput
-                      name="newPassword"
-                      placeholder="Example@1256"
-                      value={resetPasswordForm.newPassword}
-                      onChange={(e) =>
-                        setResetPasswordForm({
-                          ...resetPasswordForm,
-                          newPassword: e.target.value,
-                        })
-                      }
+                    <label className="form-label">Client Name</label>
+                    <input
+                      type="text"
+                      name="clientName"
+                      placeholder="Enter Client Name"
+                      value={localFormData.clientName}
+                      onChange={handleInputChange}
+                      maxLength={6}
                       className="gaming-input"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Must contain 8+ characters with 1 uppercase, 1 lowercase,
-                      1 number, 1 special character.
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Maximum 6 characters</p>
                   </div>
-                )}
 
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button type="submit" className="w-full sm:flex-1 gaming-btn">
-                    {selectedSubUser?.gameName === 'LOTUSBOOK'
-                      ? 'Yes, Reset Password'
-                      : t('resetPassword')}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowResetPassword(false);
-                      setResetPasswordForm({ newPassword: '' });
-                      setSelectedSubUser(null);
-                    }}
-                    className="w-full sm:flex-1 btn-secondary"
-                  >
-                    {t('cancel')}
-                  </button>
-                </div>
-              </form>
-            )}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" className="w-full sm:flex-1 gaming-btn">
+                      Create ID
+                    </button>
+                    <button type="button" onClick={() => setShowCreateIdLocal(false)} className="w-full sm:flex-1 btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Modals */}
+        {showSubUserWithdraw && (
+          <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
+            <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Withdraw From Sub</h2>
+                  <p className="text-gray-600 text-sm mt-1">ID: {selectedSubUser?.clientName || 'N/A'}</p>
+                  <div className="mt-2">
+                    {subUserBalanceLoading ? (
+                      <div className="flex items-center gap-3 bg-green-50 px-3 py-2 rounded-xl shadow-sm">
+                        <div className="w-5 h-5 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-700">Balance</span>
+                          <span className="text-sm text-gray-500 animate-pulse">Loading...</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-xl shadow-sm">
+                        <span className="text-gray-700 font-medium text-sm">Balance:</span>
+                        <span className="text-lg font-bold text-green-600">
+                          ₹{Number(subUserBalance).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button onClick={() => setShowSubUserWithdraw(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {subUserBalanceLoading ? (
+                <div className="text-center py-8">
+                  <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">Loading Balance</p>
+                  <p className="text-sm text-gray-600">Please wait while we fetch the current balance</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubUserWithdraw} className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label">Amount</label>
+                    <input
+                      type="number"
+                      placeholder="Enter Amount"
+                      value={subUserWithdrawForm.amount}
+                      onChange={(e) => setSubUserWithdrawForm({ ...subUserWithdrawForm, amount: e.target.value })}
+                      className="gaming-input"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" disabled={transactionProcessing} className="w-full sm:flex-1 gaming-btn">
+                      {transactionProcessing ? 'Processing' : 'Withdraw'}
+                    </button>
+                    <button type="button" onClick={() => setShowSubUserWithdraw(false)} className="w-full sm:flex-1 btn-secondary">
+                      Cancel
+                    </button>
+
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+        {/* transection model*/}
+        {showSubUserDeposit && (
+          <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
+            <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Deposit To Sub</h2>
+                  <p className="text-gray-600 text-sm mt-1">ID: {selectedSubUser?.clientName || 'N/A'}</p>
+                </div>
+                <button onClick={() => setShowSubUserDeposit(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {transactionProcessing ? (
+                <div className="text-center py-8">
+                  <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">Processing...</p>
+                  <p className="text-sm text-gray-600">Please wait while we process your deposit</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubUserDeposit} className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label">Amount</label>
+                    <input
+                      type="number"
+                      placeholder="Enter Amount"
+                      value={subUserDepositForm.amount}
+                      onChange={(e) => setSubUserDepositForm({ ...subUserDepositForm, amount: e.target.value })}
+                      className="gaming-input"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" className="w-full sm:flex-1 gaming-btn">
+                      Deposit
+                    </button>
+                    <button type="button" onClick={() => setShowSubUserDeposit(false)} className="w-full sm:flex-1 btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+        {/* Reset Password Modal */}
+        {showResetPassword && (
+          <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-[100]">
+            <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
+
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {t('resetPassword')}
+                  </h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    ID: {selectedSubUser?.clientName || 'N/A'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowResetPassword(false);
+                    setResetPasswordForm({ newPassword: '' });
+                    setSelectedSubUser(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {resetPasswordLoading ? (
+                <div className="text-center py-8">
+                  <div
+                    className="loading-spinner mx-auto mb-4"
+                    style={{ width: '32px', height: '32px' }}
+                  ></div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">
+                    {t('processing')}...
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Please wait while we process your password reset
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+
+                  {/* ✅ LOTUSBOOK special case */}
+                  {selectedSubUser?.gameName === 'LOTUSBOOK' ? (
+                    <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-200">
+                      <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                        Confirm Password Reset
+                      </h3>
+                      <p className="text-sm text-yellow-700">
+                        This user belongs to <b>LOTUSBOOK</b>.
+                        Are you sure you want to reset the password to the default password?
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">{t('newPassword')}</label>
+                      <PasswordInput
+                        name="newPassword"
+                        placeholder="Example@1256"
+                        value={resetPasswordForm.newPassword}
+                        onChange={(e) =>
+                          setResetPasswordForm({
+                            ...resetPasswordForm,
+                            newPassword: e.target.value,
+                          })
+                        }
+                        className="gaming-input"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Must contain 8+ characters with 1 uppercase, 1 lowercase,
+                        1 number, 1 special character.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" className="w-full sm:flex-1 gaming-btn">
+                      {selectedSubUser?.gameName === 'LOTUSBOOK'
+                        ? 'Yes, Reset Password'
+                        : t('resetPassword')}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetPassword(false);
+                        setResetPasswordForm({ newPassword: '' });
+                        setSelectedSubUser(null);
+                      }}
+                      className="w-full sm:flex-1 btn-secondary"
+                    >
+                      {t('cancel')}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
 
 
+      </div>
+
+      <BottomNavigation activePage="ids" />
     </div>
-    
-    <BottomNavigation activePage="ids" />
-  </div>
   );
 };
 
