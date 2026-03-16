@@ -519,7 +519,8 @@ const UserDashboard = () => {
 			);
 			const accountsList =
 				response?.subAccounts || response?.data || response || [];
-			setSubAccounts(accountsList);
+			const filteredAccounts = accountsList.filter(account => account.status !== 'Reject');
+			setSubAccounts(filteredAccounts);
 		} catch (error) {
 			console.error("Failed to fetch sub accounts:", error);
 			toast.error("Failed to fetch sub accounts: " + error.message);
@@ -1330,15 +1331,14 @@ const UserDashboard = () => {
 
 												<div className="flex gap-2">
 													<span
-														className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-															account.status === "Accept"
+														className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${account.status === "Accept"
 																? "bg-green-100 text-green-800"
 																: account.status === "Panding"
 																	? "bg-yellow-100 text-yellow-800"
 																	: account.status === "Reject"
 																		? "bg-red-100 text-red-800"
 																		: "bg-gray-100 text-gray-800"
-														}`}
+															}`}
 													>
 														{account.status === "Accept"
 															? t("active")
@@ -1371,9 +1371,8 @@ const UserDashboard = () => {
 													</span>
 
 													<span
-														className={`text-xs sm:text-sm font-mono truncate notranslate ${
-															isRejected ? "blur-[2px] select-none" : ""
-														}`}
+														className={`text-xs sm:text-sm font-mono truncate notranslate ${isRejected ? "blur-[2px] select-none" : ""
+															}`}
 													>
 														{account?.clientName || "N/A"}
 													</span>
@@ -1387,11 +1386,10 @@ const UserDashboard = () => {
 															toast.success("ID copied to clipboard!");
 														}}
 														disabled={isRejected}
-														className={`ml-auto p-1 rounded ${
-															isRejected
+														className={`ml-auto p-1 rounded ${isRejected
 																? "opacity-40 cursor-not-allowed"
 																: "hover:bg-gray-800"
-														}`}
+															}`}
 													>
 														<Copy className="w-3 h-3" />
 													</button>
@@ -1407,9 +1405,8 @@ const UserDashboard = () => {
 													</span>
 
 													<span
-														className={`text-xs sm:text-sm font-mono truncate flex-1 notranslate ${
-															isRejected ? "blur-[2px] select-none" : ""
-														}`}
+														className={`text-xs sm:text-sm font-mono truncate flex-1 notranslate ${isRejected ? "blur-[2px] select-none" : ""
+															}`}
 													>
 														{account?.password || "N/A"}
 													</span>
@@ -1423,11 +1420,10 @@ const UserDashboard = () => {
 															toast.success("Password copied to clipboard!");
 														}}
 														disabled={isRejected}
-														className={`p-1 rounded ${
-															isRejected
+														className={`p-1 rounded ${isRejected
 																? "opacity-40 cursor-not-allowed"
 																: "hover:bg-gray-800"
-														}`}
+															}`}
 													>
 														<Copy className="w-3 h-3" />
 													</button>
@@ -1443,9 +1439,8 @@ const UserDashboard = () => {
 													</span>
 
 													<span
-														className={`text-xs sm:text-sm font-mono truncate ${
-															isRejected ? "blur-[2px] select-none" : ""
-														}`}
+														className={`text-xs sm:text-sm font-mono truncate ${isRejected ? "blur-[2px] select-none" : ""
+															}`}
 													>
 														{account?.gameId?.gameUrl || "N/A"}
 													</span>
@@ -1460,11 +1455,10 @@ const UserDashboard = () => {
 															}
 														}}
 														disabled={isRejected}
-														className={`ml-auto p-1 rounded ${
-															isRejected
+														className={`ml-auto p-1 rounded ${isRejected
 																? "opacity-40 cursor-not-allowed"
 																: "hover:bg-gray-800"
-														}`}
+															}`}
 													>
 														<LinkIcon className="w-3 h-3" />
 													</button>
@@ -1499,11 +1493,10 @@ const UserDashboard = () => {
 															setShowSubUserDeposit(true);
 														}}
 														disabled={account.status !== "Accept"}
-														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${
-															account.status === "Accept"
+														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
 																? "bg-green-600 hover:bg-green-700 cursor-pointer"
 																: "bg-gray-500 cursor-not-allowed opacity-50"
-														}`}
+															}`}
 													>
 														<ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
 														<span className="text-xs sm:text-sm font-medium">
@@ -1521,11 +1514,10 @@ const UserDashboard = () => {
 															fetchSubUserBalance(account?.id || account?._id);
 														}}
 														disabled={account.status !== "Accept"}
-														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${
-															account.status === "Accept"
+														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
 																? "bg-red-600 hover:bg-red-700 cursor-pointer"
 																: "bg-gray-500 cursor-not-allowed opacity-50"
-														}`}
+															}`}
 													>
 														<ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
 														<span className="text-xs sm:text-sm font-medium">
@@ -1539,11 +1531,10 @@ const UserDashboard = () => {
 															setShowResetPassword(true);
 														}}
 														disabled={account.status !== "Accept"}
-														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${
-															account.status === "Accept"
+														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
 																? "cursor-pointer"
 																: "cursor-not-allowed opacity-50"
-														}`}
+															}`}
 														style={{
 															backgroundColor:
 																account.status === "Accept"
@@ -1719,11 +1710,10 @@ const UserDashboard = () => {
 			{notification && (
 				<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down">
 					<div
-						className={`${
-							notification.type === "success"
+						className={`${notification.type === "success"
 								? "bg-gradient-to-r from-green-500 to-green-600"
 								: "bg-gradient-to-r from-blue-500 to-blue-600"
-						} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[320px] border border-white/20`}
+							} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[320px] border border-white/20`}
 					>
 						<div className="bg-white/20 p-2 rounded-full">
 							<CheckCircle className="w-5 h-5" />
