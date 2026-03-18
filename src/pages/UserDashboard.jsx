@@ -1257,7 +1257,14 @@ const UserDashboard = () => {
 							<p className="text-[12px] text-blue-200">{t("manageAccounts")}</p>
 						</div>
 
-						{subAccounts.length > 1 && (
+						{subAccounts.length + games.filter(
+							(game) =>
+								!subAccounts.some(
+									(account) =>
+										account.gameId?._id === game._id ||
+										account.gameId?.name === game.name,
+								),
+							).length > 1 && (
 							<div className="flex flex-wrap justify-end gap-2">
 								<Link to={"/my-ids"}>
 									<button className="px-2 h-9 rounded-lg bg-[#005993] text-white text-[14px] sm:text-[16px] font-semibold">
@@ -1277,10 +1284,20 @@ const UserDashboard = () => {
 									<button
 										onClick={() => {
 											const step = window.innerWidth >= 640 ? 2 : 1;
+											const totalCards =
+												subAccounts.length +
+												games.filter(
+													(game) =>
+														!subAccounts.some(
+															(account) =>
+																account.gameId?._id === game._id ||
+																account.gameId?.name === game.name,
+														),
+													).length;
 											const maxSlide =
 												window.innerWidth >= 640
-													? Math.max(0, subAccounts.length - 2)
-													: subAccounts.length - 1;
+													? Math.max(0, totalCards - 2)
+													: totalCards - 1;
 											setCurrentSlide(Math.min(maxSlide, currentSlide + step));
 										}}
 										className="w-9 h-9 rounded-lg bg-white/10 text-white hover:bg-white/20"
@@ -1301,6 +1318,7 @@ const UserDashboard = () => {
 							onTouchMove={handleTouchMove}
 							onTouchEnd={handleTouchEnd}
 						>
+							{/* Existing Sub Accounts */}
 							{subAccounts.map((account, index) => {
 								const game = account.gameId?.name;
 								const isRejected = account.status === "Reject";
@@ -1552,6 +1570,125 @@ const UserDashboard = () => {
 									</div>
 								);
 							})}
+
+							{/* Dummy Cards for Games Without IDs */}
+							{games
+								.filter(
+									(game) =>
+										!subAccounts.some(
+											(account) =>
+												account.gameId?._id === game._id ||
+												account.gameId?.name === game.name,
+										),
+								)
+								.map((game, index) => (
+									<div
+										key={game._id || index}
+										className="flex-shrink-0 px-2 sm:px-0.5"
+										style={{ width: window.innerWidth >= 640 ? "50%" : "100%" }}
+									>
+										<div className="rounded-2xl p-5 bg-gradient-to-br from-blue-50/10 to-purple-50/10 border-2 border-dashed border-blue-400/30 text-white h-full flex flex-col">
+											{/* Header */}
+											<div className="flex items-center justify-between mb-4">
+												<div className="flex items-center gap-2 sm:gap-3">
+													<div className="w-12 h-12 overflow-hidden rounded-full bg-black flex items-center justify-center">
+														<img
+															src={game.image}
+															alt={game.name}
+															className="w-full m-auto h-auto rounded"
+														/>
+													</div>
+													<div>
+														<h3 className="font-bold text-sm sm:text-lg notranslate">
+															{game.name}
+														</h3>
+													</div>
+												</div>
+
+												<span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100/20 text-blue-300 border border-blue-400/30">
+													Available
+												</span>
+											</div>
+
+											{/* Account Details - Blank */}
+											<div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 flex-1">
+												<div className="flex items-center gap-2">
+													<div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded flex items-center justify-center">
+														<span className="text-xs">👤</span>
+													</div>
+													<span className="text-xs sm:text-sm notranslate">ID:</span>
+													<span className="text-xs sm:text-sm font-mono text-gray-400">
+														---
+													</span>
+												</div>
+
+												<div className="flex items-center gap-2">
+													<div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded flex items-center justify-center">
+														<span className="text-xs">🔒</span>
+													</div>
+													<span className="text-xs sm:text-sm notranslate">
+														{t("password")}:
+													</span>
+													<span className="text-xs sm:text-sm font-mono text-gray-400">
+														---
+													</span>
+												</div>
+
+												<div className="flex items-center gap-2">
+													<div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded flex items-center justify-center">
+														<span className="text-xs">🌐</span>
+													</div>
+													<span className="text-xs sm:text-sm notranslate">
+														{t("platform")}:
+													</span>
+													<span className="text-xs sm:text-sm font-mono text-gray-400 truncate">
+														{game.gameUrl || "---"}
+													</span>
+												</div>
+											</div>
+
+											{/* Action Buttons */}
+											<div className="flex gap-2 sm:gap-3 flex-wrap">
+												<button
+													disabled
+													className="flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-gray-500 cursor-not-allowed opacity-50"
+												>
+													<ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
+													<span className="text-xs sm:text-sm font-medium">
+														{t("deposit")}
+													</span>
+												</button>
+
+												<button
+													disabled
+													className="flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors bg-gray-500 cursor-not-allowed opacity-50"
+												>
+													<ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
+													<span className="text-xs sm:text-sm font-medium">
+														{t("withdraw")}
+													</span>
+												</button>
+
+												<button
+													onClick={() => {
+														setFormData({
+															...formData,
+															gameId: game._id,
+														});
+														setShowCreateId(true);
+													}}
+													className="flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors cursor-pointer"
+													style={{
+														backgroundColor: "#1477b0",
+													}}
+												>
+													<Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+													<span className="text-xs sm:text-sm font-medium">Create ID</span>
+												</button>
+											</div>
+										</div>
+									</div>
+								))}
 						</div>
 					</div>
 				</div>
