@@ -94,6 +94,17 @@ const LandingPage = () => {
         gameUrl: "https://**",
       },
     },
+    {
+      id: 6,
+      clientName: "****",
+      password: "****",
+      status: "Accept",
+      gameId: {
+        name: "DURGA247",
+        image: "/Durga.png",
+        gameUrl: "https://**",
+      },
+    },
   ];
 
   useEffect(() => {
