@@ -211,7 +211,7 @@ const TransactionHistory = () => {
               <option value="">All Modes</option>
               <option value="PowerPay">PowerPay</option>
               <option value="Wallet">Wallet</option>
-              <option value="DRPLAY">DRPLAY</option>
+              <option value="ROCKY11">ROCKYIO</option>
               <option value="Bonus">Bonus</option>
             </select>
           </div>

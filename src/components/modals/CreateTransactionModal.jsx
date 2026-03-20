@@ -256,7 +256,7 @@ const CreateTransactionModal = ({
 												className="text-blue-600 focus:ring-blue-500"
 											/>
 											<span className="font-medium text-gray-900">
-												ROCKY11(MANUALLY)
+												ROCKYIO(MANUALLY)
 											</span>
 										</div>
 									</div>
