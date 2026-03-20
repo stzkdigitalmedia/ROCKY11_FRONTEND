@@ -1,6 +1,7 @@
+import * as XLSX from 'xlsx';
 import { useState, useEffect } from 'react';
 import { DateRangePicker } from 'react-date-range';
-import { Calendar, RotateCcw, Users, Clock } from 'lucide-react';
+import { Calendar, RotateCcw, Users, Clock, Download } from 'lucide-react';
 import { apiHelper } from '../utils/apiHelper';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -79,6 +80,19 @@ const ActiveUsers = () => {
     fetchActiveUsers(dateRange[0].startDate, dateRange[0].endDate);
   };
 
+  const downloadExcel = () => {
+    const rows = users.map((u, i) => ({
+      '#': i + 1,
+      Username: u.clientUserName || 'N/A',
+      Phone: u.phone || 'N/A',
+      'Login Time': u.loginAt ? new Date(u.loginAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ActiveUsers');
+    XLSX.writeFile(wb, `active-users-${dateRange[0].startDate.toISOString().split('T')[0]}-to-${dateRange[0].endDate.toISOString().split('T')[0]}.xlsx`);
+  };
+
   const resetFilter = () => {
     const today = new Date();
     setDateRange([{ startDate: today, endDate: today, key: 'selection' }]);
@@ -88,10 +102,10 @@ const ActiveUsers = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar activeTab="dashboard" setActiveTab={handleNavigation} onLogout={handleLogout} />
-      
+
       <div className="flex-1 lg:ml-64">
         <AdminHeader title="Active Users" subtitle="View and track active users by date range" />
-        
+
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Stats Card */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -170,6 +184,14 @@ const ActiveUsers = () => {
               >
                 <RotateCcw size={18} />
                 <span className="font-medium">Reset</span>
+              </button>
+              <button
+                onClick={downloadExcel}
+                disabled={users.length === 0}
+                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download size={18} />
+                <span className="font-medium">Download Excel</span>
               </button>
             </div>
           </div>
