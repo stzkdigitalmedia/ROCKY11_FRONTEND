@@ -57,6 +57,7 @@ import ReferralStatusDetails from './pages/ReferralStatusDetails';
 import ReferralUserRegistrations from './pages/ReferralUserRegistrations';
 import ReferralFTDCompleteUsers from './pages/ReferralFTDCompleteUsers';
 import ReferralNoTransactionUsers from './pages/ReferralNoTransactionUsers';
+import Overview from './pages/Overview';
 
 
 const ToastContext = createContext();
@@ -257,6 +258,11 @@ function App() {
             <Route path="/referral-no-transaction-users" element={
               <SuperAdminRoute>
                 <ReferralNoTransactionUsers />
+              </SuperAdminRoute>
+            } />
+            <Route path="/overview" element={
+              <SuperAdminRoute>
+                <Overview />
               </SuperAdminRoute>
             } />
             <Route path="/user-dashboard" element={
