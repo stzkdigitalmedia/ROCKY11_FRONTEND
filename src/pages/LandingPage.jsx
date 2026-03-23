@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Wallet,
   Plus,
@@ -123,8 +123,7 @@ const LandingPage = () => {
   };
 
   return (
-    <Link onClick={handleRedirectToLogin}>
-      <div className="min-h-screen bg-[#0e0e0e] max-w-[769px] mx-auto">
+    <div className="min-h-screen bg-[#0e0e0e] max-w-[769px] mx-auto">
         {/* Main Content */}
         <div className="max-w-[769px] mx-auto">
           {/* Modern Wallet Section */}
@@ -148,7 +147,7 @@ const LandingPage = () => {
 
             <div className="absolute top-0 right-0 flex">
               <button className=" text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-3 sm:mr-1.5 px-2 mt-5 sm:mt-4 boeder border-1 rounded-lg border-black">
-                Login | Signup
+                {t("loginSignup")}
               </button>
               <LanguageSelector />
             </div>
@@ -162,7 +161,7 @@ const LandingPage = () => {
       flex flex-col items-center justify-center gap-2
       cursor-pointer shadow-2xl"
               >
-                <span className="text-white text-sm">Deposit</span>
+                <span className="text-white text-sm">{t("deposit")}</span>
                 <img src="/arrowup.svg" className="h-7 leading-none" />
               </div>
 
@@ -192,7 +191,7 @@ const LandingPage = () => {
       flex flex-col items-center justify-center gap-2
       cursor-pointer shadow-2xl"
               >
-                <span className="text-white text-sm">Withdraw</span>
+                <span className="text-white text-sm">{t("withdraw")}</span>
                 <img src="/arrowdown.svg" className="h-7 leading-none" />
               </div>
             </div>
@@ -399,8 +398,7 @@ const LandingPage = () => {
 
         {/* Bottom padding to prevent content overlap */}
         <BottomNavigation activePage="home" />
-      </div>
-    </Link>
+    </div>
   );
 };
 

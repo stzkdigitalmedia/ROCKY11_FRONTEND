@@ -101,7 +101,8 @@ const resources = {
       "notProvided": "Not provided",
       "notAssigned": "Not assigned",
       "notAvailable": "Not available",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "loginSignup": "Login | Signup"
     }
   },
   hi: {
@@ -203,7 +204,8 @@ const resources = {
       "notProvided": "प्रदान नहीं किया गया",
       "notAssigned": "असाइन नहीं किया गया",
       "notAvailable": "उपलब्ध नहीं",
-      "inactive": "निष्क्रिय"
+      "inactive": "निष्क्रिय",
+      "loginSignup": "लॉगिन | साइनअप"
     }
   },
   gu: {
@@ -305,7 +307,8 @@ const resources = {
       "notProvided": "પ્રદાન કરેલ નથી",
       "notAssigned": "સોંપેલ નથી",
       "notAvailable": "ઉપલબ્ધ નથી",
-      "inactive": "નિષ્ક્રિય"
+      "inactive": "નિષ્ક્રિય",
+      "loginSignup": "લૉગિન | સાઇનઅપ"
     }
   },
   ta: {
@@ -397,7 +400,8 @@ const resources = {
       "notProvided": "வழங்கப்படவில்லை",
       "notAssigned": "ஒதுக்கப்படவில்லை",
       "notAvailable": "கிடைக்கவில்லை",
-      "inactive": "செயலற்ற"
+      "inactive": "செயலற்ற",
+      "loginSignup": "உள்நுழைய | பதிவு"
     }
   },
   te: {
@@ -489,7 +493,8 @@ const resources = {
       "notProvided": "అందించబడలేదు",
       "notAssigned": "కేటాయించబడలేదు",
       "notAvailable": "అందుబాటులో లేదు",
-      "inactive": "నిష్క్రియ"
+      "inactive": "నిష్క్రియ",
+      "loginSignup": "లాగిన్ | సైన్అప్"
     }
   },
   mr: {
@@ -581,7 +586,8 @@ const resources = {
       "notProvided": "प्रदान केले नाही",
       "notAssigned": "नियुक्त केले नाही",
       "notAvailable": "उपलब्ध नाही",
-      "inactive": "निष्क्रिय"
+      "inactive": "निष्क्रिय",
+      "loginSignup": "लॉगिन | साइनअप"
     }
   },
   ur: {
@@ -673,7 +679,8 @@ const resources = {
       "notProvided": "فراہم نہیں کیا گیا",
       "notAssigned": "تفویض نہیں کیا گیا",
       "notAvailable": "دستیاب نہیں",
-      "inactive": "غیر فعال"
+      "inactive": "غیر فعال",
+      "loginSignup": "لاگ ان | سائن اپ"
     }
   },
   kn: {
@@ -765,7 +772,8 @@ const resources = {
       "notProvided": "ಒದಗಿಸಲಾಗಿಲ್ಲ",
       "notAssigned": "ನಿಯೋಜಿಸಲಾಗಿಲ್ಲ",
       "notAvailable": "ಲಭ್ಯವಿಲ್ಲ",
-      "inactive": "ನಿಷ್ಕ್ರಿಯ"
+      "inactive": "ನಿಷ್ಕ್ರಿಯ",
+      "loginSignup": "ಲಾಗಿನ್ | ಸೈನ್ಅಪ್"
     }
   },
   pa: {
@@ -857,7 +865,8 @@ const resources = {
       "notProvided": "ਪ੍ਰਦਾਨ ਨਹੀਂ ਕੀਤਾ ਗਿਆ",
       "notAssigned": "ਨਿਰਧਾਰਤ ਨਹੀਂ ਕੀਤਾ ਗਿਆ",
       "notAvailable": "ਉਪਲਬਧ ਨਹੀਂ",
-      "inactive": "ਅਕਿਰਿਆਸ਼ੀਲ"
+      "inactive": "ਅਕਿਰਿਆਸ਼ੀਲ",
+      "loginSignup": "ਲੌਗਿਨ | ਸਾਈਨਅੱਪ"
     }
   },
   ml: {
@@ -949,7 +958,8 @@ const resources = {
       "notProvided": "നൽകിയിട്ടില്ല",
       "notAssigned": "നിയോഗിച്ചിട്ടില്ല",
       "notAvailable": "ലഭ്യമല്ല",
-      "inactive": "നിഷ്ക്രിയം"
+      "inactive": "നിഷ്ക്രിയം",
+      "loginSignup": "ലോഗിൻ | സൈൻഅപ്പ്"
     }
   }
 };

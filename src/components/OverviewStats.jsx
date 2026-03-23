@@ -80,6 +80,7 @@ const OverviewStats = () => {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection' }]);
+  const [panelStats, setPanelStats] = useState(null);
   const hasFetched = useRef(false);
   const toast = useToastContext();
   const navigate = useNavigate();
@@ -91,15 +92,14 @@ const OverviewStats = () => {
       const end = endDate || new Date();
       const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
       const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
+      const startStr = start.toISOString().split('T')[0];
+      const endStr = end.toISOString().split('T')[0];
 
       const localResponse = await apiHelper.get(`/transaction/dash-summary?startDate=${startUTC}&endDate=${endUTC}`);
       const summaryData = localResponse?.data || localResponse;
       setDashSummary(summaryData);
 
-      const deleteIdsPayload = {
-        startDate: start.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0]
-      };
+      const deleteIdsPayload = { startDate: startStr, endDate: endStr };
       const deleteIdsResponse = await apiHelper.post('/deletelog/getCount_of_DeleteId', deleteIdsPayload);
       setDeleteIdsCount(deleteIdsResponse?.data || 0);
 
@@ -111,6 +111,14 @@ const OverviewStats = () => {
 
       const todayWithdrawalResponse = await apiHelper.get(`/transaction/getWithdraw_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
       setTodayWithdrawalCount(todayWithdrawalResponse?.userCount || 0);
+
+      // Master Panel Stats
+      const panelRes = await apiHelper.post('/transaction/getMasterPanelStats', {
+        startDate: startStr,
+        endDate: endStr,
+        panelId: '',
+      });
+      setPanelStats(panelRes);
     } catch (error) {
       toast.error('Failed to fetch dashboard summary: ' + error.message);
     } finally {
@@ -176,6 +184,28 @@ const OverviewStats = () => {
   const reqCountData = [
     { name: 'Deposit Req', value: todayDepositCount, color: '#22c55e' },
     { name: 'Withdrawal Req', value: todayWithdrawalCount, color: '#ef4444' },
+  ];
+
+  // Panel stats graph data
+  const panelList = Array.isArray(panelStats?.data) ? panelStats.data
+    : Array.isArray(panelStats) ? panelStats : [];
+
+  const panelDepositAmtData = panelList.map(p => ({
+    name: p.panelName || 'Panel',
+    Deposit: p.depositAmount || 0,
+    Withdrawal: p.withdrawalAmount || 0,
+    DepositCount: p.depositCount || 0,
+    WithdrawalCount: p.withdrawalCount || 0,
+  }));
+
+  const panelTotalsData = [
+    {
+      name: 'Total',
+      Deposit: panelStats?.totalDepositAmount ?? 0,
+      Withdrawal: panelStats?.totalWithdrawalAmount ?? 0,
+      DepositCount: panelStats?.totalDepositCount ?? 0,
+      WithdrawalCount: panelStats?.totalWithdrawalCount ?? 0,
+    },
   ];
 
   const isMobile = useWindowSize() < 768;
@@ -440,6 +470,70 @@ const OverviewStats = () => {
                 </div>
               </GraphCard>
             </div>
+
+            {/* Row 5 - Master Panel Stats */}
+            {panelList.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 20 }}>
+                <GraphCard title="Panel-wise Amount" subtitle="Deposit & withdrawal amount per panel (count in tooltip)">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={panelDepositAmtData} margin={{ top: 5, right: 10, left: 0, bottom: 40 }} barCategoryGap="30%">
+                      <defs>
+                        <linearGradient id="pDepGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22c55e" stopOpacity={1} /><stop offset="100%" stopColor="#22c55e" stopOpacity={0.45} /></linearGradient>
+                        <linearGradient id="pWdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4444" stopOpacity={1} /><stop offset="100%" stopColor="#ef4444" stopOpacity={0.45} /></linearGradient>
+                      </defs>
+                      <CartesianGrid {...gridStyle} vertical={false} />
+                      <XAxis dataKey="name" tick={{ ...axisStyle, fontSize: 11 }} axisLine={false} tickLine={false} angle={-20} textAnchor="end" interval={0} />
+                      <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} width={55} />
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return (
+                          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '10px 16px' }}>
+                            <p style={{ color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>{label}</p>
+                            <p style={{ color: '#22c55e', fontWeight: 600, fontSize: 13, margin: '2px 0' }}>Deposit: ₹{d?.Deposit?.toLocaleString()} <span style={{ color: '#94a3b8', fontSize: 11 }}>({d?.DepositCount} txns)</span></p>
+                            <p style={{ color: '#ef4444', fontWeight: 600, fontSize: 13, margin: '2px 0' }}>Withdrawal: ₹{d?.Withdrawal?.toLocaleString()} <span style={{ color: '#94a3b8', fontSize: 11 }}>({d?.WithdrawalCount} txns)</span></p>
+                          </div>
+                        );
+                      }} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                      <Bar dataKey="Deposit" fill="url(#pDepGrad)" radius={[6,6,0,0]} maxBarSize={50} />
+                      <Bar dataKey="Withdrawal" fill="url(#pWdGrad)" radius={[6,6,0,0]} maxBarSize={50} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </GraphCard>
+
+                <GraphCard title="Overall Panel Totals" subtitle="Total deposit & withdrawal amount (count in tooltip)">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={panelTotalsData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} barCategoryGap="40%">
+                      <defs>
+                        <linearGradient id="ptDepGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22c55e" stopOpacity={1} /><stop offset="100%" stopColor="#22c55e" stopOpacity={0.45} /></linearGradient>
+                        <linearGradient id="ptWdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4444" stopOpacity={1} /><stop offset="100%" stopColor="#ef4444" stopOpacity={0.45} /></linearGradient>
+                      </defs>
+                      <CartesianGrid {...gridStyle} vertical={false} />
+                      <XAxis dataKey="name" tick={axisStyle} axisLine={false} tickLine={false} />
+                      <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} width={55} />
+                      <Tooltip content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return (
+                          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '10px 16px' }}>
+                            <p style={{ color: '#22c55e', fontWeight: 600, fontSize: 13, margin: '2px 0' }}>Deposit: ₹{d?.Deposit?.toLocaleString()} <span style={{ color: '#94a3b8', fontSize: 11 }}>({d?.DepositCount} txns)</span></p>
+                            <p style={{ color: '#ef4444', fontWeight: 600, fontSize: 13, margin: '2px 0' }}>Withdrawal: ₹{d?.Withdrawal?.toLocaleString()} <span style={{ color: '#94a3b8', fontSize: 11 }}>({d?.WithdrawalCount} txns)</span></p>
+                          </div>
+                        );
+                      }} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                      <Bar dataKey="Deposit" fill="url(#ptDepGrad)" radius={[8,8,0,0]} maxBarSize={80}
+                        // label={{ position: 'top', fontSize: 12, fontWeight: 700, fill: '#22c55e', formatter: v => v > 0 ? `₹${(v/1000).toFixed(0)}k` : '' }}
+                         />
+                      <Bar dataKey="Withdrawal" fill="url(#ptWdGrad)" radius={[8,8,0,0]} maxBarSize={80}
+                        // label={{ position: 'top', fontSize: 12, fontWeight: 700, fill: '#ef4444', formatter: v => v > 0 ? `₹${(v/1000).toFixed(0)}k` : '' }}
+                         />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </GraphCard>
+              </div>
+            )}
 
             <div className="hidden gaming-card p-4 sm:p-6">
               <UsersList
