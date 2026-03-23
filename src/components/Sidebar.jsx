@@ -7,6 +7,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'referral', label: 'Referral', icon: Users },
+    { id: 'overview', label: 'Overview', icon: BarChart2 },
     { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'panels', label: 'Manage Panel', icon: Shield },
     { id: 'balance-logs', label: 'Balance Logs', icon: FileText },
@@ -41,7 +42,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
         }`}>
         <div className="p-4">
           <div className="flex justify-center">
-            <img src="/logo.png" alt="RRRPay"  className="object-contain bg-black" />
+            <img src="/logo.png" alt="RRRPay" className="object-contain bg-black" />
           </div>
         </div>
 
@@ -52,8 +53,8 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
                 <button
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300 ${activeTab === item.id
-                      ? 'border'
-                      : 'text-gray-700 hover:bg-gray-50'
+                    ? 'border'
+                    : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   style={activeTab === item.id ? {
                     backgroundColor: 'rgba(20, 119, 176, 0.1)',

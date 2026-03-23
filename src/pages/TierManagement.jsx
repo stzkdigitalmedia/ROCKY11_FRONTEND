@@ -69,6 +69,9 @@ const TierManagement = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
+            case 'overview':
+        navigate('/overview');
+        break;
       case 'games':
         navigate('/games');
         break;

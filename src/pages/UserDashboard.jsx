@@ -667,7 +667,7 @@ const UserDashboard = () => {
 			if (!userId) return;
 
 			const transactionsResponse = await apiHelper.post(
-				`/transaction/getUserTransactions/${userId}?page=1&limit=10`,
+				`/transaction/getUserTransactions/${userId}?page=1&limit=15`,
 			);
 			const transactions = transactionsResponse?.data?.transactions || [];
 
@@ -955,6 +955,38 @@ const UserDashboard = () => {
 					userScreenShot: "",
 				});
 				setSelectedBankId("");
+				fetchUserBalance();
+				return;
+			}
+
+			// Check if it's a withdrawal with ALLINONE branch selected
+			if (transactionForm?.transactionType === 'Withdraw' && selectedBranch === 'ALLINONE') {
+				const selectedBank = savedBanks[parseInt(selectedBankId)];
+				if (!selectedBank) {
+					toast.error('Please select a bank account for withdrawal');
+					setTransactionProcessing(false);
+					return;
+				}
+
+				const allinonePayload = {
+					userId: userId,
+					amount: parseFloat(transactionForm?.amount),
+					transactionType: 'Withdrawal',
+					upiId: selectedBank.upiId || '',
+					bankName: selectedBank.bankName || '',
+					accNo: selectedBank.accNo || '',
+					branchUserName: 'ALLINONE',
+					role: 'User',
+					mode: 'ALLINONE',
+					accHolderName: selectedBank.accHolderName || '',
+					ifscCode: selectedBank.ifscCode || ''
+				};
+
+				await apiHelper.post('/transaction/createTransaction', allinonePayload);
+				toast.success('Withdrawal request submitted successfully!');
+				setShowCreateTransaction(false);
+				setTransactionForm({ amount: '', transactionType: 'Deposit', utrNo: '', userScreenShot: '' });
+				setSelectedBankId('');
 				fetchUserBalance();
 				return;
 			}
@@ -1264,49 +1296,49 @@ const UserDashboard = () => {
 										account.gameId?._id === game._id ||
 										account.gameId?.name === game.name,
 								),
-							).length > 1 && (
-							<div className="flex flex-wrap justify-end gap-2">
-								<Link to={"/my-ids"}>
-									<button className="px-2 h-9 rounded-lg bg-[#005993] text-white text-[14px] sm:text-[16px] font-semibold">
-										Get New Id
-									</button>
-								</Link>
-								<div className="flex gap-1 sm:gap-2">
-									<button
-										onClick={() => {
-											const step = window.innerWidth >= 640 ? 2 : 1;
-											setCurrentSlide(Math.max(0, currentSlide - step));
-										}}
-										className="w-9 h-9 rounded-lg bg-white/10 text-white hover:bg-white/20"
-									>
-										<ChevronLeft className="mx-auto" />
-									</button>
-									<button
-										onClick={() => {
-											const step = window.innerWidth >= 640 ? 2 : 1;
-											const totalCards =
-												subAccounts.length +
-												games.filter(
-													(game) =>
-														!subAccounts.some(
-															(account) =>
-																account.gameId?._id === game._id ||
-																account.gameId?.name === game.name,
-														),
+						).length > 1 && (
+								<div className="flex flex-wrap justify-end gap-2">
+									<Link to={"/my-ids"}>
+										<button className="px-2 h-9 rounded-lg bg-[#005993] text-white text-[14px] sm:text-[16px] font-semibold">
+											Get New Id
+										</button>
+									</Link>
+									<div className="flex gap-1 sm:gap-2">
+										<button
+											onClick={() => {
+												const step = window.innerWidth >= 640 ? 2 : 1;
+												setCurrentSlide(Math.max(0, currentSlide - step));
+											}}
+											className="w-9 h-9 rounded-lg bg-white/10 text-white hover:bg-white/20"
+										>
+											<ChevronLeft className="mx-auto" />
+										</button>
+										<button
+											onClick={() => {
+												const step = window.innerWidth >= 640 ? 2 : 1;
+												const totalCards =
+													subAccounts.length +
+													games.filter(
+														(game) =>
+															!subAccounts.some(
+																(account) =>
+																	account.gameId?._id === game._id ||
+																	account.gameId?.name === game.name,
+															),
 													).length;
-											const maxSlide =
-												window.innerWidth >= 640
-													? Math.max(0, totalCards - 2)
-													: totalCards - 1;
-											setCurrentSlide(Math.min(maxSlide, currentSlide + step));
-										}}
-										className="w-9 h-9 rounded-lg bg-white/10 text-white hover:bg-white/20"
-									>
-										<ChevronRight className="mx-auto" />
-									</button>
+												const maxSlide =
+													window.innerWidth >= 640
+														? Math.max(0, totalCards - 2)
+														: totalCards - 1;
+												setCurrentSlide(Math.min(maxSlide, currentSlide + step));
+											}}
+											className="w-9 h-9 rounded-lg bg-white/10 text-white hover:bg-white/20"
+										>
+											<ChevronRight className="mx-auto" />
+										</button>
+									</div>
 								</div>
-							</div>
-						)}
+							)}
 					</div>
 					<div className="relative overflow-hidden">
 						<div
@@ -1350,12 +1382,12 @@ const UserDashboard = () => {
 												<div className="flex gap-2">
 													<span
 														className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${account.status === "Accept"
-																? "bg-green-100 text-green-800"
-																: account.status === "Panding"
-																	? "bg-yellow-100 text-yellow-800"
-																	: account.status === "Reject"
-																		? "bg-red-100 text-red-800"
-																		: "bg-gray-100 text-gray-800"
+															? "bg-green-100 text-green-800"
+															: account.status === "Panding"
+																? "bg-yellow-100 text-yellow-800"
+																: account.status === "Reject"
+																	? "bg-red-100 text-red-800"
+																	: "bg-gray-100 text-gray-800"
 															}`}
 													>
 														{account.status === "Accept"
@@ -1405,8 +1437,8 @@ const UserDashboard = () => {
 														}}
 														disabled={isRejected}
 														className={`ml-auto p-1 rounded ${isRejected
-																? "opacity-40 cursor-not-allowed"
-																: "hover:bg-gray-800"
+															? "opacity-40 cursor-not-allowed"
+															: "hover:bg-gray-800"
 															}`}
 													>
 														<Copy className="w-3 h-3" />
@@ -1439,8 +1471,8 @@ const UserDashboard = () => {
 														}}
 														disabled={isRejected}
 														className={`p-1 rounded ${isRejected
-																? "opacity-40 cursor-not-allowed"
-																: "hover:bg-gray-800"
+															? "opacity-40 cursor-not-allowed"
+															: "hover:bg-gray-800"
 															}`}
 													>
 														<Copy className="w-3 h-3" />
@@ -1474,8 +1506,8 @@ const UserDashboard = () => {
 														}}
 														disabled={isRejected}
 														className={`ml-auto p-1 rounded ${isRejected
-																? "opacity-40 cursor-not-allowed"
-																: "hover:bg-gray-800"
+															? "opacity-40 cursor-not-allowed"
+															: "hover:bg-gray-800"
 															}`}
 													>
 														<LinkIcon className="w-3 h-3" />
@@ -1512,8 +1544,8 @@ const UserDashboard = () => {
 														}}
 														disabled={account.status !== "Accept"}
 														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
-																? "bg-green-600 hover:bg-green-700 cursor-pointer"
-																: "bg-gray-500 cursor-not-allowed opacity-50"
+															? "bg-green-600 hover:bg-green-700 cursor-pointer"
+															: "bg-gray-500 cursor-not-allowed opacity-50"
 															}`}
 													>
 														<ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1533,8 +1565,8 @@ const UserDashboard = () => {
 														}}
 														disabled={account.status !== "Accept"}
 														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
-																? "bg-red-600 hover:bg-red-700 cursor-pointer"
-																: "bg-gray-500 cursor-not-allowed opacity-50"
+															? "bg-red-600 hover:bg-red-700 cursor-pointer"
+															: "bg-gray-500 cursor-not-allowed opacity-50"
 															}`}
 													>
 														<ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1550,8 +1582,8 @@ const UserDashboard = () => {
 														}}
 														disabled={account.status !== "Accept"}
 														className={`flex-1 py-2 px-2 sm:px-4 rounded-lg flex items-center justify-center gap-1 sm:gap-2 transition-colors ${account.status === "Accept"
-																? "cursor-pointer"
-																: "cursor-not-allowed opacity-50"
+															? "cursor-pointer"
+															: "cursor-not-allowed opacity-50"
 															}`}
 														style={{
 															backgroundColor:
@@ -1848,8 +1880,8 @@ const UserDashboard = () => {
 				<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down">
 					<div
 						className={`${notification.type === "success"
-								? "bg-gradient-to-r from-green-500 to-green-600"
-								: "bg-gradient-to-r from-blue-500 to-blue-600"
+							? "bg-gradient-to-r from-green-500 to-green-600"
+							: "bg-gradient-to-r from-blue-500 to-blue-600"
 							} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[320px] border border-white/20`}
 					>
 						<div className="bg-white/20 p-2 rounded-full">

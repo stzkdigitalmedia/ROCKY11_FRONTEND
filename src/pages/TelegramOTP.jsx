@@ -50,6 +50,7 @@ const TelegramOTP = () => {
       'dashboard': '/dashboard',
       'games': '/games',
       'panels': '/panels',
+      'overview': '/overview',
       'balance-logs': '/balance-logs',
       'transaction-history': '/transaction-history',
       'transaction-logs': '/transaction-logs',
@@ -57,7 +58,7 @@ const TelegramOTP = () => {
       'telegram-otp': '/telegram-otp',
       'settings': '/settings',
       'bonuses': '/sa-bonuses',
-      'referral':'/referral'
+      'referral': '/referral'
     };
     if (routes[tab]) navigate(routes[tab]);
   };

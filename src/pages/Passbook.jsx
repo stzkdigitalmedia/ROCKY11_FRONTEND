@@ -139,7 +139,7 @@ const Passbook = () => {
               onClick={() => setShowFilters(!showFilters)}
               className="p-1 px-1 sm:px-2 text-black bg-white flex text-[12px] rounded-lg hover:bg-gray-200"
             >
-              <Filter size={20} className='my-auto text-black' /> 
+              <Filter size={20} className='my-auto text-black' />
               {/* {t('applyFilters')} */}
             </button>
           </div>
@@ -264,160 +264,160 @@ const Passbook = () => {
                 </div>
               ) : (
                 transactions.map((transaction, index) => {
-                const icon = getIconConfig(transaction.transactionType);
+                  const icon = getIconConfig(transaction.transactionType);
 
-                return (
-                  <div
-                    key={transaction?._id || index}
-                    className="bg-[#1b1b1b] rounded-2xl p-4 shadow-sm"
-                  >
-                    {/* TOP ROW - CLICKABLE */}
-                    <div 
-                      className="flex items-start gap-4 cursor-pointer"
-                      onClick={() => toggleTransactionDetails(transaction._id)}
+                  return (
+                    <div
+                      key={transaction?._id || index}
+                      className="bg-[#1b1b1b] rounded-2xl p-4 shadow-sm"
                     >
-                      {/* ICON */}
+                      {/* TOP ROW - CLICKABLE */}
                       <div
-                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${icon.bg}`}
+                        className="flex items-start gap-4 cursor-pointer"
+                        onClick={() => toggleTransactionDetails(transaction._id)}
                       >
-                        {transaction.transactionType === 'Deposit' ? (
-                          // <ArrowDown className={`w-7 h-7 ${icon.icon}`} />
-
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 8.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M6 16.5H8" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M10.5 16.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M20 3.5V9.5L22 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M20 9.5L18 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-
-                        ) : (
-                          // <ArrowUp className={`w-7 h-7 ${icon.icon}`} />
-
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 8.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M6 16.5H8" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M10.5 16.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M20 9.5V3.5L22 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M20 3.5L18 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-
-                        )}
-                      </div>
-
-                      {/* MAIN INFO */}
-                      <div className="flex-1">
-                        <p className="text-base text-[14px] font-semibold text-gray-300">
-                          {transaction.transactionType}
-                        </p>
-
-                        <p className="text-sm text-gray-400 mt-1">
-                          Tra_ID: #{transaction._id?.slice(-4)} •{' '}
-                          {transaction.createdAt
-                            ? new Date(transaction.createdAt).toLocaleTimeString('en-IN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                            : ''}
-                        </p>
-                      </div>
-
-                      {/* AMOUNT + STATUS */}
-                      <div className="text-right">
-                        <p
-                          className={`text-[14px] font-bold ${transaction.transactionType === 'Deposit'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                            }`}
+                        {/* ICON */}
+                        <div
+                          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${icon.bg}`}
                         >
-                          {icon.sign}₹{transaction.amount}
-                        </p>
+                          {transaction.transactionType === 'Deposit' ? (
+                            // <ArrowDown className={`w-7 h-7 ${icon.icon}`} />
 
-                        <span
-                          className={`inline-block mt-1 px-1 py-0 sm:px-3 sm:py-1 rounded-full sm:text-xs text-[12px] font-medium ${getStatusPill(
-                            transaction.status
-                          )}`}
-                        >
-                          {transaction.status === 'Accept'
-                            ? t('Accept')
-                            : transaction.status === 'Reject'
-                              ? t('rejected')
-                              : transaction.status === 'pending'
-                                ? t('pending')
-                                : transaction.status === 'Initial'
-                                  ? t('initial')
-                                  : transaction.status || t('pending')}
-                        </span>
-                      </div>
-                    </div>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M2 8.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M6 16.5H8" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M10.5 16.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M20 3.5V9.5L22 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M20 9.5L18 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
 
-                    {/* EXTRA DETAILS (MANDATORY DATA) - EXPANDABLE */}
-                    {expandedTransactions === transaction._id && (
-                      <div className="mt-4 space-y-2 text-sm text-gray-300 border-t border-gray-300 pt-4">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">{t('gameName')}:</span>
-                          <span className="font-medium">{transaction.gameName || 'N/A'}</span>
+                          ) : (
+                            // <ArrowUp className={`w-7 h-7 ${icon.icon}`} />
+
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M2 8.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M6 16.5H8" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M10.5 16.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M20 9.5V3.5L22 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M20 3.5L18 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+
+                          )}
                         </div>
 
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">{t('clientName')}:</span>
-                          <span className="font-medium">{transaction.clientName || 'N/A'}</span>
-                        </div>
+                        {/* MAIN INFO */}
+                        <div className="flex-1">
+                          <p className="text-base text-[14px] font-semibold text-gray-300">
+                            {transaction.transactionType}
+                          </p>
 
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">{t('remark')}:</span>
-                          <span className="font-medium">{transaction.remarks || '-'}</span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">{t('transactionFrom')}:</span>
-                          <span className="font-medium">
-                            {transaction.mode || 'N/A'}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
-                          <span className="text-gray-300">{t('createdAt')}:</span>
-                          <span>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Tra_ID: #{transaction._id?.slice(-4)} •{' '}
                             {transaction.createdAt
-                              ? new Date(transaction.createdAt).toLocaleString('en-IN')
-                              : 'N/A'}
-                          </span>
+                              ? new Date(transaction.createdAt).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                              : ''}
+                          </p>
                         </div>
 
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-300">{t('updatedAt')}:</span>
-                          <span>
-                            {transaction.updatedAt
-                              ? new Date(transaction.updatedAt).toLocaleString('en-IN')
-                              : 'N/A'}
+                        {/* AMOUNT + STATUS */}
+                        <div className="text-right">
+                          <p
+                            className={`text-[14px] font-bold ${transaction.transactionType === 'Deposit'
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                              }`}
+                          >
+                            {icon.sign}₹{transaction.amount}
+                          </p>
+
+                          <span
+                            className={`inline-block mt-1 px-1 py-0 sm:px-3 sm:py-1 rounded-full sm:text-xs text-[12px] font-medium ${getStatusPill(
+                              transaction.status
+                            )}`}
+                          >
+                            {transaction.status === 'Accept'
+                              ? t('Accept')
+                              : transaction.status === 'Reject'
+                                ? t('rejected')
+                                : transaction.status === 'pending'
+                                  ? t('pending')
+                                  : transaction.status === 'Initial'
+                                    ? t('initial')
+                                    : transaction.status || t('pending')}
                           </span>
                         </div>
                       </div>
-                    )}
 
-                    {/* SCREENSHOT BUTTON (KEEP LOGIC) - ONLY SHOW WHEN EXPANDED */}
-                    {expandedTransactions === transaction._id &&
-                      transaction?.transactionType === 'Withdrawal' &&
-                      transaction?.mode === 'PowerPay' &&
-                      transaction?.status !== 'Reject' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            fetchTransactionScreenshot(transaction?._id);
-                          }}
-                          className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View Screenshot
-                        </button>
-                      )
-                    }
-                  </div>
-                );
-              })
+                      {/* EXTRA DETAILS (MANDATORY DATA) - EXPANDABLE */}
+                      {expandedTransactions === transaction._id && (
+                        <div className="mt-4 space-y-2 text-sm text-gray-300 border-t border-gray-300 pt-4">
+                          <div className="flex justify-between">
+                            <span className="text-gray-300">{t('gameName')}:</span>
+                            <span className="font-medium">{transaction.gameName || 'N/A'}</span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-gray-300">{t('clientName')}:</span>
+                            <span className="font-medium">{transaction.clientName || 'N/A'}</span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-gray-300">{t('remark')}:</span>
+                            <span className="font-medium">{transaction.remarks || '-'}</span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-gray-300">{t('transactionFrom')}:</span>
+                            <span className="font-medium">
+                              {transaction.mode === 'ALLINONE' ? 'INSTANT PAYOUT' : transaction.mode || 'N/A'}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
+                            <span className="text-gray-300">{t('createdAt')}:</span>
+                            <span>
+                              {transaction.createdAt
+                                ? new Date(transaction.createdAt).toLocaleString('en-IN')
+                                : 'N/A'}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-300">{t('updatedAt')}:</span>
+                            <span>
+                              {transaction.updatedAt
+                                ? new Date(transaction.updatedAt).toLocaleString('en-IN')
+                                : 'N/A'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SCREENSHOT BUTTON (KEEP LOGIC) - ONLY SHOW WHEN EXPANDED */}
+                      {expandedTransactions === transaction._id &&
+                        transaction?.transactionType === 'Withdrawal' &&
+                        transaction?.mode === 'PowerPay' &&
+                        transaction?.status !== 'Reject' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fetchTransactionScreenshot(transaction?._id);
+                            }}
+                            className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Screenshot
+                          </button>
+                        )
+                      }
+                    </div>
+                  );
+                })
               )}
             </div>
 
@@ -427,36 +427,34 @@ const Passbook = () => {
                 <button
                   onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={page === 1}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                    page === 1
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${page === 1
                       ? 'bg-[#1b1b1b] text-gray-600 cursor-not-allowed'
                       : 'bg-[#005993] text-white hover:bg-[#004a7a] shadow-lg'
-                  }`}
+                    }`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span className="hidden sm:inline">Previous</span>
                 </button>
-                
+
                 <div className="flex items-center gap-2 px-4 py-2.5 bg-[#1b1b1b] rounded-xl">
                   <span className="text-white font-semibold">{page}</span>
                   <span className="text-gray-500">/</span>
                   <span className="text-gray-400">{totalPages}</span>
                 </div>
-                
+
                 <button
                   onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={page === totalPages}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                    page === totalPages
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${page === totalPages
                       ? 'bg-[#1b1b1b] text-gray-600 cursor-not-allowed'
                       : 'bg-[#005993] text-white hover:bg-[#004a7a] shadow-lg'
-                  }`}
+                    }`}
                 >
                   <span className="hidden sm:inline">Next</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </div>

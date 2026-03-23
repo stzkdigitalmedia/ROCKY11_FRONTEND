@@ -21,6 +21,9 @@ const Dashboard = () => {
 
   const handleNavigation = (tab) => {
     switch (tab) {
+            case 'overview':
+        navigate('/overview');
+        break;
       case 'games':
         navigate('/games');
         break;

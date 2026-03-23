@@ -239,11 +239,10 @@ const CreateTransactionModal = ({
 								{/* ROCKY11 Option */}
 								<div className="space-y-2 mb-2">
 									<div
-										className={`p-3 border rounded-lg cursor-pointer transition-all ${
-											selectedBranch === "ROCKY11"
-												? "border-blue-500 bg-blue-50"
-												: "border-gray-200 hover:border-gray-300"
-										}`}
+										className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedBranch === "ROCKY11"
+											? "border-blue-500 bg-blue-50"
+											: "border-gray-200 hover:border-gray-300"
+											}`}
 										onClick={() => onBranchChange("ROCKY11")}
 									>
 										<div className="flex items-center gap-3">
@@ -264,15 +263,14 @@ const CreateTransactionModal = ({
 								{/* Active Branches */}
 								<div className="space-y-2">
 									{user.teirId.branches
-										.filter((branch) => branch.isActive)
+										.filter(branch => branch.isActive && !(branch.branchName === 'ALLINONE' && transactionForm?.transactionType === 'Deposit'))
 										.map((branch, index) => (
 											<div
 												key={index}
-												className={`p-3 border rounded-lg cursor-pointer transition-all ${
-													selectedBranch === branch.branchName
-														? "border-blue-500 bg-blue-50"
-														: "border-gray-200 hover:border-gray-300"
-												}`}
+												className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedBranch === branch.branchName
+													? "border-blue-500 bg-blue-50"
+													: "border-gray-200 hover:border-gray-300"
+													}`}
 												onClick={() => onBranchChange(branch.branchName)}
 											>
 												<div className="flex items-center gap-3">
@@ -284,9 +282,7 @@ const CreateTransactionModal = ({
 														onChange={() => onBranchChange(branch.branchName)}
 														className="text-blue-600 focus:ring-blue-500"
 													/>
-													<span className="font-medium text-gray-900">
-														{branch.branchName}
-													</span>
+													<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? 'INSTANT PAYOUT (₹500-₹5000)' : branch.branchName}</span>
 												</div>
 											</div>
 										))}
@@ -300,15 +296,14 @@ const CreateTransactionModal = ({
 									<label className="form-label">Select Payment Method</label>
 									<div className="space-y-2">
 										{user.teirId.branches
-											.filter((branch) => branch.isActive)
+											.filter(branch => branch.isActive && !(branch.branchName === 'ALLINONE' && transactionForm?.transactionType === 'Deposit'))
 											.map((branch, index) => (
 												<div
 													key={index}
-													className={`p-3 border rounded-lg cursor-pointer transition-all ${
-														selectedBranch === branch.branchName
-															? "border-blue-500 bg-blue-50"
-															: "border-gray-200 hover:border-gray-300"
-													}`}
+													className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedBranch === branch.branchName
+														? "border-blue-500 bg-blue-50"
+														: "border-gray-200 hover:border-gray-300"
+														}`}
 													onClick={() => onBranchChange(branch.branchName)}
 												>
 													<div className="flex items-center gap-3">
@@ -320,9 +315,7 @@ const CreateTransactionModal = ({
 															onChange={() => onBranchChange(branch.branchName)}
 															className="text-blue-600 focus:ring-blue-500"
 														/>
-														<span className="font-medium text-gray-900">
-															{branch.branchName}
-														</span>
+														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? 'INSTANT PAYOUT (₹500-₹5000)' : branch.branchName}</span>
 													</div>
 												</div>
 											))}
@@ -351,11 +344,10 @@ const CreateTransactionModal = ({
 											{savedBanks.map((bank, index) => (
 												<div
 													key={bank.id || bank._id || index}
-													className={`p-3 border rounded-lg cursor-pointer transition-all ${
-														selectedBankId === index.toString()
-															? "border-green-500 bg-green-50"
-															: "border-gray-200 hover:border-gray-300"
-													}`}
+													className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedBankId === index.toString()
+														? "border-green-500 bg-green-50"
+														: "border-gray-200 hover:border-gray-300"
+														}`}
 													onClick={() => onBankIdChange(index.toString())}
 												>
 													<div className="flex items-center gap-3">
@@ -426,7 +418,7 @@ const CreateTransactionModal = ({
 						{/* Form Actions */}
 						<div className="flex flex-col sm:flex-row gap-3 pt-4">
 							{selectedBranch === "ROCKY11" &&
-							transactionForm?.transactionType === "Deposit" ? (
+								transactionForm?.transactionType === "Deposit" ? (
 								// Special Next button for ROCKY11 deposit
 								<button
 									type="button"
@@ -449,14 +441,20 @@ const CreateTransactionModal = ({
 									disabled={isProcessing}
 									className="w-full sm:flex-1 gaming-btn"
 									onClick={(e) => {
-										if (
-											transactionForm?.transactionType === "Withdraw" &&
-											!selectedBankId
-										) {
+										if (transactionForm?.transactionType === "Withdraw" && !selectedBankId) {
 											e.preventDefault();
 											toast.error("Please select your bank account");
 											return;
 										}
+										if (selectedBranch === 'ALLINONE') {
+											const amt = Number(transactionForm.amount);
+											if (!amt || amt < 500 || amt > 5000) {
+												e.preventDefault();
+												toast.error('INSTANT PAYOUT sirf ₹500 - ₹5000 ke liye available hai. Kripya dusra payment method select karein.');
+												return;
+											}
+										}
+
 									}}
 								>
 									{isProcessing ? (

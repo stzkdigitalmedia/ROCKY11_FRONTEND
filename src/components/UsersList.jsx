@@ -1279,7 +1279,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                           <p className="text-sm text-gray-900">{transaction?.gameName || 'N/A'}</p>
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-sm text-gray-900">{transaction?.mode || 'N/A'}</p>
+                          <p className="text-sm text-gray-900">{transaction.mode === 'ALLINONE' ? 'INSTANT PAYOUT' : transaction.mode || 'N/A'}</p>
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-sm font-semibold text-green-600">

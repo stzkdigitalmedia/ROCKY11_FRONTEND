@@ -24,6 +24,9 @@ const Games = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
+      case 'overview':
+        navigate('/overview');
+        break;
       case 'panels':
         navigate('/panels');
         break;
