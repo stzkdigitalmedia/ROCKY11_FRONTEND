@@ -82,9 +82,6 @@ const TierManagement = () => {
       case 'allinreq':
         navigate('/allinreq');
         break;
-      case 'allinreq':
-        navigate('/allinreq');
-        break;
       case 'panels':
         navigate('/panels');
         break;

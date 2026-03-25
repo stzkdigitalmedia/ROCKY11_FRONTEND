@@ -58,6 +58,7 @@ import ReferralUserRegistrations from './pages/ReferralUserRegistrations';
 import ReferralFTDCompleteUsers from './pages/ReferralFTDCompleteUsers';
 import ReferralNoTransactionUsers from './pages/ReferralNoTransactionUsers';
 import Overview from './pages/Overview';
+import AllInOneReq from './pages/AllInOneReq';
 
 
 const ToastContext = createContext();
@@ -96,6 +97,11 @@ function App() {
               <PeerRoute>
                 <Deposit />
               </PeerRoute>
+            } />
+            <Route path="/allinreq" element={
+              <SuperAdminRoute>
+                <AllInOneReq />
+              </SuperAdminRoute>
             } />
             <Route path="/peer/banks" element={
               <PeerRoute>
