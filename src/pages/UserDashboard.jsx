@@ -1036,6 +1036,7 @@ const UserDashboard = () => {
 			}
 
 			// For all other cases (non-ROCKY11 branches) - use createTransaction API
+			const specialBranches = ['ALLINONE', 'LEOPAY'];
 			let payload = {
 				userId: userId,
 				amount: parseFloat(transactionForm?.amount),
@@ -1044,7 +1045,7 @@ const UserDashboard = () => {
 						? "Withdrawal"
 						: transactionForm?.transactionType,
 				role: "User",
-				mode: "PowerPay",
+				mode: specialBranches.includes(selectedBranch) ? selectedBranch : 'PowerPay',
 				branchUserName: selectedBranch || "Rockybook",
 			};
 
@@ -1083,14 +1084,20 @@ const UserDashboard = () => {
 				fetchUserBalance();
 
 				// Handle different transaction types
-				if (transactionForm?.transactionType === "Deposit") {
-					// For all non-ROCKY11 branches - redirect to powerdreams
-					toast.info("Processing payment... Please wait");
-					setTimeout(() => {
-						window.location.href = `https://www.powerdreams.co/online/pay/${selectedBranch}/${transaction?._id}`;
-					}, 2000);
-				} else if (transactionForm?.transactionType === "Withdraw") {
-					toast.info("Withdrawal request submitted successfully!");
+				if (transactionForm?.transactionType === 'Deposit') {
+					// For all non-DR branches - redirect to powerdreams
+					toast.info('Processing payment... Please wait');
+					if (transaction.mode == 'LEOPAY') {
+						setTimeout(() => {
+							window.location.href = `${transaction?.redirectUrl}`;
+						}, 2000);
+					} else {
+						setTimeout(() => {
+							window.location.href = `https://www.powerdreams.co/online/pay/${selectedBranch}/${transaction?._id}`;
+						}, 2000);
+					}
+				} else if (transactionForm?.transactionType === 'Withdraw') {
+					toast.info('Withdrawal request submitted successfully!');
 				}
 
 				return;

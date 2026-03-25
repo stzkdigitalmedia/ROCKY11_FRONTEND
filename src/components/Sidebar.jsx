@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users,BarChart2  } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -8,6 +8,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'referral', label: 'Referral', icon: Users },
     { id: 'overview', label: 'Overview', icon: BarChart2 },
+    { id: 'allinreq', label: 'Instant Payout Req', icon: Zap },
     { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'panels', label: 'Manage Panel', icon: Shield },
     { id: 'balance-logs', label: 'Balance Logs', icon: FileText },
@@ -52,7 +53,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
               <li key={item.id}>
                 <button
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300 ${activeTab === item.id
+                  className={`w-full flex items-center gap-3 px-4 py-1.5 rounded-lg text-left transition-all duration-300 ${activeTab === item.id
                     ? 'border'
                     : 'text-gray-700 hover:bg-gray-50'
                     }`}

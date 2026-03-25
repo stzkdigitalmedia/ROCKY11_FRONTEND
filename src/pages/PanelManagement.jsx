@@ -30,6 +30,9 @@ const PanelManagementPage = () => {
       case 'games':
         navigate('/games');
         break;
+      case 'allinreq':
+        navigate('/allinreq');
+        break;
       case 'user-registrations':
         navigate('/user-registrations');
         break;

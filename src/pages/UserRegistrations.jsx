@@ -49,6 +49,9 @@ const UserRegistrations = () => {
       case 'games':
         navigate('/games');
         break;
+      case 'allinreq':
+        navigate('/allinreq');
+        break;
       case 'panels':
         navigate('/panels');
         break;
