@@ -20,7 +20,9 @@ const TierManagement = () => {
     teirName: '',
     branches: [],
     teir_transaction_amount: '',
-    teir_no_of_transaction: ''
+    teir_no_of_transaction: '',
+    minAmount: '',
+    maxAmount: '',
   });
   const [showDeleteTierModal, setShowDeleteTierModal] = useState(false);
   const [deleteTierLoading, setDeleteTierLoading] = useState(false);
@@ -38,7 +40,9 @@ const TierManagement = () => {
     teirName: '',
     branches: [{ branchName: '', isActive: true }],
     teir_transaction_amount: '',
-    teir_no_of_transaction: ''
+    teir_no_of_transaction: '',
+    minAmount: '',
+    maxAmount: '',
   });
   const toast = useToastContext();
 
@@ -69,11 +73,17 @@ const TierManagement = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
-            case 'overview':
+      case 'overview':
         navigate('/overview');
         break;
       case 'games':
         navigate('/games');
+        break;
+      case 'allinreq':
+        navigate('/allinreq');
+        break;
+      case 'allinreq':
+        navigate('/allinreq');
         break;
       case 'panels':
         navigate('/panels');
@@ -127,13 +137,18 @@ const TierManagement = () => {
   const updateTier = async () => {
     if (!editingTier) return;
 
+    const hasAllInOne = editFormData.branches.some(b => b.branchName === 'ALLINONE');
+    const payload = hasAllInOne
+      ? { ...editFormData, minAmount: Number(editFormData.minAmount), maxAmount: Number(editFormData.maxAmount) }
+      : { teirName: editFormData.teirName, branches: editFormData.branches, teir_transaction_amount: editFormData.teir_transaction_amount, teir_no_of_transaction: editFormData.teir_no_of_transaction };
+
     setEditTierLoading(true);
     try {
-      await apiHelper.put(`/tier/updateTierDetails/${editingTier._id}`, editFormData);
+      await apiHelper.put(`/tier/updateTierDetails/${editingTier._id}`, payload);
       toast.success('Tier updated successfully!');
       setShowEditTierModal(false);
       setEditingTier(null);
-      setEditFormData({ teirName: '', branches: [], teir_transaction_amount: '', teir_no_of_transaction: '' });
+      setEditFormData({ teirName: '', branches: [], teir_transaction_amount: '', teir_no_of_transaction: '', minAmount: '', maxAmount: '' });
       fetchTiers();
     } catch (error) {
       toast.error('Failed to update tier');
@@ -265,8 +280,25 @@ const TierManagement = () => {
     e.preventDefault();
     setCreateLoading(true);
 
+    const hasAllInOne = formData.branches.some(b => b.branchName === 'ALLINONE');
+    const payload = hasAllInOne
+      ? {
+        teirName: formData.teirName,
+        branches: formData.branches,
+        teir_transaction_amount: formData.teir_transaction_amount,
+        teir_no_of_transaction: formData.teir_no_of_transaction,
+        minAmount: Number(formData.minAmount),
+        maxAmount: Number(formData.maxAmount),
+      }
+      : {
+        teirName: formData.teirName,
+        branches: formData.branches,
+        teir_transaction_amount: formData.teir_transaction_amount,
+        teir_no_of_transaction: formData.teir_no_of_transaction,
+      };
+
     try {
-      const response = await apiHelper.post('/tier/createTier', formData);
+      const response = await apiHelper.post('/tier/createTier', payload);
       if (response?.success) {
         toast.success('Tier created successfully!');
         setShowCreateModal(false);
@@ -274,7 +306,9 @@ const TierManagement = () => {
           teirName: '',
           branches: [{ branchName: '', isActive: true }],
           teir_transaction_amount: '',
-          teir_no_of_transaction: ''
+          teir_no_of_transaction: '',
+          minAmount: '',
+          maxAmount: '',
         });
         fetchTiers();
       }
@@ -378,7 +412,9 @@ const TierManagement = () => {
                                       isActive: branch.isActive
                                     })) || [],
                                     teir_transaction_amount: tier.teir_transaction_amount,
-                                    teir_no_of_transaction: tier.teir_no_of_transaction
+                                    teir_no_of_transaction: tier.teir_no_of_transaction,
+                                    minAmount: tier.minAmount ?? '',
+                                    maxAmount: tier.maxAmount ?? '',
                                   });
                                   setShowEditTierModal(true);
                                 }}
@@ -605,6 +641,43 @@ const TierManagement = () => {
                 />
               </div>
 
+
+              <div className="grid grid-cols-2 gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Amount (ALLINONE)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <input
+                      type="number"
+                      name="minAmount"
+                      value={formData.minAmount}
+                      onChange={handleInputChange}
+                      placeholder="500"
+                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      onWheel={(e) => e.target.blur()}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Amount (ALLINONE)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <input
+                      type="number"
+                      name="maxAmount"
+                      value={formData.maxAmount}
+                      onChange={handleInputChange}
+                      placeholder="5000"
+                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      onWheel={(e) => e.target.blur()}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -714,6 +787,39 @@ const TierManagement = () => {
                   onWheel={(e) => e.target.blur()}
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Amount (ALLINONE)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editFormData.minAmount}
+                      onChange={(e) => setEditFormData({ ...editFormData, minAmount: e.target.value })}
+                      placeholder="500"
+                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      onWheel={(e) => e.target.blur()}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Amount (ALLINONE)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editFormData.maxAmount}
+                      onChange={(e) => setEditFormData({ ...editFormData, maxAmount: e.target.value })}
+                      placeholder="5000"
+                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      onWheel={(e) => e.target.blur()}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

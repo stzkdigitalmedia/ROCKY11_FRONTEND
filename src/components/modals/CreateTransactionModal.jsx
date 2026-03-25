@@ -282,7 +282,7 @@ const CreateTransactionModal = ({
 														onChange={() => onBranchChange(branch.branchName)}
 														className="text-blue-600 focus:ring-blue-500"
 													/>
-													<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? 'INSTANT PAYOUT (₹500-₹5000)' : branch.branchName}</span>
+													<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 500}-₹${user?.teirId?.maxAmount ?? 5000})` : branch.branchName}</span>
 												</div>
 											</div>
 										))}
@@ -315,7 +315,7 @@ const CreateTransactionModal = ({
 															onChange={() => onBranchChange(branch.branchName)}
 															className="text-blue-600 focus:ring-blue-500"
 														/>
-														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? 'INSTANT PAYOUT (₹500-₹5000)' : branch.branchName}</span>
+														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 500}-₹${user?.teirId?.maxAmount ?? 5000})` : branch.branchName}</span>
 													</div>
 												</div>
 											))}
@@ -447,13 +447,15 @@ const CreateTransactionModal = ({
 											return;
 										}
 										if (selectedBranch === 'ALLINONE') {
-											const amt = Number(transactionForm.amount);
-											if (!amt || amt < 500 || amt > 5000) {
-												e.preventDefault();
-												toast.error('INSTANT PAYOUT sirf ₹500 - ₹5000 ke liye available hai. Kripya dusra payment method select karein.');
-												return;
-											}
-										}
+                                            const amt = Number(transactionForm.amount);
+                                            const min = user?.teirId?.minAmount ?? 500;
+                                            const max = user?.teirId?.maxAmount ?? 5000;
+                                            if (!amt || amt < min || amt > max) {
+                                                e.preventDefault();
+                                                toast.error(`INSTANT PAYOUT sirf ₹${min} - ₹${max} ke liye available hai. Kripya dusra payment method select karein.`);
+                                                return;
+                                            }
+                                        }
 
 									}}
 								>
