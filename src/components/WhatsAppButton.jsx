@@ -57,7 +57,7 @@ const WhatsAppButton = () => {
 
       setChatUrl(`${baseUrl}?${params.toString()}`);
     } catch (err) {
-      setError("Something is wrong");
+       window.open("https://wa.link/rockybookio", "_blank")
       console.error("Chat error:", err);
     } finally {
       setLoading(false);
