@@ -103,6 +103,11 @@ function App() {
                 <AllInOneReq />
               </SuperAdminRoute>
             } />
+            <Route path="/quickpayreq" element={
+              <SuperAdminRoute>
+                <AllInOneReq />
+              </SuperAdminRoute>
+            } />
             <Route path="/peer/banks" element={
               <PeerRoute>
                 <PeerBanks />

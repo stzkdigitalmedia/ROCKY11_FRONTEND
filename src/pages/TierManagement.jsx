@@ -21,8 +21,6 @@ const TierManagement = () => {
     branches: [],
     teir_transaction_amount: '',
     teir_no_of_transaction: '',
-    minAmount: '',
-    maxAmount: '',
   });
   const [showDeleteTierModal, setShowDeleteTierModal] = useState(false);
   const [deleteTierLoading, setDeleteTierLoading] = useState(false);
@@ -30,7 +28,7 @@ const TierManagement = () => {
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
   const [addBranchLoading, setAddBranchLoading] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(null);
-  const [newBranchData, setNewBranchData] = useState({ branchName: '', isActive: true });
+  const [newBranchData, setNewBranchData] = useState({ branchName: '', isActive: true, is_deposit: true, is_withdraw: true, min_deposit: 0, max_deposit: 0, min_withdraw: 0, max_withdraw: 0 });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState(null);
@@ -38,11 +36,9 @@ const TierManagement = () => {
   const [manageUsersLoading, setManageUsersLoading] = useState(false);
   const [formData, setFormData] = useState({
     teirName: '',
-    branches: [{ branchName: '', isActive: true }],
+    branches: [{ branchName: '', isActive: true, is_deposit: true, is_withdraw: true, min_deposit: 0, max_deposit: 0, min_withdraw: 0, max_withdraw: 0 }],
     teir_transaction_amount: '',
     teir_no_of_transaction: '',
-    minAmount: '',
-    maxAmount: '',
   });
   const toast = useToastContext();
 
@@ -81,6 +77,9 @@ const TierManagement = () => {
         break;
       case 'allinreq':
         navigate('/allinreq');
+        break;
+      case 'quickpayreq':
+        navigate('/quickpayreq');
         break;
       case 'panels':
         navigate('/panels');
@@ -134,10 +133,7 @@ const TierManagement = () => {
   const updateTier = async () => {
     if (!editingTier) return;
 
-    const hasAllInOne = editFormData.branches.some(b => b.branchName === 'ALLINONE');
-    const payload = hasAllInOne
-      ? { ...editFormData, minAmount: Number(editFormData.minAmount), maxAmount: Number(editFormData.maxAmount) }
-      : { teirName: editFormData.teirName, branches: editFormData.branches, teir_transaction_amount: editFormData.teir_transaction_amount, teir_no_of_transaction: editFormData.teir_no_of_transaction };
+    const payload = { teirName: editFormData.teirName, branches: editFormData.branches, teir_transaction_amount: editFormData.teir_transaction_amount, teir_no_of_transaction: editFormData.teir_no_of_transaction };
 
     setEditTierLoading(true);
     try {
@@ -145,7 +141,7 @@ const TierManagement = () => {
       toast.success('Tier updated successfully!');
       setShowEditTierModal(false);
       setEditingTier(null);
-      setEditFormData({ teirName: '', branches: [], teir_transaction_amount: '', teir_no_of_transaction: '', minAmount: '', maxAmount: '' });
+      setEditFormData({ teirName: '', branches: [], teir_transaction_amount: '', teir_no_of_transaction: '' });
       fetchTiers();
     } catch (error) {
       toast.error('Failed to update tier');
@@ -249,7 +245,7 @@ const TierManagement = () => {
   const addBranch = () => {
     setFormData({
       ...formData,
-      branches: [...formData.branches, { branchName: '', isActive: true }]
+      branches: [...formData.branches, { branchName: '', isActive: true, is_deposit: true, is_withdraw: true, min_deposit: 0, max_deposit: 0, min_withdraw: 0, max_withdraw: 0 }]
     });
   };
 
@@ -277,22 +273,12 @@ const TierManagement = () => {
     e.preventDefault();
     setCreateLoading(true);
 
-    const hasAllInOne = formData.branches.some(b => b.branchName === 'ALLINONE');
-    const payload = hasAllInOne
-      ? {
-        teirName: formData.teirName,
-        branches: formData.branches,
-        teir_transaction_amount: formData.teir_transaction_amount,
-        teir_no_of_transaction: formData.teir_no_of_transaction,
-        minAmount: Number(formData.minAmount),
-        maxAmount: Number(formData.maxAmount),
-      }
-      : {
-        teirName: formData.teirName,
-        branches: formData.branches,
-        teir_transaction_amount: formData.teir_transaction_amount,
-        teir_no_of_transaction: formData.teir_no_of_transaction,
-      };
+    const payload = {
+      teirName: formData.teirName,
+      branches: formData.branches,
+      teir_transaction_amount: formData.teir_transaction_amount,
+      teir_no_of_transaction: formData.teir_no_of_transaction,
+    };
 
     try {
       const response = await apiHelper.post('/tier/createTier', payload);
@@ -301,11 +287,9 @@ const TierManagement = () => {
         setShowCreateModal(false);
         setFormData({
           teirName: '',
-          branches: [{ branchName: '', isActive: true }],
+          branches: [{ branchName: '', isActive: true, is_deposit: true, is_withdraw: true, min_deposit: 0, max_deposit: 0, min_withdraw: 0, max_withdraw: 0 }],
           teir_transaction_amount: '',
           teir_no_of_transaction: '',
-          minAmount: '',
-          maxAmount: '',
         });
         fetchTiers();
       }
@@ -406,12 +390,16 @@ const TierManagement = () => {
                                     teirName: tier.teirName,
                                     branches: tier.branches?.map(branch => ({
                                       branchName: branch.branchName,
-                                      isActive: branch.isActive
+                                      isActive: branch.isActive,
+                                      is_deposit: branch.is_deposit ?? true,
+                                      is_withdraw: branch.is_withdraw ?? true,
+                                      min_deposit: branch.min_deposit ?? 0,
+                                      max_deposit: branch.max_deposit ?? 0,
+                                      min_withdraw: branch.min_withdraw ?? 0,
+                                      max_withdraw: branch.max_withdraw ?? 0,
                                     })) || [],
                                     teir_transaction_amount: tier.teir_transaction_amount,
                                     teir_no_of_transaction: tier.teir_no_of_transaction,
-                                    minAmount: tier.minAmount ?? '',
-                                    maxAmount: tier.maxAmount ?? '',
                                   });
                                   setShowEditTierModal(true);
                                 }}
@@ -538,7 +526,7 @@ const TierManagement = () => {
               <p className="text-blue-100 text-sm mt-1">Configure a new tier with transaction limits</p>
             </div>
 
-            <form onSubmit={handleCreateTier} className="p-6 space-y-5">
+            <form onSubmit={handleCreateTier} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Tier Name
@@ -563,32 +551,56 @@ const TierManagement = () => {
                 </label>
                 <div className="space-y-3">
                   {formData.branches.map((branch, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={branch.branchName}
-                        onChange={(e) => handleBranchChange(index, 'branchName', e.target.value)}
-                        placeholder="Enter branch name"
-                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        required
-                      />
-                      <select
-                        value={branch.isActive}
-                        onChange={(e) => handleBranchChange(index, 'isActive', e.target.value === 'true')}
-                        className="px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value={true}>Active</option>
-                        <option value={false}>Inactive</option>
-                      </select>
-                      {formData.branches.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeBranch(index)}
-                          className="px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    <div key={index} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={branch.branchName}
+                          onChange={(e) => handleBranchChange(index, 'branchName', e.target.value)}
+                          placeholder="Enter branch name"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          required
+                        />
+                        <select
+                          value={branch.isActive}
+                          onChange={(e) => handleBranchChange(index, 'isActive', e.target.value === 'true')}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          ✕
-                        </button>
-                      )}
+                          <option value={true}>Active</option>
+                          <option value={false}>Inactive</option>
+                        </select>
+                        {formData.branches.length > 1 && (
+                          <button type="button" onClick={() => removeBranch(index)} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">✕</button>
+                        )}
+                      </div>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={branch.is_deposit ?? true} onChange={(e) => handleBranchChange(index, 'is_deposit', e.target.checked)} className="w-4 h-4 text-blue-600" />
+                          Deposit
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={branch.is_withdraw ?? true} onChange={(e) => handleBranchChange(index, 'is_withdraw', e.target.checked)} className="w-4 h-4 text-blue-600" />
+                          Withdraw
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Min Deposit</label>
+                          <input type="number" value={branch.min_deposit ?? 0} onChange={(e) => handleBranchChange(index, 'min_deposit', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Max Deposit</label>
+                          <input type="number" value={branch.max_deposit ?? 0} onChange={(e) => handleBranchChange(index, 'max_deposit', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Min Withdraw</label>
+                          <input type="number" value={branch.min_withdraw ?? 0} onChange={(e) => handleBranchChange(index, 'min_withdraw', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Max Withdraw</label>
+                          <input type="number" value={branch.max_withdraw ?? 0} onChange={(e) => handleBranchChange(index, 'max_withdraw', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                      </div>
                     </div>
                   ))}
                   <button
@@ -636,42 +648,6 @@ const TierManagement = () => {
                   onWheel={(e) => e.target.blur()}
                   required
                 />
-              </div>
-
-
-              <div className="grid grid-cols-2 gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Amount (ALLINONE)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
-                    <input
-                      type="number"
-                      name="minAmount"
-                      value={formData.minAmount}
-                      onChange={handleInputChange}
-                      placeholder="500"
-                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      onWheel={(e) => e.target.blur()}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Amount (ALLINONE)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
-                    <input
-                      type="number"
-                      name="maxAmount"
-                      value={formData.maxAmount}
-                      onChange={handleInputChange}
-                      placeholder="5000"
-                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      onWheel={(e) => e.target.blur()}
-                      required
-                    />
-                  </div>
-                </div>
               </div>
 
 
@@ -735,22 +711,52 @@ const TierManagement = () => {
                 </label>
                 <div className="space-y-3 max-h-40 overflow-y-auto">
                   {editFormData.branches.map((branch, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={branch.branchName}
-                        onChange={(e) => handleEditBranchChange(index, 'branchName', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                      <select
-                        value={branch.isActive}
-                        onChange={(e) => handleEditBranchChange(index, 'isActive', e.target.value === 'true')}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value={true}>Active</option>
-                        <option value={false}>Inactive</option>
-                      </select>
+                    <div key={index} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={branch.branchName}
+                          onChange={(e) => handleEditBranchChange(index, 'branchName', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                        <select
+                          value={branch.isActive}
+                          onChange={(e) => handleEditBranchChange(index, 'isActive', e.target.value === 'true')}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value={true}>Active</option>
+                          <option value={false}>Inactive</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={branch.is_deposit ?? true} onChange={(e) => handleEditBranchChange(index, 'is_deposit', e.target.checked)} className="w-4 h-4 text-blue-600" />
+                          Deposit
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox" checked={branch.is_withdraw ?? true} onChange={(e) => handleEditBranchChange(index, 'is_withdraw', e.target.checked)} className="w-4 h-4 text-blue-600" />
+                          Withdraw
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Min Deposit</label>
+                          <input type="number" value={branch.min_deposit ?? 0} onChange={(e) => handleEditBranchChange(index, 'min_deposit', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Max Deposit</label>
+                          <input type="number" value={branch.max_deposit ?? 0} onChange={(e) => handleEditBranchChange(index, 'max_deposit', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Min Withdraw</label>
+                          <input type="number" value={branch.min_withdraw ?? 0} onChange={(e) => handleEditBranchChange(index, 'min_withdraw', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Max Withdraw</label>
+                          <input type="number" value={branch.max_withdraw ?? 0} onChange={(e) => handleEditBranchChange(index, 'max_withdraw', Number(e.target.value))} placeholder="0" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onWheel={(e) => e.target.blur()} />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -786,38 +792,6 @@ const TierManagement = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Amount (ALLINONE)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
-                    <input
-                      type="number"
-                      value={editFormData.minAmount}
-                      onChange={(e) => setEditFormData({ ...editFormData, minAmount: e.target.value })}
-                      placeholder="500"
-                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      onWheel={(e) => e.target.blur()}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Amount (ALLINONE)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
-                    <input
-                      type="number"
-                      value={editFormData.maxAmount}
-                      onChange={(e) => setEditFormData({ ...editFormData, maxAmount: e.target.value })}
-                      placeholder="5000"
-                      className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      onWheel={(e) => e.target.blur()}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="p-6 border-t border-gray-200">
@@ -947,13 +921,42 @@ const TierManagement = () => {
                 </select>
               </div>
 
+              <div className="flex gap-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={newBranchData.is_deposit} onChange={(e) => setNewBranchData({ ...newBranchData, is_deposit: e.target.checked })} className="w-4 h-4 text-green-600" />
+                  Deposit
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={newBranchData.is_withdraw} onChange={(e) => setNewBranchData({ ...newBranchData, is_withdraw: e.target.checked })} className="w-4 h-4 text-green-600" />
+                  Withdraw
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Min Deposit</label>
+                  <input type="number" value={newBranchData.min_deposit} onChange={(e) => setNewBranchData({ ...newBranchData, min_deposit: Number(e.target.value) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" onWheel={(e) => e.target.blur()} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Max Deposit</label>
+                  <input type="number" value={newBranchData.max_deposit} onChange={(e) => setNewBranchData({ ...newBranchData, max_deposit: Number(e.target.value) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" onWheel={(e) => e.target.blur()} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Min Withdraw</label>
+                  <input type="number" value={newBranchData.min_withdraw} onChange={(e) => setNewBranchData({ ...newBranchData, min_withdraw: Number(e.target.value) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" onWheel={(e) => e.target.blur()} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Max Withdraw</label>
+                  <input type="number" value={newBranchData.max_withdraw} onChange={(e) => setNewBranchData({ ...newBranchData, max_withdraw: Number(e.target.value) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" onWheel={(e) => e.target.blur()} />
+                </div>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddBranchModal(false);
                     setSelectedTierId(null);
-                    setNewBranchData({ branchName: '', isActive: true });
+                    setNewBranchData({ branchName: '', isActive: true, is_deposit: true, is_withdraw: true, min_deposit: 0, max_deposit: 0, min_withdraw: 0, max_withdraw: 0 });
                   }}
                   className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                 >

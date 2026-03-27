@@ -112,6 +112,7 @@ const UserDashboard = () => {
 	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	const [notification, setNotification] = useState(null);
+	const [userAnnouncement, setUserAnnouncement] = useState('');
 	const { on, off } = useSocket(user?.clientName);
 
 	const showNotification = (message, type = "success") => {
@@ -1085,7 +1086,7 @@ const UserDashboard = () => {
 
 				// Handle different transaction types
 				if (transactionForm?.transactionType === 'Deposit') {
-					// For all non-DR branches - redirect to powerdreams
+					// For all non-ROCKY11 branches - redirect to powerdreams
 					toast.info('Processing payment... Please wait');
 					if (transaction.mode == 'LEOPAY') {
 						setTimeout(() => {
@@ -1167,6 +1168,9 @@ const UserDashboard = () => {
 		fetchGames();
 		fetchSubAccounts();
 		fetchUserBalance();
+		apiHelper.get('/announcement/getAnnouncement')
+			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
+			.catch(() => { });
 	}, []);
 
 	// Smart polling for sub accounts - only when there are pending statuses
@@ -1279,6 +1283,16 @@ const UserDashboard = () => {
 					</div>
 				</div>
 
+				{/* Marquee */}
+				<div className="mt-2 mx-2 overflow-hidden rounded-xl bg-[#1a1a2e] border border-[#1477b0]/30 py-2 flex items-center gap-2 px-3">
+					<span className="text-lg flex-shrink-0">📢</span>
+					<div className="overflow-hidden flex-1">
+						<marquee className="text-sm font-medium text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
+							{userAnnouncement}
+						</marquee>
+					</div>
+				</div>
+
 				{/* Available Bonuses */}
 				<AvailableBonuses
 					userId={user?._id}
@@ -1287,7 +1301,7 @@ const UserDashboard = () => {
 				/>
 
 				{/* Sub Accounts Slider */}
-				<div className="m-1 rounded-2xl mt-[22px] mx-2 p-4 sm:p-6 bg-[#1b1b1b] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+				<div className="m-1 rounded-2xl mt-2 mx-2 p-4 sm:p-6 bg-[#1b1b1b] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl">
 					<div className="flex justify-between items-center mb-6">
 						<div>
 							<h2 className="text-xl font-semibold text-white">

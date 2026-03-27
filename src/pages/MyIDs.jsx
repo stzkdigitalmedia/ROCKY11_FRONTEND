@@ -427,7 +427,7 @@ const MyIDs = ({
       </div>
 
       {/* Fixed Top Tabs */}
-      <div className="fixed top-[55px] mx-auto max-w-[769px] left-0 right-0 z-40 bg-[#0e0e0e] px-3 sm:px-5 py-3 text-white">
+      <div className="fixed top-[95px] mx-auto max-w-[769px] left-0 right-0 z-40 bg-[#0e0e0e] px-3 sm:px-5 py-3 text-white">
         <div className="max-w-[769px] mx-auto">
           <div className="flex bg-[#0e0e0e] gap-2 rounded-xl overflow-hidden">
             <button
@@ -457,7 +457,7 @@ const MyIDs = ({
       </div>
 
       {/* Scrollable Content */}
-      <div className="pt-[120px] sm:pt-[125px] pb-20 min-h-screen bg-[#0e0e0e] p-3 sm:px-5 max-w-[769px] mx-auto text-white">
+      <div className="pt-[160px] sm:pt-[170px] pb-20 min-h-screen bg-[#0e0e0e] p-3 sm:px-5 max-w-[769px] mx-auto text-white">
         {/* ================= CREATE ID ================= */}
         {activeTab === "createId" && (
           <>

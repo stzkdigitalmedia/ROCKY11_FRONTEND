@@ -915,32 +915,19 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
 
           {/* Page Numbers */}
           <div className="flex gap-1">
-            {Array.from({ length: Math.min(totalPages, 100) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 100) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
-
-              return (
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p >= page - 2 && p <= page + 2)
+              .map(pageNum => (
                 <button
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
                   disabled={loading}
-                  className={`px-3 py-2 text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${page === pageNum
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-gray-300 hover:bg-gray-50'
+                  className={`px-3 py-2 text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${page === pageNum ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50'
                     }`}
                 >
                   {pageNum}
                 </button>
-              );
-            })}
+              ))}
           </div>
 
           <button
@@ -1240,6 +1227,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">GameName</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Remining Amo.</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
@@ -1279,11 +1267,16 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                           <p className="text-sm text-gray-900">{transaction?.gameName || 'N/A'}</p>
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-sm text-gray-900">{transaction.mode === 'ALLINONE' ? 'INSTANT PAYOUT' : transaction.mode || 'N/A'}</p>
+                          <p className="text-sm text-gray-900">{transaction.mode === 'ALLINONE' ? 'INSTANT PAYOUT' : transaction.mode === 'LEOPAY' ? 'QUICKPAY' : transaction.mode || 'N/A'}</p>
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-sm font-semibold text-green-600">
                             ₹{transaction?.amount || 0}
+                          </p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-sm font-semibold text-green-600">
+                            ₹{transaction?.after_Wallet_Balance || 0}
                           </p>
                         </td>
                         <td className="py-4 px-4">

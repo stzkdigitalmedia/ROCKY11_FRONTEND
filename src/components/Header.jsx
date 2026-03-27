@@ -10,6 +10,7 @@ import CreateTransactionModal from "./modals/CreateTransactionModal";
 const Header = () => {
 	const { user } = useAuth(true);
 	const { t } = useTranslation();
+	const [userAnnouncement, setUserAnnouncement] = useState('');
 	const toast = useToastContext();
 	const [showCreateTransaction, setShowCreateTransaction] = useState(false);
 	const [transactionForm, setTransactionForm] = useState({
@@ -236,6 +237,12 @@ const Header = () => {
 	};
 
 	useEffect(() => {
+		apiHelper.get('/announcement/getAnnouncement')
+			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
+			.catch(() => { });
+	}, []);
+
+	useEffect(() => {
 		if (user?._id) {
 			fetchUserBalance();
 		}
@@ -252,35 +259,47 @@ const Header = () => {
 
 	return (
 		<>
-			<header className="max-w-[769px] mx-auto bg-[#3f3f3f] h-[56px] flex items-center px-3 shadow-md">
-				{/* LEFT */}
-				<div className="flex items-center gap-3">
-					<Link to="/">
-						<img
-							src="/logoforlogin.png"
-							alt="Logo"
-							className="w-25 object-contain"
-						/>
-					</Link>
-				</div>
+			<div className="max-w-[769px] mx-auto bg-[#0e0e0e]">
+				<header className="max-w-[769px] mx-auto bg-[#3f3f3f] h-[56px] flex items-center px-3 shadow-md">
+					{/* LEFT */}
+					<div className="flex items-center gap-3">
+						<Link to="/">
+							<img
+								src="/logoforlogin.png"
+								alt="Logo"
+								className="w-25 object-contain"
+							/>
+						</Link>
+					</div>
 
-				{/* RIGHT */}
-				<div className="ml-auto flex items-center gap-2">
-					<p className="text-[12px] text-white">
-						{user?.balance.toLocaleString()} Bal
-					</p>
-					<button
-						onClick={() => {
-							setTransactionForm({ amount: "", transactionType: "Deposit" });
-							setShowCreateTransaction(true);
-							fetchUserBalance();
-						}}
-						className="bg-white text-black text-sm px-4 py-1.5 rounded-md transition"
-					>
-						Deposit
-					</button>
+					{/* RIGHT */}
+					<div className="ml-auto flex items-center gap-2">
+						<p className="text-[12px] text-white">
+							{user?.balance.toLocaleString()} Bal
+						</p>
+						<button
+							onClick={() => {
+								setTransactionForm({ amount: "", transactionType: "Deposit" });
+								setShowCreateTransaction(true);
+								fetchUserBalance();
+							}}
+							className="bg-white text-black text-sm px-4 py-1.5 rounded-md transition"
+						>
+							Deposit
+						</button>
+					</div>
+				</header>
+
+				{/* Marquee */}
+				<div className="mt-2 mx-5 overflow-hidden rounded-md bg-[#1a1a2e] border border-[#1477b0]/30 py-0.5 flex items-center gap-2 px-3">
+					<span className="text-lg flex-shrink-0">📢</span>
+					<div className="overflow-hidden flex-1">
+						<marquee className="text-sm font-medium text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
+							{userAnnouncement}
+						</marquee>
+					</div>
 				</div>
-			</header>
+			</div>
 
 			{/* Create Transaction Modal */}
 			{showCreateTransaction && (
@@ -306,7 +325,7 @@ const Header = () => {
 					onDeleteBank={handleDeleteBank}
 					onAddBankClick={() => setShowAddBankModal(true)}
 					fetchUserBalance={fetchUserBalance}
-					// fetchBanks={fetchBanks}
+				// fetchBanks={fetchBanks}
 				/>
 			)}
 		</>

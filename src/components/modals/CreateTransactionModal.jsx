@@ -446,16 +446,25 @@ const CreateTransactionModal = ({
 											toast.error("Please select your bank account");
 											return;
 										}
-										if (selectedBranch === 'ALLINONE') {
-                                            const amt = Number(transactionForm.amount);
-                                            const min = user?.teirId?.minAmount ?? 500;
-                                            const max = user?.teirId?.maxAmount ?? 5000;
-                                            if (!amt || amt < min || amt > max) {
-                                                e.preventDefault();
-                                                toast.error(`INSTANT PAYOUT sirf ₹${min} - ₹${max} ke liye available hai. Kripya dusra payment method select karein.`);
-                                                return;
-                                            }
-                                        }
+										const amt = Number(transactionForm.amount);
+										if (selectedBranch && selectedBranch !== 'ROCKY11') {
+											const branch = user?.teirId?.branches?.find(b => b.branchName === selectedBranch);
+											if (branch) {
+												const isDeposit = transactionForm?.transactionType === 'Deposit';
+												const min = isDeposit ? (branch.min_deposit ?? 0) : (branch.min_withdraw ?? 0);
+												const max = isDeposit ? (branch.max_deposit ?? 0) : (branch.max_withdraw ?? 0);
+												if (min > 0 && amt < min) {
+													e.preventDefault();
+													toast.error(`Minimum amount for ${selectedBranch} is ₹${min}`);
+													return;
+												}
+												if (max > 0 && amt > max) {
+													e.preventDefault();
+													toast.error(`Maximum amount for ${selectedBranch} is ₹${max}`);
+													return;
+												}
+											}
+										}
 
 									}}
 								>

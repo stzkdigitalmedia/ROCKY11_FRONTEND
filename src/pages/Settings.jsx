@@ -18,7 +18,55 @@ const Settings = () => {
   const [tiers, setTiers] = useState([]);
   const [selectedTierId, setSelectedTierId] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [announcement, setAnnouncement] = useState(null);
+  const [announcementLoading, setAnnouncementLoading] = useState(false);
+  const [showEditAnnouncementModal, setShowEditAnnouncementModal] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({ demoAnnouncement: '', userAnnouncement: '', isActive: true, bannerImageUrl: null });
+  const [announcementUpdateLoading, setAnnouncementUpdateLoading] = useState(false);
   const toast = useToastContext();
+
+  const fetchAnnouncement = async () => {
+    setAnnouncementLoading(true);
+    try {
+      const response = await apiHelper.get('/announcement/getAnnouncement');
+      setAnnouncement(response?.data || response);
+    } catch (error) {
+      toast.error('Failed to fetch announcement');
+    } finally {
+      setAnnouncementLoading(false);
+    }
+  };
+
+  const openEditAnnouncementModal = () => {
+    setAnnouncementForm({
+      demoAnnouncement: announcement?.demoAnnouncement || '',
+      userAnnouncement: announcement?.userAnnouncement || '',
+      isActive: announcement?.isActive ?? true,
+      bannerImageUrl: null,
+    });
+    setShowEditAnnouncementModal(true);
+  };
+
+  const updateAnnouncement = async () => {
+    setAnnouncementUpdateLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('demoAnnouncement', announcementForm.demoAnnouncement);
+      formData.append('userAnnouncement', announcementForm.userAnnouncement);
+      formData.append('isActive', announcementForm.isActive);
+      if (announcementForm.bannerImageUrl) {
+        formData.append('bannerImageUrl', announcementForm.bannerImageUrl);
+      }
+      await apiHelper.putFormData('/announcement/updateAnnouncement', formData);
+      toast.success('Announcement updated successfully!');
+      setShowEditAnnouncementModal(false);
+      fetchAnnouncement();
+    } catch (error) {
+      toast.error('Failed to update announcement');
+    } finally {
+      setAnnouncementUpdateLoading(false);
+    }
+  };
 
   const fetchTiers = async () => {
     try {
@@ -83,6 +131,7 @@ const Settings = () => {
 
   useEffect(() => {
     fetchSystemSettings();
+    fetchAnnouncement();
   }, []);
 
   const handleLogout = async () => {
@@ -112,7 +161,7 @@ const Settings = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
-            case 'overview':
+      case 'overview':
         navigate('/overview');
         break;
       case 'games':
@@ -120,6 +169,9 @@ const Settings = () => {
         break;
       case 'allinreq':
         navigate('/allinreq');
+        break;
+      case 'quickpayreq':
+        navigate('/quickpayreq');
         break;
       case 'panels':
         navigate('/panels');
@@ -170,6 +222,61 @@ const Settings = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Announcement</h3>
+              {announcementLoading ? (
+                <div className="text-center py-4">
+                  <div className="loading-spinner mx-auto mb-2" style={{ width: '24px', height: '24px' }}></div>
+                  <p className="text-gray-600 text-sm">Loading...</p>
+                </div>
+              ) : announcement ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Demo Announcement</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">User Announcement</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Banner Image</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Status</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Created At</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Updated At</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-900">{announcement.demoAnnouncement || 'N/A'}</td>
+                        <td className="px-4 py-3 text-gray-900">{announcement.userAnnouncement || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          {announcement.bannerImage ? (
+                            <img src={announcement.bannerImage} alt="Banner" className="h-16 rounded-lg object-cover" />
+                          ) : 'N/A'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${announcement.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {announcement.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-900">{announcement.createdAt ? new Date(announcement.createdAt).toLocaleString('en-IN') : 'N/A'}</td>
+                        <td className="px-4 py-3 text-gray-900">{announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('en-IN') : 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={openEditAnnouncementModal}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Announcement"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No announcement found.</p>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Tier System Settings</h3>
 
               {loading ? (
@@ -212,6 +319,78 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Announcement Modal */}
+      {showEditAnnouncementModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Announcement</h3>
+              <button onClick={() => setShowEditAnnouncementModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Demo Announcement</label>
+                <input
+                  type="text"
+                  value={announcementForm.demoAnnouncement}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, demoAnnouncement: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">User Announcement</label>
+                <input
+                  type="text"
+                  value={announcementForm.userAnnouncement}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, userAnnouncement: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, bannerImageUrl: e.target.files[0] || null })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {announcement?.bannerImage && !announcementForm.bannerImageUrl && (
+                  <img src={announcement.bannerImage} alt="Current Banner" className="mt-2 h-16 rounded-lg object-cover" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={announcementForm.isActive}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, isActive: e.target.value === 'true' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={true}>Active</option>
+                  <option value={false}>Inactive</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowEditAnnouncementModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateAnnouncement}
+                  disabled={announcementUpdateLoading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {announcementUpdateLoading ? 'Updating...' : 'Update'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {showEditModal && (
