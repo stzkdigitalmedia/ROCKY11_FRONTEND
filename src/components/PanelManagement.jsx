@@ -53,13 +53,13 @@ const PanelManagement = () => {
   const fetchPanels = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await apiHelper.get(`/panel/getAllPanels?page=${page}&limit=10`);
+      const response = await apiHelper.get(`/panel/getAllPanels?page=${page}&limit=100`);
       // console.log('API Response:', response); // Debug log
-
+      
       // Handle different response structures
       const panelsData = response.data?.panels || response.panels || response.data || response || [];
       const totalCount = response.data?.total || response.total || response.data?.count || panelsData.length || 0;
-
+      
       setPanels(Array.isArray(panelsData) ? panelsData : []);
       setTotalPages(Math.ceil(totalCount / 10));
     } catch (error) {
@@ -96,16 +96,16 @@ const PanelManagement = () => {
 
   const handleStatusToggle = async (panelId, currentStatus) => {
     // Immediately update local state for instant UI feedback
-    setPanels(prevPanels =>
+    setPanels(prevPanels => 
       prevPanels.map(panel => {
         if ((panel._id || panel.id) === panelId) {
           return {
             ...panel,
             isActive: panel.isActive !== undefined ? !panel.isActive : !(panel.status === 'active' || panel.active),
-            status: panel.isActive !== undefined
+            status: panel.isActive !== undefined 
               ? (!panel.isActive ? 'active' : 'inactive')
               : (panel.status === 'active' || panel.active ? 'inactive' : 'active'),
-            active: panel.isActive !== undefined
+            active: panel.isActive !== undefined 
               ? !panel.isActive
               : !(panel.status === 'active' || panel.active)
           };
@@ -119,16 +119,16 @@ const PanelManagement = () => {
       showToast('Panel status updated successfully', 'success');
     } catch (error) {
       // Revert the local state change if API call fails
-      setPanels(prevPanels =>
+      setPanels(prevPanels => 
         prevPanels.map(panel => {
           if ((panel._id || panel.id) === panelId) {
             return {
               ...panel,
               isActive: panel.isActive !== undefined ? !panel.isActive : !(panel.status === 'active' || panel.active),
-              status: panel.isActive !== undefined
+              status: panel.isActive !== undefined 
                 ? (!panel.isActive ? 'inactive' : 'active')
                 : (panel.status === 'active' || panel.active ? 'active' : 'inactive'),
-              active: panel.isActive !== undefined
+              active: panel.isActive !== undefined 
                 ? !panel.isActive
                 : !(panel.status === 'active' || panel.active)
             };
@@ -141,9 +141,9 @@ const PanelManagement = () => {
   };
 
   const handleDefaultToggle = async (panelId, currentDefault, panel) => {
-    setPanels(prevPanels =>
-      prevPanels.map(p =>
-        (p._id || p.id) === panelId
+    setPanels(prevPanels => 
+      prevPanels.map(p => 
+        (p._id || p.id) === panelId 
           ? { ...p, isDefault: !currentDefault }
           : p
       )
@@ -156,9 +156,9 @@ const PanelManagement = () => {
       });
       showToast('Panel default status updated successfully', 'success');
     } catch (error) {
-      setPanels(prevPanels =>
-        prevPanels.map(p =>
-          (p._id || p.id) === panelId
+      setPanels(prevPanels => 
+        prevPanels.map(p => 
+          (p._id || p.id) === panelId 
             ? { ...p, isDefault: currentDefault }
             : p
         )
@@ -168,9 +168,9 @@ const PanelManagement = () => {
   };
 
   const handleShowToggle = async (panelId, currentShow, panel) => {
-    setPanels(prevPanels =>
-      prevPanels.map(p =>
-        (p._id || p.id) === panelId
+    setPanels(prevPanels => 
+      prevPanels.map(p => 
+        (p._id || p.id) === panelId 
           ? { ...p, isShow: !currentShow }
           : p
       )
@@ -183,9 +183,9 @@ const PanelManagement = () => {
       });
       showToast('Panel show status updated successfully', 'success');
     } catch (error) {
-      setPanels(prevPanels =>
-        prevPanels.map(p =>
-          (p._id || p.id) === panelId
+      setPanels(prevPanels => 
+        prevPanels.map(p => 
+          (p._id || p.id) === panelId 
             ? { ...p, isShow: currentShow }
             : p
         )
@@ -260,7 +260,7 @@ const PanelManagement = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Shield className="w-5 h-5" style={{ color: '#1477b0' }} />
+              <Shield className="w-5 h-5" style={{color: '#1477b0'}} />
               Panel Management
             </h2>
             <p className="text-gray-600 text-sm mt-1">Create and manage exchange panels</p>
@@ -294,7 +294,7 @@ const PanelManagement = () => {
             Found {panels.length} panels
           </div>
         )}
-
+        
         {/* Grouped Panels List */}
         <div className="space-y-6">
           {loading ? (
@@ -313,7 +313,7 @@ const PanelManagement = () => {
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: '#1477b0' }}>
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{backgroundColor: '#1477b0'}}>
                         {panelName.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -328,7 +328,11 @@ const PanelManagement = () => {
                       </div>
                       <div className="text-sm font-bold">
                         <span className="text-gray-700">Available Credits: </span>
-                        <span className="text-green-600">₹{panelGroup[0]?.panelCredit || 0}</span>
+                        {panelGroup[0]?.panelCredit ? (
+                          <span className="text-green-600">₹{panelGroup[0].panelCredit}</span>
+                        ) : (
+                          <span className="text-red-500">NOT FOUND</span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-500">
                         {panelGroup.filter(p => p.isActive !== undefined ? p.isActive : p.status === 'active' || p.active).length} active
@@ -336,7 +340,7 @@ const PanelManagement = () => {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Panels Table in Group */}
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -365,16 +369,17 @@ const PanelManagement = () => {
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${(panel.isActive !== undefined ? panel.isActive : panel.status === 'active' || panel.active)
-                                ? 'bg-green-100 text-green-800'
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                              (panel.isActive !== undefined ? panel.isActive : panel.status === 'active' || panel.active)
+                                ? 'bg-green-100 text-green-800' 
                                 : 'bg-red-100 text-red-800'
-                              }`}>
+                            }`}>
                               {(panel.isActive !== undefined ? panel.isActive : panel.status === 'active' || panel.active) ? 'Active' : 'Inactive'}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-600">
-                            {panel.createdAt ? new Date(panel.createdAt).toLocaleDateString() :
-                              panel.created_at ? new Date(panel.created_at).toLocaleDateString() : 'N/A'}
+                            {panel.createdAt ? new Date(panel.createdAt).toLocaleDateString() : 
+                             panel.created_at ? new Date(panel.created_at).toLocaleDateString() : 'N/A'}
                           </td>
                           <td className="py-3 px-4 text-center">
                             <label className="relative inline-flex items-center cursor-pointer" title="Active/Inactive">
@@ -490,7 +495,7 @@ const PanelManagement = () => {
                     type="text"
                     required
                     value={formData.userName}
-                    onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                    onChange={(e) => setFormData({...formData, userName: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Username"
                   />
@@ -504,7 +509,7 @@ const PanelManagement = () => {
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="Password"
                     />
@@ -526,7 +531,7 @@ const PanelManagement = () => {
                       type={showPin ? 'text' : 'password'}
                       required
                       value={formData.transactionPin}
-                      onChange={(e) => setFormData({ ...formData, transactionPin: e.target.value })}
+                      onChange={(e) => setFormData({...formData, transactionPin: e.target.value})}
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="Transaction PIN"
                     />
@@ -547,7 +552,7 @@ const PanelManagement = () => {
                     type="text"
                     required
                     value={formData.adminLink}
-                    onChange={(e) => setFormData({ ...formData, adminLink: e.target.value })}
+                    onChange={(e) => setFormData({...formData, adminLink: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Admin Link"
                   />
@@ -588,7 +593,7 @@ const PanelManagement = () => {
                   <input
                     type="text"
                     value={editFormData.panelName}
-                    onChange={(e) => setEditFormData({ ...editFormData, panelName: e.target.value })}
+                    onChange={(e) => setEditFormData({...editFormData, panelName: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Panel Name"
                   />
@@ -601,12 +606,12 @@ const PanelManagement = () => {
                   <input
                     type="text"
                     value={editFormData.userName}
-                    onChange={(e) => setEditFormData({ ...editFormData, userName: e.target.value })}
+                    onChange={(e) => setEditFormData({...editFormData, userName: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Username"
                   />
                 </div>
-
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Password
@@ -615,7 +620,7 @@ const PanelManagement = () => {
                     <input
                       type={showEditPassword ? 'text' : 'password'}
                       value={editFormData.password}
-                      onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                      onChange={(e) => setEditFormData({...editFormData, password: e.target.value})}
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="Password"
                     />
@@ -628,7 +633,7 @@ const PanelManagement = () => {
                     </button>
                   </div>
                 </div>
-
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Transaction PIN
@@ -637,7 +642,7 @@ const PanelManagement = () => {
                     <input
                       type={showEditPin ? 'text' : 'password'}
                       value={editFormData.transactionPin}
-                      onChange={(e) => setEditFormData({ ...editFormData, transactionPin: e.target.value })}
+                      onChange={(e) => setEditFormData({...editFormData, transactionPin: e.target.value})}
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="Transaction PIN"
                     />
@@ -657,7 +662,7 @@ const PanelManagement = () => {
                   <input
                     type="text"
                     value={editFormData.adminLink}
-                    onChange={(e) => setEditFormData({ ...editFormData, adminLink: e.target.value })}
+                    onChange={(e) => setEditFormData({...editFormData, adminLink: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Admin Link"
                   />
