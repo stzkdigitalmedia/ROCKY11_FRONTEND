@@ -227,7 +227,7 @@ const CreateTransactionModal = ({
 								onWheel={(e) => e.target.blur()}
 								className="gaming-input"
 								required
-								min={500}
+								// min={500}
 								max={10000000}
 							/>
 						</div>
