@@ -59,6 +59,10 @@ import ReferralFTDCompleteUsers from './pages/ReferralFTDCompleteUsers';
 import ReferralNoTransactionUsers from './pages/ReferralNoTransactionUsers';
 import Overview from './pages/Overview';
 import AllInOneReq from './pages/AllInOneReq';
+import Success from './pages/Success';
+import Failed from './pages/Failed';
+import Pending from './pages/Pending';
+import Cancel from './pages/Cancel';
 
 
 const ToastContext = createContext();
@@ -83,6 +87,10 @@ function App() {
             <Route path="/suprime/super-admin" element={<AdminLogin />} />
             <Route path="/panel-login" element={<PanelLogin />} />
             <Route path="/peer-login" element={<PeerLogin />} />
+            <Route path="/transaction/success" element={<Success />} />
+            <Route path="/transaction/failed" element={<Failed />} />
+            <Route path="/transaction/pending" element={<Pending />} />
+            <Route path="/transaction/cancel" element={<Cancel />} />
             <Route path="/panel-dashboard" element={
               <PanelRoute>
                 <PanelDashboard />

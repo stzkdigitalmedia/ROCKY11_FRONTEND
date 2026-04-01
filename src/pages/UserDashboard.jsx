@@ -1317,8 +1317,8 @@ const UserDashboard = () => {
 				<div className="mt-2 mx-2 overflow-hidden rounded-xl bg-[#1a1a2e] border border-[#1477b0]/30 py-2 flex items-center gap-2 px-3">
 					<span className="text-lg flex-shrink-0">📢</span>
 					<div className="overflow-hidden flex-1">
-						<marquee className="text-sm font-medium text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
-							{userAnnouncement}
+						<marquee className="text-sm mt-1 font-medium text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
+							{userAnnouncement || '	Welcome to Rockybook! Get ready for an epic gaming experience with our exclusive IDs and unbeatable bonuses. Dive in now and level up your play!'}
 						</marquee>
 					</div>
 				</div>

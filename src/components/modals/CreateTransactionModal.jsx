@@ -216,10 +216,14 @@ const CreateTransactionModal = ({
 					<form onSubmit={onSubmit} className="space-y-4">
 						{/* Amount Field */}
 						<div className="form-group">
-							<label className="form-label">Amount (Minimum ₹500)</label>
+							<label className="form-label">
+								{transactionForm?.transactionType === "Deposit"
+									? "Amount (Minimum ₹100)"
+									: "Amount (Minimum ₹500)"}
+							</label>
 							<input
 								type="number"
-								placeholder="Enter amount (min 500)"
+								placeholder={transactionForm?.transactionType === "Deposit" ? "Enter amount (min 100)" : "Enter amount (min 500)"}
 								value={transactionForm.amount}
 								onChange={(e) =>
 									onFormChange({ ...transactionForm, amount: e.target.value })
@@ -227,7 +231,7 @@ const CreateTransactionModal = ({
 								onWheel={(e) => e.target.blur()}
 								className="gaming-input"
 								required
-								min={500}
+								min={transactionForm?.transactionType === "Deposit" ? 100 : 500}
 								max={10000000}
 							/>
 						</div>
