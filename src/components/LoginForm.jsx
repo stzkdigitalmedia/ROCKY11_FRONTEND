@@ -50,6 +50,9 @@ const LoginForm = () => {
 
       toast.success('Login successful!');
 
+      // Set announcement flag BEFORE navigation
+      sessionStorage.setItem('showAnnouncement', 'true');
+
       // Navigate based on role
       if (userRole === 'SA' || userRole === 'SubAdmin') {
         navigate('/dashboard', { replace: true });
@@ -60,11 +63,6 @@ const LoginForm = () => {
       } else {
         navigate('/user-dashboard', { replace: true });
       }
-
-      // Refresh the page after navigation
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
     } catch (error) {
       toast.error('Login failed: ' + (error?.message || 'Unknown error'));
     } finally {
