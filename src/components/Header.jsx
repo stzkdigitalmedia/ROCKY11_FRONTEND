@@ -291,14 +291,14 @@ const Header = () => {
 				</header>
 
 				{/* Marquee */}
-				<div className="mt-2 mx-5 overflow-hidden rounded-md bg-[#1a1a2e] border border-[#1477b0]/30 py-0.5 flex items-center gap-2 px-3">
-					<span className="text-lg flex-shrink-0">📢</span>
-					<div className="overflow-hidden flex-1">
-						<marquee className="text-sm font-medium text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
-							{userAnnouncement}
-						</marquee>
-					</div>
-				</div>
+				<div className="mt-2 mx-[12px] sm:mx-5 overflow-hidden rounded-xl bg-[#1a1a2e] border border-[#1477b0]/30 py-0.5 flex items-center gap-2 px-3">
+                    <span className="text-lg flex-shrink-0">📢</span>
+                    <div className="overflow-hidden flex-1">
+                        <marquee className="text-sm font-medium mt-1.5 text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
+                            {userAnnouncement}
+                        </marquee>
+                    </div>
+                </div>
 			</div>
 
 			{/* Create Transaction Modal */}
