@@ -1925,7 +1925,7 @@ const UserDashboard = () => {
 
 			{/* Bottom padding to prevent content overlap */}
 			{/* Announcement Popup */}
-			{announcement && (
+	{/* {announcement && (
 				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
 					<div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
 						{announcement.image && (
@@ -1945,7 +1945,7 @@ const UserDashboard = () => {
 						</div>
 					</div>
 				</div>
-			)}
+			)} */}
 
 
 
