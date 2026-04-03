@@ -567,32 +567,50 @@ const MyIDs = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (acc.status !== 'Accept') return;
                           setSelectedSubUser(acc);
                           setShowSubUserDeposit(true);
                         }}
-                        className="rounded-full w-8 h-8 text-xs bg-green-600 hover:bg-green-700"
+                        disabled={acc.status !== 'Accept'}
+                        className={`rounded-full w-8 h-8 text-xs ${
+                          acc.status === 'Accept'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-gray-500 opacity-50 cursor-not-allowed'
+                        }`}
                       >
                         D
                       </button>
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
+                          if (acc.status !== 'Accept') return;
                           setSelectedSubUser(acc);
                           await createBalanceLog(acc?.id || acc?._id);
                           setShowSubUserWithdraw(true);
                           fetchSubUserBalance(acc?.id || acc?._id);
                         }}
-                        className="rounded-full w-8 h-8 text-xs bg-red-600 hover:bg-red-700"
+                        disabled={acc.status !== 'Accept'}
+                        className={`rounded-full w-8 h-8 text-xs ${
+                          acc.status === 'Accept'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-gray-500 opacity-50 cursor-not-allowed'
+                        }`}
                       >
                         W
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (acc.status !== 'Accept') return;
                           setSelectedSubUser(acc);
                           setShowResetPassword(true);
                         }}
-                        className="rounded-full w-8 h-8 text-xs bg-[#005993] hover:bg-[#0b5689]"
+                        disabled={acc.status !== 'Accept'}
+                        className={`rounded-full w-8 h-8 text-xs ${
+                          acc.status === 'Accept'
+                            ? 'bg-[#005993] hover:bg-[#0b5689]'
+                            : 'bg-gray-500 opacity-50 cursor-not-allowed'
+                        }`}
                       >
                         P
                       </button>

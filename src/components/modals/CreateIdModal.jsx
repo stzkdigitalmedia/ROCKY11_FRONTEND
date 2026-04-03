@@ -1,4 +1,4 @@
-import { X, Check } from 'lucide-react';
+import { X, Check, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
  * @param {Object} props - Component props
  * @param {boolean} props.isOpen - Controls modal visibility
  * @param {Function} props.onClose - Callback when modal closes
- * @param {Object} props.formData - Form data for ID creation
+ * @param {Object} props.formData - Form data for ID creationYour ID is creating...Your ID is creating...
  * @param {Function} props.onInputChange - Callback for input changes
  * @param {Function} props.onSubmit - Callback for form submission
  * @param {boolean} props.isLoading - Loading state indicator
@@ -23,6 +23,7 @@ const CreateIdModal = ({
   onSubmit,
   isLoading,
   isCreated,
+  isRejected,
   games
 }) => {
 
@@ -57,6 +58,14 @@ const CreateIdModal = ({
             </div>
             <p className="text-lg font-semibold text-green-600 mb-2">{t('idCreated')}</p>
             <p className="text-sm text-gray-600">{t('idCreatedSuccess')}</p>
+          </div>
+        ) : isRejected ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <p className="text-lg font-semibold text-red-600 mb-2">ID Creation Failed</p>
+            <p className="text-sm text-gray-600">Your ID request was rejected. Please contact support. Use Deffrent user Name</p>
           </div>
         ) : isLoading ? (
           // Loading state
