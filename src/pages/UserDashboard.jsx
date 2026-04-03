@@ -114,6 +114,7 @@ const UserDashboard = () => {
 	const [notification, setNotification] = useState(null);
 	const [userAnnouncement, setUserAnnouncement] = useState('');
 	const { on, off } = useSocket(user?.clientName);
+	const [announcement, setAnnouncement] = useState(null); // { text, image }
 
 	const showNotification = (message, type = "success") => {
 		setNotification({ message, type });
@@ -1172,6 +1173,35 @@ const UserDashboard = () => {
 			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
 			.catch(() => { });
 	}, []);
+	useEffect(() => {
+		if (sessionStorage.getItem('showAnnouncement') === 'true') {
+			console.log('🎯 Fetching announcement banner...');
+			apiHelper.get('/announcement/getAnnouncement')
+				.then(res => {
+					console.log('📢 Announcement API Response:', res);
+					const data = res?.data;
+					const text = data?.userAnnouncement || '';
+					const image = data?.bannerImage || '';
+					console.log('📸 Banner Image URL:', image);
+					console.log('📝 Banner Text:', text);
+					if (text || image) {
+						console.log('✅ Setting announcement popup');
+						setAnnouncement({ text, image });
+					} else {
+						console.log('❌ No banner image or text found');
+					}
+				})
+				.catch((err) => {
+					console.error('❌ Failed to fetch announcement:', err);
+				})
+				.finally(() => {
+					console.log('🗑️ Removing showAnnouncement flag');
+					sessionStorage.removeItem('showAnnouncement');
+				});
+		} else {
+			console.log('⏭️ showAnnouncement flag not set, skipping banner');
+		}
+	}, []);
 
 	// Smart polling for sub accounts - only when there are pending statuses
 	useEffect(() => {
@@ -1894,6 +1924,31 @@ const UserDashboard = () => {
 			)}
 
 			{/* Bottom padding to prevent content overlap */}
+			{/* Announcement Popup */}
+	{/* {announcement && (
+				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+					<div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+						{announcement.image && (
+							<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
+						)}
+						<div className="p-4">
+							{announcement.text && (
+								<p className="text-gray-700 text-sm whitespace-pre-wrap mb-4">{announcement.text}</p>
+							)}
+							<button
+								onClick={() => setAnnouncement(null)}
+								className="w-full py-2 rounded-xl text-white font-semibold"
+								style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+							>
+								OK
+							</button>
+						</div>
+					</div>
+				</div>
+			)} */}
+
+
+
 			<BottomNavigation activePage="home" />
 
 			{/* Custom Notification */}
