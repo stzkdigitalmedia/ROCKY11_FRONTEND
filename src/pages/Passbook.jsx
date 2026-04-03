@@ -29,6 +29,9 @@ const Passbook = () => {
   const [screenshotData, setScreenshotData] = useState(null);
   const [screenshotLoading, setScreenshotLoading] = useState(false);
   const [expandedTransactions, setExpandedTransactions] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelTransactionId, setCancelTransactionId] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
@@ -126,6 +129,21 @@ const Passbook = () => {
       toast.error('Failed to fetch screenshot: ' + error.message);
     } finally {
       setScreenshotLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    setCancelLoading(true);
+    try {
+      await apiHelper.patch(`/transaction/cancelWithdrawal/${cancelTransactionId}`);
+      toast.success('Withdrawal request cancelled successfully!');
+      setShowCancelConfirm(false);
+      setCancelTransactionId(null);
+      fetchTransactions();
+    } catch (error) {
+      toast.error('Failed to cancel request: ' + error.message);
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -415,6 +433,25 @@ const Passbook = () => {
                           </button>
                         )
                       }
+
+                      {/* CANCEL REQUEST BUTTON */}
+                      {expandedTransactions === transaction._id &&
+                        transaction?.status === 'Pending' &&
+                        transaction?.transactionType === 'Withdrawal' &&
+                        transaction?.mode === 'PowerPay' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCancelTransactionId(transaction._id);
+                              setShowCancelConfirm(true);
+                            }}
+                            className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-red-500 text-red-500 hover:bg-red-50"
+                          >
+                            <X className="w-4 h-4" />
+                            Cancel Request
+                          </button>
+                        )
+                      }
                     </div>
                   );
                 })
@@ -517,6 +554,37 @@ const Passbook = () => {
         }
 
         <BottomNavigation activePage="passbook" />
+
+        {/* Cancel Confirmation Popup */}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[200]">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cancel Request</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to cancel this withdrawal request? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelRequest}
+                  disabled={cancelLoading}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCancelConfirm(false);
+                    setCancelTransactionId(null);
+                  }}
+                  disabled={cancelLoading}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                >
+                  No, Keep
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div >
     </div>
   );
