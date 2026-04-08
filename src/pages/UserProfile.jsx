@@ -283,7 +283,7 @@ const UserProfile = () => {
 
 	const handleDeleteBank = async (bankId) => {
 		try {
-			const response = await apiHelper.delete(`/user/deleteBank/${bankId}`);
+			const response = await apiHelper.delete(`/bank/deleteBank/${bankId}`);
 			if (response?.success) {
 				toast.success("Bank account deleted successfully");
 				fetchSavedBanks();
