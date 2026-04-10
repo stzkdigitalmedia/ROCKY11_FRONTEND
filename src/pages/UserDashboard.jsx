@@ -554,6 +554,7 @@ const UserDashboard = () => {
 						phone: "",
 					});
 					fetchSubAccounts();
+					fetchGames();
 				}, 2000);
 				return; // Stop further API calls
 			} else {
@@ -1751,7 +1752,7 @@ const UserDashboard = () => {
 			{showCreateId && (
 				<CreateIdModal
 					isOpen={showCreateId}
-					onClose={() => setShowCreateId(false)}
+					onClose={() => { setShowCreateId(false); fetchGames(); }}
 					formData={formData}
 					onInputChange={handleInputChange}
 					onSubmit={handleCreateId}
