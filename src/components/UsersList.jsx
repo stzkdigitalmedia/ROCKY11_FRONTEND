@@ -52,11 +52,10 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [bonusUser, setBonusUser] = useState(null);
   const [bonusAmount, setBonusAmount] = useState('');
   const [bonusRemark, setBonusRemark] = useState('add manual bonus');
-  const [balanceLogUser, setBalanceLogUser] = useState(null);
-  const [balanceLogs, setBalanceLogs] = useState([]);
-  const [balanceLogsLoading, setBalanceLogsLoading] = useState(false);
-  const [balanceLogsPage, setBalanceLogsPage] = useState(1);
-  const [balanceLogsTotalPages, setBalanceLogsTotalPages] = useState(1);
+  const [directTxModal, setDirectTxModal] = useState(null); // { user, type: 'D' | 'W' }
+  const [directTxAmount, setDirectTxAmount] = useState('');
+  const [directTxRemarks, setDirectTxRemarks] = useState('');
+  const [directTxLoading, setDirectTxLoading] = useState(false);
   // const [showAssignTier, setShowAssignTier] = useState(false);
   // const [assignTierUser, setAssignTierUser] = useState(null);
   // const [tiers, setTiers] = useState([]);
@@ -127,31 +126,24 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       const response = await apiHelper.get(`/subAccount/getSubAccountsByParentId/${user?.id || user?._id}`);
       const subAccounts = response?.subAccounts || response?.data || response || [];
       setUserSubAccounts(subAccounts);
-      setSubAccountsLoading(false);
-
-      // Fetch balances after showing sub-accounts
-      const balances = {};
-      for (const account of subAccounts) {
-        try {
-          // Only create balance log if status is not Reject
-          if (account?.status !== 'Reject') {
-            await createBalanceLog(account?.id || account?._id);
-            const balance = await fetchSubUserBalance(account?.id || account?._id);
-            balances[account?.id || account?._id] = balance;
-          } else {
-            balances[account?.id || account?._id] = 0;
-          }
-          setSubAccountBalances({ ...balances });
-        } catch (error) {
-          console.error(`Failed to fetch balance for account ${account?.id || account?._id}:`, error);
-          balances[account?.id || account?._id] = 0;
-          setSubAccountBalances({ ...balances });
-        }
-      }
     } catch (error) {
       toast.error('Failed to fetch sub accounts: ' + error.message);
       setUserSubAccounts([]);
+    } finally {
       setSubAccountsLoading(false);
+    }
+  };
+
+  const handleGetBalance = async (account) => {
+    const id = account?.id || account?._id;
+    setSubAccountBalances(prev => ({ ...prev, [id]: 'loading' }));
+    try {
+      await apiHelper.post('/balance/createBalanceLog', { userId: id });
+      const balance = await fetchSubUserBalance(id);
+      setSubAccountBalances(prev => ({ ...prev, [id]: balance }));
+    } catch (error) {
+      toast.error('Failed to fetch balance');
+      setSubAccountBalances(prev => ({ ...prev, [id]: null }));
     }
   };
 
@@ -554,29 +546,28 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   //   document.body.classList.remove('modal-open');
   // };
 
-  const fetchBalanceLogs = async (user, pg = 1) => {
-    setBalanceLogUser(user);
-    setBalanceLogsLoading(true);
-    setBalanceLogsPage(pg);
-    document.body.classList.add('modal-open');
+  const handleDirectTx = async () => {
+    if (!directTxAmount) { toast.error('Please enter amount'); return; }
+    setDirectTxLoading(true);
     try {
-      const response = await apiHelper.get(`/user/getUpdated_Balance_Logs?page=${pg}&limit=10&userId=${user?.id || user?._id}`);
-      setBalanceLogs(response?.data?.logs || response?.data || response?.logs || []);
-      setBalanceLogsTotalPages(response?.data?.totalPages || response?.totalPages || 1);
+      const endpoint = directTxModal.type === 'D'
+        ? '/transaction/directBalanceDeposit'
+        : '/transaction/directBalanceWithdrawal';
+      await apiHelper.post(endpoint, {
+        userId: directTxModal.user?.id || directTxModal.user?._id,
+        amount: parseFloat(directTxAmount),
+        remarks: directTxRemarks
+      });
+      toast.success(directTxModal.type === 'D' ? 'Deposit successful!' : 'Withdrawal successful!');
+      setDirectTxModal(null);
+      setDirectTxAmount('');
+      setDirectTxRemarks('');
+      fetchUsers(page, searchTerm);
     } catch (error) {
-      toast.error('Failed to fetch balance logs: ' + error.message);
-      setBalanceLogs([]);
+      toast.error('Failed: ' + error.message);
     } finally {
-      setBalanceLogsLoading(false);
+      setDirectTxLoading(false);
     }
-  };
-
-  const closeBalanceLogsModal = () => {
-    setBalanceLogUser(null);
-    setBalanceLogs([]);
-    setBalanceLogsPage(1);
-    setBalanceLogsTotalPages(1);
-    document.body.classList.remove('modal-open');
   };
 
   const closeDeleteLogsModal = () => {
@@ -784,7 +775,6 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Role</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
-              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Balancelog</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Profit & Loss</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Delete Id</th>
@@ -794,7 +784,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="11" className="text-center" style={{ height: '320px' }}>
+                <td colSpan="10" className="text-center" style={{ height: '320px' }}>
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="loading-spinner mb-2" style={{ width: '20px', height: '20px' }}></div>
                     <p className="text-gray-600 text-sm">Loading...</p>
@@ -803,7 +793,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan="11" className="text-center text-gray-500" style={{ height: '320px' }}>
+                <td colSpan="10" className="text-center text-gray-500" style={{ height: '320px' }}>
                   <div className="flex flex-col items-center justify-center h-full">
                     <p className="text-lg mb-2">No users found</p>
                     <p className="text-sm">Add some users to get started</p>
@@ -835,14 +825,24 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                           <p className="text-sm text-gray-900">{user?.city}</p>
                         </td> */}
                   <td className="py-4 px-2 sm:px-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex-col items-center gap-1">
                       <p className="text-sm font-semibold text-green-600">₹{user?.balance || 0}</p>
-                      <button
-                        onClick={() => openEditBalanceModal(user)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <Edit size={14} />
-                      </button>
+                      <div flex-col className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditBalanceModal(user)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => { setDirectTxModal({ user, type: 'D' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
+                          className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded font-bold hover:bg-green-700"
+                        >D</button>
+                        <button
+                          onClick={() => { setDirectTxModal({ user, type: 'W' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
+                          className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded font-bold hover:bg-red-700"
+                        >W</button>
+                      </div>
                     </div>
                   </td>
                   <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
@@ -868,15 +868,6 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                     >
                       <History size={14} className="sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">History</span>
-                    </button>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4">
-                    <button
-                      onClick={() => fetchBalanceLogs(user)}
-                      className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1"
-                    >
-                      <History size={14} className="sm:w-4 sm:h-4" />
-                      <span className="hidden sm:inline">Bal.log</span>
                     </button>
                   </td>
                   <td className="py-4 px-2 sm:px-4">
@@ -1014,6 +1005,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1037,16 +1029,28 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-sm font-semibold text-green-600">
-                            {(() => { const id = account?.id || account?._id; return id in subAccountBalances ? `₹ ${subAccountBalances[id].toLocaleString()}` : 'Pending'; })()}
+                            {subAccountBalances[account?.id || account?._id] === 'loading'
+                              ? 'Loading...'
+                              : subAccountBalances[account?.id || account?._id] != null
+                                ? `₹ ${Number(subAccountBalances[account?.id || account?._id]).toLocaleString()}`
+                                : '—'}
                           </p>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`badge ${account?.status === 'Accept' ? 'badge-green' :
-                            account?.status === 'Reject' ? 'badge-red' : 'badge-blue'
-                            }`}>
-                            {account?.status === 'Accept' ? 'Active' :
-                              account?.status === 'Reject' ? 'Rejected' : 'Pending'}
+                          <span className={`badge ${account?.status === 'Accept' ? 'badge-green' : account?.status === 'Reject' ? 'badge-red' : 'badge-blue'}`}>
+                            {account?.status === 'Accept' ? 'Active' : account?.status === 'Reject' ? 'Rejected' : 'Pending'}
                           </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          {account?.status !== 'Reject' && (
+                            <button
+                              onClick={() => handleGetBalance(account)}
+                              disabled={subAccountBalances[account?.id || account?._id] === 'loading'}
+                              className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Get Balance
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1443,73 +1447,6 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
         </div>
       )}
 
-      {/* Balance Logs Modal */}
-      {balanceLogUser && (
-        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50">
-          <div className="gaming-card p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Balance Logs</h2>
-                <p className="text-gray-600 text-sm mt-1">{balanceLogUser?.clientName}</p>
-              </div>
-              <button onClick={closeBalanceLogsModal} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-
-            {balanceLogsLoading ? (
-              <div className="text-center py-8">
-                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
-                <p className="text-gray-600">Loading balance logs...</p>
-              </div>
-            ) : balanceLogs.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p className="text-lg mb-2">No balance logs found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="table-header">
-                    <tr>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Previous Balance</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated Balance</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Changed</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {balanceLogs.map((log, index) => (
-                      <tr key={log._id || index} className="border-b border-gray-100">
-                        <td className="py-4 px-4"><p className="text-sm font-medium text-gray-900">{((balanceLogsPage - 1) * 10) + index + 1}</p></td>
-                        <td className="py-4 px-4"><p className="text-sm text-gray-900">₹{log?.previousBalance ?? 'N/A'}</p></td>
-                        <td className="py-4 px-4"><p className="text-sm font-semibold text-green-600">₹{log?.updatedBalance ?? log?.newBalance ?? 'N/A'}</p></td>
-                        <td className="py-4 px-4"><p className="text-sm text-gray-900">₹{log?.chnagedAmount}</p></td>
-                        <td className="py-4 px-4"><p className="text-sm text-gray-900">{log?.reason || 'N/A'}</p></td>
-                        <td className="py-4 px-4">
-                          <p className="text-sm text-gray-900">{log?.createdAt ? new Date(log.createdAt).toLocaleDateString('en-IN') : 'N/A'}</p>
-                          <p className="text-xs text-gray-500">{log?.createdAt ? new Date(log.createdAt).toLocaleTimeString('en-IN') : ''}</p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {balanceLogsTotalPages > 1 && (
-                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                    <span className="text-sm text-gray-600">Page {balanceLogsPage} of {balanceLogsTotalPages}</span>
-                    <div className="flex gap-2">
-                      <button onClick={() => fetchBalanceLogs(balanceLogUser, balanceLogsPage - 1)} disabled={balanceLogsPage === 1 || balanceLogsLoading} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Previous</button>
-                      <button onClick={() => fetchBalanceLogs(balanceLogUser, balanceLogsPage + 1)} disabled={balanceLogsPage === balanceLogsTotalPages || balanceLogsLoading} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">Next</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Delete Logs Modal */}
       {showDeleteLogs && (
         <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50">
@@ -1670,6 +1607,55 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
           </div>
         </div>
       )} */}
+
+      {/* Direct Deposit / Withdrawal Modal */}
+      {directTxModal && (
+        <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50">
+          <div className="gaming-card p-4 sm:p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {directTxModal.type === 'D' ? 'Direct Deposit' : 'Direct Withdrawal'}
+                </h2>
+                <p className="text-gray-600 text-sm mt-1">{directTxModal.user?.clientName}</p>
+              </div>
+              <button onClick={() => setDirectTxModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+              <input
+                type="number"
+                value={directTxAmount}
+                onChange={(e) => setDirectTxAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+              <input
+                type="text"
+                value={directTxRemarks}
+                onChange={(e) => setDirectTxRemarks(e.target.value)}
+                placeholder="Enter remarks"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDirectTxModal(null)} className="flex-1 btn-secondary">Cancel</button>
+              <button
+                onClick={handleDirectTx}
+                disabled={directTxLoading}
+                className={`flex-1 text-white px-4 py-2 rounded hover:opacity-90 disabled:opacity-50 ${directTxModal.type === 'D' ? 'bg-green-600' : 'bg-red-600'}`}
+              >
+                {directTxLoading ? 'Processing...' : directTxModal.type === 'D' ? 'Deposit' : 'Withdraw'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Manual Bonus Modal */}
       {showBonusModal && (
