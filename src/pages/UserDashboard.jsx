@@ -1175,35 +1175,23 @@ const UserDashboard = () => {
 			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
 			.catch(() => { });
 	}, []);
-	  useEffect(() => {
-    if (sessionStorage.getItem('showAnnouncement') === 'true') {
-      console.log('🎯 Fetching announcement banner...');
-      apiHelper.get('/announcement/getAnnouncement')
-        .then(res => {
-          console.log('📢 Announcement API Response:', res);
-          const data = res?.data;
-          const text = data?.userAnnouncement || '';
-          const image = data?.bannerImage || '';
-          console.log('📸 Banner Image URL:', image);
-          console.log('📝 Banner Text:', text);
-          if (text || image) {
-            console.log('✅ Setting announcement popup');
-            setAnnouncement({ text, image });
-          } else {
-            console.log('❌ No banner image or text found');
-          }
-        })
-        .catch((err) => {
-          console.error('❌ Failed to fetch announcement:', err);
-        })
-        .finally(() => {
-          console.log('🗑️ Removing showAnnouncement flag');
-          sessionStorage.removeItem('showAnnouncement');
-        });
-    } else {
-      console.log('⏭️ showAnnouncement flag not set, skipping banner');
-    }
-  }, []);
+	useEffect(() => {
+		if (sessionStorage.getItem('showAnnouncement') === 'true') {
+			apiHelper.get('/announcement/getAnnouncement')
+				.then(res => {
+					const data = res?.data;
+					const text = data?.userAnnouncement || '';
+					const image = data?.bannerImage || '';
+					if (data?.isBanner && (text || image)) {
+						setAnnouncement({ text, image });
+					}
+				})
+				.catch(() => { })
+				.finally(() => {
+					sessionStorage.removeItem('showAnnouncement');
+				});
+		}
+	}, []);
 
 	// Smart polling for sub accounts - only when there are pending statuses
 	useEffect(() => {
@@ -1925,17 +1913,17 @@ const UserDashboard = () => {
 				/>
 			)}
 
-			  {/* Bottom padding to prevent content overlap */}
-      {/* Announcement Popup */}
-			{/* {announcement && (
+			{/* Bottom padding to prevent content overlap */}
+			{/* Announcement Popup */}
+			{announcement && (
 				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
 					<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
-					<button
-						onClick={() => setAnnouncement(null)}
-						className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-					>
-						<X className="w-4 h-4" />
-					</button>
+						<button
+							onClick={() => setAnnouncement(null)}
+							className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+						>
+							<X className="w-4 h-4" />
+						</button>
 						{announcement.image && (
 							<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
 						)}
@@ -1953,7 +1941,7 @@ const UserDashboard = () => {
 						</div>
 					</div>
 				</div>
-			)} */}
+			)}
 
 
 			{/* Bottom padding to prevent content overlap */}

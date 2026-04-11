@@ -152,5 +152,22 @@ export const apiHelper = {
     } catch (error) {
       throw error;
     }
+  },
+
+  async putFormData(endpoint, formData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'X-Forwarded-For': await getUserIP(),
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
   }
 };
