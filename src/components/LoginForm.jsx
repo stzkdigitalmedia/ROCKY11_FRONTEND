@@ -50,6 +50,9 @@ const LoginForm = () => {
 
       toast.success('Login successful!');
 
+        // Set announcement flag BEFORE navigation
+      sessionStorage.setItem('showAnnouncement', 'true');
+
       // Set announcement flag BEFORE navigation
       sessionStorage.setItem('showAnnouncement', 'true');
 
