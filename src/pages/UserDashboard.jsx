@@ -1050,7 +1050,7 @@ const UserDashboard = () => {
 						: transactionForm?.transactionType,
 				role: "User",
 				mode: specialBranches.includes(selectedBranch) ? selectedBranch : 'PowerPay',
-				branchUserName: selectedBranch || "RBIO1D",
+				branchUserName: selectedBranch,
 			};
 
 			// Add bank details for withdraw transactions
