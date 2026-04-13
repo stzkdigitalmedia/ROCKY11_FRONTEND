@@ -97,7 +97,7 @@ const SimpleRegister = () => {
         clientName: formData?.clientName,
         password: formData?.password,
         phone: formData?.phone,
-        branchName: "Rockybook",
+        branchName: "RBIO1D",
         otp: formData?.otp,
         referalCode: formData?.referralCode || ""
       };
