@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
+import { useAuth } from '../hooks/useAuth';
 import { Eye, Trash2, X, Edit, History, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -63,6 +64,14 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   // const [assignTierLoading, setAssignTierLoading] = useState(false);
 
   const toast = useToastContext();
+  const { user: authUser } = useAuth();
+
+  const getTierPerms = (rowUser) => {
+    if (authUser?.role !== 'TierRole') return null;
+    const tierDetails = authUser?.tierDetails || [];
+    const matched = tierDetails.find(td => td.tierId?._id === rowUser?.teirId);
+    return matched || tierDetails[0] || {};
+  };
 
   // const handleDeleteUser = async () => {
   //   if (!userToDelete) return;
@@ -775,7 +784,9 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Role</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
-              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus</th>
+              {(authUser?.role !== 'TierRole' || true) && (
+                <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus</th>
+              )}
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Profit & Loss</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Delete Id</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -801,7 +812,9 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                 </td>
               </tr>
             ) : (
-              users.map((user, index) => (
+              users.map((user, index) => {
+                const tierPerms = getTierPerms(user);
+                return (
                 <tr key={user?.id || index} className="table-row border-b border-gray-100">
                   <td className="py-4 px-2 sm:px-4">
                     <div className="flex items-center gap-2 sm:gap-3">
@@ -828,20 +841,34 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                     <div className="flex-col items-center gap-1">
                       <p className="text-sm font-semibold text-green-600">₹{user?.balance || 0}</p>
                       <div flex-col className="flex items-center gap-1.5">
+                        {(!tierPerms || tierPerms.is_Deposit_RoleBack || tierPerms.is_Withdraw_RoleBack) ? (
                         <button
                           onClick={() => openEditBalanceModal(user)}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           <Edit size={18} />
                         </button>
+                        ) : (
+                        <button disabled className="text-gray-300 cursor-not-allowed">
+                          <Edit size={18} />
+                        </button>
+                        )}
+                        {(!tierPerms || tierPerms.is_Deposit) ? (
                         <button
                           onClick={() => { setDirectTxModal({ user, type: 'D' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
                           className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded font-bold hover:bg-green-700"
                         >D</button>
+                        ) : (
+                        <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">D</button>
+                        )}
+                        {(!tierPerms || tierPerms.is_Withdraw) ? (
                         <button
                           onClick={() => { setDirectTxModal({ user, type: 'W' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
                           className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded font-bold hover:bg-red-700"
                         >W</button>
+                        ) : (
+                        <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">W</button>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -851,11 +878,12 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                     </span>
                   </td>
                   <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label className={`relative inline-flex items-center ${tierPerms && !tierPerms.is_Block_User ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
                         checked={user?.status === 'Active' || user?.isActive !== false}
                         onChange={() => toggleUserStatus(user)}
+                        disabled={tierPerms && !tierPerms.is_Block_User}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -872,8 +900,9 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                   </td>
                   <td className="py-4 px-2 sm:px-4">
                     <button
-                      onClick={() => openBonusModal(user)}
-                      className="text-blue-600 hover:text-blue-800"
+                      onClick={() => !tierPerms || tierPerms.is_Bonus_Assign ? openBonusModal(user) : null}
+                      disabled={tierPerms && !tierPerms.is_Bonus_Assign}
+                      className={`${tierPerms && !tierPerms.is_Bonus_Assign ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
                     >
                       <Edit size={14} />
                     </button>
@@ -924,7 +953,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

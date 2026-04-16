@@ -21,6 +21,7 @@ import {
 	Link2,
 	LinkIcon,
 	CheckCircle,
+	GiftIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
@@ -1243,7 +1244,13 @@ const UserDashboard = () => {
 					</Link>
 
 					<div className="absolute top-0 right-0">
-						<LanguageSelector />
+						<div className='flex items-center gap-2'>
+							{/* <button onClick={() => navigate('/refer-earn')}
+								className="p-[7px] mt-[12.5px] h-fit bg-gray-800 rounded-full border-1 border-white transition-colors">
+								<GiftIcon className="w-5 h-5 text-white" />
+							</button> */}
+							<LanguageSelector />
+						</div>
 					</div>
 
 					{/* CENTER WRAPPER */}

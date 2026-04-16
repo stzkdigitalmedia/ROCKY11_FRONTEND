@@ -80,17 +80,20 @@ export const apiHelper = {
     }
   },
 
-  async delete(endpoint) {
+  async delete(endpoint, data = null) {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const options = {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'X-Forwarded-For': await getUserIP(),
         },
         credentials: 'include',
-      });
-
+      };
+      if (data) {
+        options.body = JSON.stringify(data);
+      }
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
       return await handleResponse(response);
     } catch (error) {
       throw error;
