@@ -319,7 +319,7 @@ const CreateTransactionModal = ({
 															onChange={() => onBranchChange(branch.branchName)}
 															className="text-blue-600 focus:ring-blue-500"
 														/>
-														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 500}-₹${user?.teirId?.maxAmount ?? 5000})` : branch.branchName}</span>
+														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 1000}-₹${user?.teirId?.maxAmount ?? 25000})` : branch.branchName}</span>
 													</div>
 												</div>
 											))}
