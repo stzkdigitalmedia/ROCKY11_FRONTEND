@@ -93,6 +93,7 @@ const UserDashboard = () => {
 	const [showUserDropdown, setShowUserDropdown] = useState(false);
 	const [selectedBranch, setSelectedBranch] = useState("");
 	const [announcement, setAnnouncement] = useState(null); // { text, image }
+	const [panels, setPanels] = useState([]);
 
 	const [updatedTransactions, setUpdatedTransactions] = useState("");
 	const [showResetPassword, setShowResetPassword] = useState(false);
@@ -509,6 +510,7 @@ const UserDashboard = () => {
 			);
 
 			setGames(availableGames);
+			setPanels(activePanels);
 		} catch (error) {
 			console.error("Failed to fetch games:", error);
 			setGames([]);
@@ -1424,6 +1426,14 @@ const UserDashboard = () => {
 														<h3 className="font-bold text-sm sm:text-lg notranslate">
 															{game || "Game"}
 														</h3>
+														{panels.some(p => p.panelName === game && p.isTrending) ? (
+															<div className="flex items-center gap-1 mt-0.5">
+																<span className="text-orange-400 text-xs">🔥</span>
+																<span className="text-orange-300 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+															</div>
+														) : (
+															<div className="h-[18px]" />
+														)}
 													</div>
 												</div>
 
@@ -1682,6 +1692,14 @@ const UserDashboard = () => {
 														<h3 className="font-bold text-sm sm:text-lg notranslate">
 															{game.name}
 														</h3>
+														{panels.some(p => p.panelName === game.name && p.isTrending) ? (
+															<div className="flex items-center gap-1 mt-0.5">
+																<span className="text-orange-400 text-xs">🔥</span>
+																<span className="text-orange-300 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+															</div>
+														) : (
+															<div className="h-[18px]" />
+														)}
 													</div>
 												</div>
 
