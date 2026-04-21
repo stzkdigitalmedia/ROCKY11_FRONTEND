@@ -57,6 +57,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [directTxAmount, setDirectTxAmount] = useState('');
   const [directTxRemarks, setDirectTxRemarks] = useState('');
   const [directTxLoading, setDirectTxLoading] = useState(false);
+  const [bonusLoading, setBonusLoading] = useState(false);
   // const [showAssignTier, setShowAssignTier] = useState(false);
   // const [assignTierUser, setAssignTierUser] = useState(null);
   // const [tiers, setTiers] = useState([]);
@@ -608,6 +609,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       return;
     }
 
+    setBonusLoading(true);
     try {
       const payload = {
         userId: bonusUser.id || bonusUser._id,
@@ -620,6 +622,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       fetchUsers(page, searchTerm);
     } catch (error) {
       toast.error('Failed to add bonus: ' + error.message);
+    } finally {
+      setBonusLoading(false);
     }
   };
 
@@ -1731,8 +1735,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               <button onClick={closeBonusModal} className="flex-1 btn-secondary">
                 Cancel
               </button>
-              <button onClick={addManualBonus} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center">
-                Add Bonus
+              <button onClick={addManualBonus} disabled={bonusLoading} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {bonusLoading ? 'Processing...' : 'Add Bonus'}
               </button>
             </div>
           </div>
