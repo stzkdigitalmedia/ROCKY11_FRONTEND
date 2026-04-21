@@ -225,9 +225,11 @@ const CreateTransactionModal = ({
 								type="number"
 								placeholder={transactionForm?.transactionType === "Deposit" ? "Enter amount (min 100)" : "Enter amount (min 500)"}
 								value={transactionForm.amount}
-								onChange={(e) =>
-									onFormChange({ ...transactionForm, amount: e.target.value })
-								}
+								onChange={(e) => {
+									const val = e.target.value.replace(/[^0-9]/g, '');
+									onFormChange({ ...transactionForm, amount: val });
+								}}
+								onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
 								onWheel={(e) => e.target.blur()}
 								className="gaming-input"
 								required
