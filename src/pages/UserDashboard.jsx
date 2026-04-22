@@ -93,6 +93,7 @@ const UserDashboard = () => {
 	const [showUserDropdown, setShowUserDropdown] = useState(false);
 	const [selectedBranch, setSelectedBranch] = useState("");
 	const [announcement, setAnnouncement] = useState(null); // { text, image }
+	const [videoAnnouncement, setVideoAnnouncement] = useState(null); // { video }
 	const [panels, setPanels] = useState([]);
 
 	const [updatedTransactions, setUpdatedTransactions] = useState("");
@@ -1185,8 +1186,11 @@ const UserDashboard = () => {
 					const data = res?.data;
 					const text = data?.userAnnouncement || '';
 					const image = data?.bannerImage || '';
+					const video = data?.bannerVideo || '';
 					if (data?.isBanner && (text || image)) {
-						setAnnouncement({ text, image });
+						setAnnouncement({ text, image, video: data?.isShowVideo ? video : '' });
+					} else if (data?.isShowVideo && video) {
+						setVideoAnnouncement({ video });
 					}
 				})
 				.catch(() => { })
@@ -1940,33 +1944,75 @@ const UserDashboard = () => {
 
 			{/* Bottom padding to prevent content overlap */}
 			{/* Announcement Popup */}
-			{announcement && (
-				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
-					<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
-						<button
-							onClick={() => setAnnouncement(null)}
-							className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-						>
-							<X className="w-4 h-4" />
-						</button>
-						{announcement.image && (
-							<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
-						)}
-						<div className="p-4">
-							{announcement.text && (
-								<p className="text-gray-700 text-sm whitespace-pre-wrap mb-4">{announcement.text}</p>
-							)}
+			{
+				announcement && (
+					<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+						<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
 							<button
-								onClick={() => setAnnouncement(null)}
-								className="w-full py-2 rounded-xl text-white font-semibold"
-								style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								onClick={() => {
+									const video = announcement.video;
+									setAnnouncement(null);
+									if (video) setVideoAnnouncement({ video });
+								}}
+								className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
 							>
-								OK
+								<X className="w-4 h-4" />
 							</button>
+							{announcement.image && (
+								<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
+							)}
+							<div className="p-4">
+								{announcement.text && (
+									<p className="text-gray-700 text-sm whitespace-pre-wrap mb-4">{announcement.text}</p>
+								)}
+								<button
+									onClick={() => {
+										const video = announcement.video;
+										setAnnouncement(null);
+										if (video) setVideoAnnouncement({ video });
+									}}
+									className="w-full py-2 rounded-xl text-white font-semibold"
+									style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								>
+									OK
+								</button>
+							</div>
 						</div>
 					</div>
-				</div>
-			)}
+				)
+			}
+
+			{/* Video Announcement Popup */}
+			{
+				videoAnnouncement && (
+					<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+						<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
+							<button
+								onClick={() => setVideoAnnouncement(null)}
+								className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+							>
+								<X className="w-4 h-4" />
+							</button>
+							<video
+								src={videoAnnouncement.video}
+								controls
+								autoPlay
+								className="w-full"
+								onError={(e) => { e.target.style.display = 'none'; }}
+							/>
+							<div className="p-4">
+								<button
+									onClick={() => setVideoAnnouncement(null)}
+									className="w-full py-2 rounded-xl text-white font-semibold"
+									style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								>
+									OK
+								</button>
+							</div>
+						</div>
+					</div>
+				)
+			}
 
 
 			{/* Bottom padding to prevent content overlap */}

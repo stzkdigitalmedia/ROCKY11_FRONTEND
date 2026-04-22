@@ -21,10 +21,12 @@ const Settings = () => {
   const [announcement, setAnnouncement] = useState(null);
   const [announcementLoading, setAnnouncementLoading] = useState(false);
   const [showEditAnnouncementModal, setShowEditAnnouncementModal] = useState(false);
-  const [announcementForm, setAnnouncementForm] = useState({ demoAnnouncement: '', userAnnouncement: '', isActive: true, bannerImageUrl: null });
+  const [announcementForm, setAnnouncementForm] = useState({ demoAnnouncement: '', userAnnouncement: '', isActive: true, bannerImageUrl: null, bannerVideoUrl: null });
   const [announcementUpdateLoading, setAnnouncementUpdateLoading] = useState(false);
   const [isBanner, setIsBanner] = useState(false);
   const [bannerToggleLoading, setBannerToggleLoading] = useState(false);
+  const [isShowVideo, setIsShowVideo] = useState(false);
+  const [videoToggleLoading, setVideoToggleLoading] = useState(false);
   const toast = useToastContext();
 
   const fetchAnnouncement = async () => {
@@ -34,6 +36,7 @@ const Settings = () => {
       const data = response?.data || response;
       setAnnouncement(data);
       setIsBanner(data?.isBanner ?? false);
+      setIsShowVideo(data?.isShowVideo ?? false);
     } catch (error) {
       toast.error('Failed to fetch announcement');
     } finally {
@@ -47,6 +50,7 @@ const Settings = () => {
       userAnnouncement: announcement?.userAnnouncement || '',
       isActive: announcement?.isActive ?? true,
       bannerImageUrl: null,
+      bannerVideoUrl: null,
     });
     setShowEditAnnouncementModal(true);
   };
@@ -60,6 +64,9 @@ const Settings = () => {
       formData.append('isActive', announcementForm.isActive);
       if (announcementForm.bannerImageUrl) {
         formData.append('bannerImageUrl', announcementForm.bannerImageUrl);
+      }
+      if (announcementForm.bannerVideoUrl) {
+        formData.append('bannerVideo', announcementForm.bannerVideoUrl);
       }
       await apiHelper.putFormData('/announcement/updateAnnouncement', formData);
       toast.success('Announcement updated successfully!');
@@ -84,6 +91,21 @@ const Settings = () => {
       toast.error('Failed to update banner');
     } finally {
       setBannerToggleLoading(false);
+    }
+  };
+
+  const toggleShowVideo = async (val) => {
+    setVideoToggleLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('isShowVideo', val);
+      await apiHelper.putFormData('/announcement/updateAnnouncement', formData);
+      setIsShowVideo(val);
+      toast.success('Video visibility updated!');
+    } catch (error) {
+      toast.error('Failed to update video visibility');
+    } finally {
+      setVideoToggleLoading(false);
     }
   };
 
@@ -254,12 +276,12 @@ const Settings = () => {
                       <tr>
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Demo Announcement</th>
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">User Announcement</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Banner Image</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Popup Image</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Popup Video</th>
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Status</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Banner</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Created At</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Updated At</th>
                         <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Action</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Image</th>
+                        <th className="text-left px-4 py-3 font-semibold text-gray-600 border-b">Video</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -272,9 +294,27 @@ const Settings = () => {
                           ) : 'N/A'}
                         </td>
                         <td className="px-4 py-3">
+                          {announcement.bannerVideo ? (
+                            <video src={announcement.bannerVideo} autoPlay
+                              muted
+                              loop
+                              playsInline alt="Banner" className="h-16 rounded-lg object-cover">
+                            </video>
+                          ) : 'N/A'}
+                        </td>
+                        <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${announcement.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {announcement.isActive ? 'Active' : 'Inactive'}
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={openEditAnnouncementModal}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Announcement"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                         </td>
                         <td className="px-4 py-3">
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -288,16 +328,17 @@ const Settings = () => {
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                           </label>
                         </td>
-                        <td className="px-4 py-3 text-gray-900">{announcement.createdAt ? new Date(announcement.createdAt).toLocaleString('en-IN') : 'N/A'}</td>
-                        <td className="px-4 py-3 text-gray-900">{announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('en-IN') : 'N/A'}</td>
                         <td className="px-4 py-3">
-                          <button
-                            onClick={openEditAnnouncementModal}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit Announcement"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isShowVideo}
+                              onChange={(e) => toggleShowVideo(e.target.checked)}
+                              disabled={videoToggleLoading}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                          </label>
                         </td>
                       </tr>
                     </tbody>
@@ -391,6 +432,18 @@ const Settings = () => {
                 />
                 {announcement?.bannerImage && !announcementForm.bannerImageUrl && (
                   <img src={announcement.bannerImage} alt="Current Banner" className="mt-2 h-16 rounded-lg object-cover" />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Banner Video</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, bannerVideoUrl: e.target.files[0] || null })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {announcement?.bannerVideo && !announcementForm.bannerVideoUrl && (
+                  <video src={announcement.bannerVideo} className="mt-2 h-16 rounded-lg object-cover" muted />
                 )}
               </div>
               <div>
