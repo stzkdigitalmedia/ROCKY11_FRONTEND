@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap, Bell } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const allMenuItems = [
@@ -20,6 +20,7 @@ const allMenuItems = [
   { id: 'telegram-otp',        label: 'Telegram OTP',         icon: MessageSquare,   path: '/telegram-otp',        roles: ['SA', 'SubAdmin'] },
   { id: 'bonuses',             label: 'Bonuses',              icon: Gift,            path: '/sa-bonuses',          roles: ['SA', 'SubAdmin'] },
   { id: 'settings',            label: 'Settings',             icon: Settings,        path: '/settings',            roles: ['SA', 'SubAdmin'] },
+  { id: 'notifications',       label: 'Notifications',        icon: Bell,            path: '/notifications',       roles: ['SA', 'SubAdmin'] },
 ];
 
 const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {

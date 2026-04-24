@@ -55,9 +55,9 @@ export const useAuth = () => {
     const listener = (newState) => {
       setState({ ...newState });
     };
-    
+
     listeners.push(listener);
-    
+
     if (!globalAuthState.initialized) {
       fetchUserOnce();
     }
@@ -82,9 +82,22 @@ export const useAuth = () => {
       localStorage.setItem('userRole', userData.role);
     }
     notifyListeners();
+
+    // Request FCM token on login
+    if ('Notification' in window && Notification.permission === 'granted') {
+      import('../services/notificationService').then(({ getAndSaveToken }) => getAndSaveToken());
+    } else if ('Notification' in window && Notification.permission === 'default') {
+      import('../services/notificationService').then(({ requestPermission }) => requestPermission());
+    }
   };
 
   const logout = async () => {
+    // Fire and forget - don't block logout
+    const token = localStorage.getItem('fcmToken');
+    if (token) {
+      apiHelper.post('/firebaseNotification/token/remove', { token }).catch(() => { });
+      localStorage.removeItem('fcmToken');
+    }
     try {
       await apiHelper.get('/auth/logout');
     } catch (error) {
@@ -103,11 +116,11 @@ export const useAuth = () => {
     notifyListeners();
   };
 
-  return { 
-    user: state.user, 
-    isAuthenticated: state.isAuthenticated, 
-    loading: state.loading, 
-    login, 
-    logout 
+  return {
+    user: state.user,
+    isAuthenticated: state.isAuthenticated,
+    loading: state.loading,
+    login,
+    logout
   };
 };

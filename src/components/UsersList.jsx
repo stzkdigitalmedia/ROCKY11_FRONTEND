@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { useAuth } from '../hooks/useAuth';
-import { Eye, Trash2, X, Edit, History, Download } from 'lucide-react';
+import { Eye, Trash2, X, Edit, History, Download, Bell } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) => {
@@ -64,8 +64,50 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   // const [selectedTierId, setSelectedTierId] = useState('');
   // const [assignTierLoading, setAssignTierLoading] = useState(false);
 
+  const [sendingNotification, setSendingNotification] = useState(null);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [sendingMultiple, setSendingMultiple] = useState(false);
+
   const toast = useToastContext();
   const { user: authUser } = useAuth();
+
+  const sendMultipleNotification = async () => {
+    if (selectedUsers.length === 0) { toast.error('Please select at least one user'); return; }
+    setSendingMultiple(true);
+    try {
+      await apiHelper.post('/firebaseNotification/send/multiple', { userIds: selectedUsers });
+      toast.success(`Notification sent to ${selectedUsers.length} users!`);
+      setSelectedUsers([]);
+    } catch (error) {
+      toast.error('Failed to send notification: ' + error.message);
+    } finally {
+      setSendingMultiple(false);
+    }
+  };
+
+  const toggleSelectUser = (userId) => {
+    setSelectedUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.length === users.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map(u => u.id || u._id));
+    }
+  };
+
+  const sendNotification = async (userId) => {
+    setSendingNotification(userId);
+    try {
+      await apiHelper.post('/firebaseNotification/send/user', { userId });
+      toast.success('Notification sent!');
+    } catch (error) {
+      toast.error('Failed to send notification: ' + error.message);
+    } finally {
+      setSendingNotification(null);
+    }
+  };
 
   const getTierPerms = (rowUser) => {
     if (authUser?.role !== 'TierRole') return null;
@@ -766,7 +808,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       </div>
 
       {/* Download Button */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
         <button
           onClick={downloadUsersExcel}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
@@ -774,6 +816,30 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
           <Download size={16} />
           Download Users
         </button>
+        <button
+          onClick={async () => {
+            try {
+              await apiHelper.post('/firebaseNotification/send/all', {});
+              toast.success('Notification sent to all users!');
+            } catch (error) {
+              toast.error('Failed to send notification: ' + error.message);
+            }
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Bell size={16} />
+          Bulk Notification
+        </button>
+        {selectedUsers.length > 0 && (
+          <button
+            onClick={sendMultipleNotification}
+            disabled={sendingMultiple}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50"
+          >
+            <Bell size={16} />
+            {sendingMultiple ? 'Sending...' : `Send to Selected (${selectedUsers.length})`}
+          </button>
+        )}
       </div>
 
 
@@ -793,7 +859,11 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               )}
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Profit & Loss</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Delete Id</th>
+              {/* <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Notification</th> */}
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <input type="checkbox" checked={users.length > 0 && selectedUsers.length === users.length} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -819,117 +889,117 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               users.map((user, index) => {
                 const tierPerms = getTierPerms(user);
                 return (
-                <tr key={user?.id || index} className="table-row border-b border-gray-100">
-                  <td className="py-4 px-2 sm:px-4">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {(user?.fullName || user?.clientName || 'U').charAt(0).toUpperCase()}
+                  <tr key={user?.id || index} className="table-row border-b border-gray-100">
+                    <td className="py-4 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {(user?.fullName || user?.clientName || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{user?.clientName}</p>
+                          {/* <h3 className="text-sm text-gray-500 truncate">{user?.fullName || user?.clientName}</h3> */}
+                          {/* <p className="text-sm text-gray-500 truncate sm:hidden">{user?.email}</p> */}
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{user?.clientName}</p>
-                        {/* <h3 className="text-sm text-gray-500 truncate">{user?.fullName || user?.clientName}</h3> */}
-                        {/* <p className="text-sm text-gray-500 truncate sm:hidden">{user?.email}</p> */}
+                    </td>
+                    <td className="py-4 px-2 sm:px-4 hidden sm:table-cell">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate">{user?.phone}</p>
+                        {/* <p className="text-sm text-gray-500">{user?.email}</p> */}
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4 hidden sm:table-cell">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 truncate">{user?.phone}</p>
-                      {/* <p className="text-sm text-gray-500">{user?.email}</p> */}
-                    </div>
-                  </td>
-                  {/* <td className="py-4 px-2 sm:px-4 hidden md:table-cell">
+                    </td>
+                    {/* <td className="py-4 px-2 sm:px-4 hidden md:table-cell">
                           <p className="text-sm text-gray-900">{user?.city}</p>
                         </td> */}
-                  <td className="py-4 px-2 sm:px-4">
-                    <div className="flex-col items-center gap-1">
-                      <p className="text-sm font-semibold text-green-600">₹{user?.balance || 0}</p>
-                      <div flex-col className="flex items-center gap-1.5">
-                        {(!tierPerms || tierPerms.is_Deposit_RoleBack || tierPerms.is_Withdraw_RoleBack) ? (
-                        <button
-                          onClick={() => openEditBalanceModal(user)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        ) : (
-                        <button disabled className="text-gray-300 cursor-not-allowed">
-                          <Edit size={18} />
-                        </button>
-                        )}
-                        {(!tierPerms || tierPerms.is_Deposit) ? (
-                        <button
-                          onClick={() => { setDirectTxModal({ user, type: 'D' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
-                          className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded font-bold hover:bg-green-700"
-                        >D</button>
-                        ) : (
-                        <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">D</button>
-                        )}
-                        {(!tierPerms || tierPerms.is_Withdraw) ? (
-                        <button
-                          onClick={() => { setDirectTxModal({ user, type: 'W' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
-                          className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded font-bold hover:bg-red-700"
-                        >W</button>
-                        ) : (
-                        <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">W</button>
-                        )}
+                    <td className="py-4 px-2 sm:px-4">
+                      <div className="flex-col items-center gap-1">
+                        <p className="text-sm font-semibold text-green-600">₹{user?.balance || 0}</p>
+                        <div flex-col className="flex items-center gap-1.5">
+                          {(!tierPerms || tierPerms.is_Deposit_RoleBack || tierPerms.is_Withdraw_RoleBack) ? (
+                            <button
+                              onClick={() => openEditBalanceModal(user)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          ) : (
+                            <button disabled className="text-gray-300 cursor-not-allowed">
+                              <Edit size={18} />
+                            </button>
+                          )}
+                          {(!tierPerms || tierPerms.is_Deposit) ? (
+                            <button
+                              onClick={() => { setDirectTxModal({ user, type: 'D' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
+                              className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded font-bold hover:bg-green-700"
+                            >D</button>
+                          ) : (
+                            <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">D</button>
+                          )}
+                          {(!tierPerms || tierPerms.is_Withdraw) ? (
+                            <button
+                              onClick={() => { setDirectTxModal({ user, type: 'W' }); setDirectTxAmount(''); setDirectTxRemarks(''); }}
+                              className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded font-bold hover:bg-red-700"
+                            >W</button>
+                          ) : (
+                            <button disabled className="px-1.5 py-0.5 bg-gray-300 text-white text-xs rounded font-bold cursor-not-allowed">W</button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
-                    <span className="badge badge-green">
-                      {user?.role}
-                    </span>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
-                    <label className={`relative inline-flex items-center ${tierPerms && !tierPerms.is_Block_User ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                      <input
-                        type="checkbox"
-                        checked={user?.status === 'Active' || user?.isActive !== false}
-                        onChange={() => toggleUserStatus(user)}
-                        disabled={tierPerms && !tierPerms.is_Block_User}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4">
-                    <button
-                      onClick={() => fetchUserHistory(user)}
-                      className="text-purple-600 hover:text-purple-800 text-xs sm:text-sm font-medium flex items-center gap-1"
-                    >
-                      <History size={14} className="sm:w-4 sm:h-4" />
-                      <span className="hidden sm:inline">History</span>
-                    </button>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4">
-                    <button
-                      onClick={() => !tierPerms || tierPerms.is_Bonus_Assign ? openBonusModal(user) : null}
-                      disabled={tierPerms && !tierPerms.is_Bonus_Assign}
-                      className={`${tierPerms && !tierPerms.is_Bonus_Assign ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
-                    >
-                      <Edit size={14} />
-                    </button>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4">
-                    <button
-                      onClick={() => fetchUserProfitLoss(user)}
-                      className="text-orange-600 hover:text-orange-800 text-xs sm:text-sm font-medium flex items-center gap-1"
-                    >
-                      <span className="hidden sm:inline">View P&L</span>
-                      <span className="sm:hidden">P&L</span>
-                    </button>
-                  </td>
-                  <td className="py-4 px-2 sm:px-4">
-                    <button
-                      onClick={() => fetchDeleteLogs(user)}
-                      className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium flex items-center gap-1"
-                    >
-                      <span className="hidden sm:inline">Delete Logs</span>
-                      <span className="sm:hidden">Logs</span>
-                    </button>
-                  </td>
-                  {/* <td className="py-4 px-2 sm:px-4">
+                    </td>
+                    <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
+                      <span className="badge badge-green">
+                        {user?.role}
+                      </span>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
+                      <label className={`relative inline-flex items-center ${tierPerms && !tierPerms.is_Block_User ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                        <input
+                          type="checkbox"
+                          checked={user?.status === 'Active' || user?.isActive !== false}
+                          onChange={() => toggleUserStatus(user)}
+                          disabled={tierPerms && !tierPerms.is_Block_User}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4">
+                      <button
+                        onClick={() => fetchUserHistory(user)}
+                        className="text-purple-600 hover:text-purple-800 text-xs sm:text-sm font-medium flex items-center gap-1"
+                      >
+                        <History size={14} className="sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">History</span>
+                      </button>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4">
+                      <button
+                        onClick={() => !tierPerms || tierPerms.is_Bonus_Assign ? openBonusModal(user) : null}
+                        disabled={tierPerms && !tierPerms.is_Bonus_Assign}
+                        className={`${tierPerms && !tierPerms.is_Bonus_Assign ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
+                      >
+                        <Edit size={14} />
+                      </button>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4">
+                      <button
+                        onClick={() => fetchUserProfitLoss(user)}
+                        className="text-orange-600 hover:text-orange-800 text-xs sm:text-sm font-medium flex items-center gap-1"
+                      >
+                        <span className="hidden sm:inline">View P&L</span>
+                        <span className="sm:hidden">P&L</span>
+                      </button>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4">
+                      <button
+                        onClick={() => fetchDeleteLogs(user)}
+                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium flex items-center gap-1"
+                      >
+                        <span className="hidden sm:inline">Delete Logs</span>
+                        <span className="sm:hidden">Logs</span>
+                      </button>
+                    </td>
+                    {/* <td className="py-4 px-2 sm:px-4">
                         <button 
                           onClick={() => openAssignTierModal(user)}
                           className="text-purple-600 hover:text-purple-800 text-xs sm:text-sm font-medium flex items-center gap-1"
@@ -938,25 +1008,40 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                           <span className="sm:hidden">Tier</span>
                         </button>
                       </td> */}
-                  <td className="py-4 px-2 sm:px-4">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <button
-                        onClick={() => handleViewSubAccounts(user)}
-                        className="text-xs sm:text-sm font-medium flex items-center gap-1 hover:opacity-80"
-                        style={{ color: '#1477b0' }}
-                      >
-                        <Eye size={14} className="sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">View</span>
-                      </button>
-                      <button
-                        onClick={() => openResetPasswordModal(user)}
-                        className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium flex items-center gap-1"
-                      >
-                        <span className="hidden sm:inline">Reset</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    {/* <td className="py-4 px-2 sm:px-4">
+                    <button
+                      onClick={() => sendNotification(user?.id || user?._id)}
+                      disabled={sendingNotification === (user?.id || user?._id)}
+                      className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Send Notification"
+                    >
+                      {sendingNotification === (user?.id || user?._id)
+                        ? <span className="text-xs">Sending...</span>
+                        : <Bell size={16} />}
+                    </button>
+                  </td> */}
+                    <td className="py-4 px-2 sm:px-4">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <button
+                          onClick={() => handleViewSubAccounts(user)}
+                          className="text-xs sm:text-sm font-medium flex items-center gap-1 hover:opacity-80"
+                          style={{ color: '#1477b0' }}
+                        >
+                          <Eye size={14} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">View</span>
+                        </button>
+                        <button
+                          onClick={() => openResetPasswordModal(user)}
+                          className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium flex items-center gap-1"
+                        >
+                          <span className="hidden sm:inline">Reset</span>
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4">
+                      <input type="checkbox" checked={selectedUsers.includes(user?.id || user?._id)} onChange={() => toggleSelectUser(user?.id || user?._id)} className="w-4 h-4 cursor-pointer" />
+                    </td>
+                  </tr>
                 );
               })
             )}

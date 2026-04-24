@@ -499,8 +499,8 @@ const MyIDs = ({
                       </p>
                       {panels.some(p => p.panelName === game.name && p.isTrending) ? (
                         <div className="flex items-center gap-1 mt-0.5">
-                          <span className="text-orange-400 text-xs">🔥</span>
-                          <span className="text-orange-300 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+                          <span className="text-orange-400 text-xs">🏆</span>
+                          <span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
                         </div>
                       ) : (
                         <div className="h-[18px]" />
@@ -566,8 +566,8 @@ const MyIDs = ({
                           </p>
                           {panels.some(p => p.panelName === acc.gameId?.name && p.isTrending) ? (
                             <div className="flex items-center gap-1 mt-0.5">
-                              <span className="text-orange-400 text-xs">🔥</span>
-                              <span className="text-orange-300 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+                              <span className="text-orange-400 text-xs">🏆</span>
+                              <span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
                             </div>
                           ) : (
                             <div className="h-[18px]" />

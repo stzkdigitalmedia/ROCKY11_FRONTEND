@@ -48,6 +48,7 @@ import TierDetails from './pages/TierDetails';
 import Passbook from './pages/Passbook';
 import WhatsAppButton from './components/WhatsAppButton';
 import { useAuth } from './hooks/useAuth';
+import useNotification from './hooks/useNotification';
 import SABonuses from './pages/SABonuses';
 import ActiveUsers from './pages/ActiveUsers';
 import Referral from './pages/Referral';
@@ -67,6 +68,7 @@ import Pending from './pages/Pending';
 import Cancel from './pages/Cancel';
 import RoleManagement from './pages/RoleManagement';
 import ManagerLogin from './pages/ManagerLogin';
+import Notifications from './pages/Notifications';
 
 const ToastContext = createContext();
 
@@ -81,6 +83,7 @@ export const useToastContext = () => {
 function App() {
   const toast = useToast();
   const { user } = useAuth();
+  useNotification();
   return (
     <div className='bg-gray-300'>
       <ToastContext.Provider value={toast}>
@@ -298,6 +301,13 @@ function App() {
                 <ReferralEarning />
               </SuperAdminRoute>
             } />
+
+            <Route path="/notifications" element={
+              <SuperAdminRoute>
+                <Notifications />
+              </SuperAdminRoute>
+            } />
+
             <Route path="/user-dashboard" element={
               <UserRoute>
                 <UserDashboard />
