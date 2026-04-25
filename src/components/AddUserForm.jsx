@@ -10,7 +10,7 @@ const AddUserForm = ({ onClose, onSuccess }) => {
     clientName: '',
     password: '',
     phone: '',
-    branchName: 'branch1',
+    branchName: 'RBIO1D',
     referalCode: 'ADMIN',
     teirId: ''
   });
