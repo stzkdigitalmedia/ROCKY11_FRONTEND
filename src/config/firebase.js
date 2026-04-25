@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: "AIzaSyArDfW1ksEOCIZOEmLPLctl6_fWG28hsZA",
@@ -12,6 +12,19 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
 
-export { messaging, getToken, onMessage };
+// messaging only initialize karo agar supported ho (iOS Safari mein nahi hoga)
+let messaging = null;
+const initMessaging = async () => {
+  try {
+    const supported = await isSupported();
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  } catch (e) {
+    console.warn('Firebase messaging not supported:', e);
+  }
+};
+initMessaging();
+
+export { messaging, getToken, onMessage, isSupported };
