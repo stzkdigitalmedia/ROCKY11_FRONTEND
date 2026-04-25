@@ -232,7 +232,7 @@ const DashboardStats = () => {
             onClick={() => navigate('/ftd-complete-users')}
           >
             <h3 className="text-sm font-medium text-gray-500">FTD Complete User</h3>
-            <p className="text-2xl font-bold text-green-600">{dashSummary?.ftd_users_count|| 0}</p>
+            <p className="text-2xl font-bold text-green-600">{dashSummary?.ftd_users_count || 0}</p>
           </div>
           <div
             className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
@@ -242,7 +242,7 @@ const DashboardStats = () => {
             <p className="text-2xl font-bold text-orange-600">{dashSummary?.userRegistrationsNoTranxCount || 0}</p>
           </div>
           {user?.role !== 'TierRole' && (
-            <div 
+            <div
               className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/active-users')}
             >
@@ -365,14 +365,14 @@ const DashboardStats = () => {
                 ₹{totalBalance.toLocaleString()} Total Balance
               </div>
             </div> */}
-            {/* <button
+            <button
               onClick={() => setShowAddUser(true)}
               className="gaming-btn flex items-center gap-2 text-sm sm:text-base"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add New User</span>
               <span className="sm:hidden">Add User</span>
-            </button> */}
+            </button>
           </div>
         </div>
 

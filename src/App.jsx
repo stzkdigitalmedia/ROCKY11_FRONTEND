@@ -69,6 +69,7 @@ import Cancel from './pages/Cancel';
 import RoleManagement from './pages/RoleManagement';
 import ManagerLogin from './pages/ManagerLogin';
 import Notifications from './pages/Notifications';
+import ManualDash from './pages/ManualDash';
 
 const ToastContext = createContext();
 
@@ -305,6 +306,12 @@ function App() {
             <Route path="/notifications" element={
               <SuperAdminRoute>
                 <Notifications />
+              </SuperAdminRoute>
+            } />
+
+            <Route path="/manual-dash" element={
+              <SuperAdminRoute>
+                <ManualDash />
               </SuperAdminRoute>
             } />
 

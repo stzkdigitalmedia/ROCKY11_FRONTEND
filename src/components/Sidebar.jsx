@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const allMenuItems = [
   { id: 'dashboard',           label: 'Dashboard',            icon: LayoutDashboard, path: '/dashboard',           roles: ['SA', 'SubAdmin', 'TierRole'] },
+  { id: 'manual-dash',         label: 'Manual Dash',          icon: BarChart2,       path: '/manual-dash',         roles: ['SA'] },
   { id: 'referral',            label: 'Referral',             icon: Users,           path: '/referral',            roles: ['SA', 'SubAdmin'] },
   { id: 'referral-earning',    label: 'Refer & Earn',         icon: Gift,            path: '/referral-earning',    roles: ['SA', 'SubAdmin'] },
   { id: 'role-management',     label: 'Role Management',      icon: Shield,          path: '/role-management',     roles: ['SA', 'SubAdmin'] },
@@ -61,7 +62,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 h-screen shadow-lg transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
-        <div className="p-4">
+        <div className="p-1">
           <div className="flex justify-center">
             <img src="/logo.png" alt="RRRPay" className="object-contain bg-black" />
           </div>
@@ -73,7 +74,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
               <li key={item.id}>
                 <button
                   onClick={() => handleClick(item)}
-                  className={`w-full flex items-center gap-3 px-4 py-1 rounded-lg text-left transition-all duration-300 ${isActive(item) ? 'border' : 'text-gray-700 hover:bg-gray-50'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-0 rounded-lg text-left transition-all duration-300 ${isActive(item) ? 'border' : 'text-gray-700 hover:bg-gray-50'}`}
                   style={isActive(item) ? {
                     backgroundColor: 'rgba(20, 119, 176, 0.1)',
                     color: '#1477b0',
