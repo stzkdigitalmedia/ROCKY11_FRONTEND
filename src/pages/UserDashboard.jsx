@@ -21,6 +21,7 @@ import {
 	Link2,
 	LinkIcon,
 	CheckCircle,
+	GiftIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
@@ -92,6 +93,8 @@ const UserDashboard = () => {
 	const [showUserDropdown, setShowUserDropdown] = useState(false);
 	const [selectedBranch, setSelectedBranch] = useState("");
 	const [announcement, setAnnouncement] = useState(null); // { text, image }
+	const [videoAnnouncement, setVideoAnnouncement] = useState(null); // { video }
+	const [panels, setPanels] = useState([]);
 
 	const [updatedTransactions, setUpdatedTransactions] = useState("");
 	const [showResetPassword, setShowResetPassword] = useState(false);
@@ -508,6 +511,7 @@ const UserDashboard = () => {
 			);
 
 			setGames(availableGames);
+			setPanels(activePanels);
 		} catch (error) {
 			console.error("Failed to fetch games:", error);
 			setGames([]);
@@ -1050,7 +1054,7 @@ const UserDashboard = () => {
 						: transactionForm?.transactionType,
 				role: "User",
 				mode: specialBranches.includes(selectedBranch) ? selectedBranch : 'PowerPay',
-				branchUserName: selectedBranch || "RBIO1D",
+				branchUserName: selectedBranch || 'RBIO1D',
 			};
 
 			// Add bank details for withdraw transactions
@@ -1175,35 +1179,26 @@ const UserDashboard = () => {
 			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
 			.catch(() => { });
 	}, []);
-	  useEffect(() => {
-    if (sessionStorage.getItem('showAnnouncement') === 'true') {
-      console.log('🎯 Fetching announcement banner...');
-      apiHelper.get('/announcement/getAnnouncement')
-        .then(res => {
-          console.log('📢 Announcement API Response:', res);
-          const data = res?.data;
-          const text = data?.userAnnouncement || '';
-          const image = data?.bannerImage || '';
-          console.log('📸 Banner Image URL:', image);
-          console.log('📝 Banner Text:', text);
-          if (text || image) {
-            console.log('✅ Setting announcement popup');
-            setAnnouncement({ text, image });
-          } else {
-            console.log('❌ No banner image or text found');
-          }
-        })
-        .catch((err) => {
-          console.error('❌ Failed to fetch announcement:', err);
-        })
-        .finally(() => {
-          console.log('🗑️ Removing showAnnouncement flag');
-          sessionStorage.removeItem('showAnnouncement');
-        });
-    } else {
-      console.log('⏭️ showAnnouncement flag not set, skipping banner');
-    }
-  }, []);
+	useEffect(() => {
+		if (sessionStorage.getItem('showAnnouncement') === 'true') {
+			apiHelper.get('/announcement/getAnnouncement')
+				.then(res => {
+					const data = res?.data;
+					const text = data?.userAnnouncement || '';
+					const image = data?.bannerImage || '';
+					const video = data?.bannerVideo || '';
+					if (data?.isBanner && (text || image)) {
+						setAnnouncement({ text, image, video: data?.isShowVideo ? video : '' });
+					} else if (data?.isShowVideo && video) {
+						setVideoAnnouncement({ video });
+					}
+				})
+				.catch(() => { })
+				.finally(() => {
+					sessionStorage.removeItem('showAnnouncement');
+				});
+		}
+	}, []);
 
 	// Smart polling for sub accounts - only when there are pending statuses
 	useEffect(() => {
@@ -1255,7 +1250,13 @@ const UserDashboard = () => {
 					</Link>
 
 					<div className="absolute top-0 right-0">
-						<LanguageSelector />
+						<div className='flex items-center gap-2'>
+							{/* <button onClick={() => navigate('/refer-earn')}
+								className="p-[7px] mt-[12.5px] h-fit bg-gray-800 rounded-full border-1 border-white transition-colors">
+								<GiftIcon className="w-5 h-5 text-white" />
+							</button> */}
+							<LanguageSelector />
+						</div>
 					</div>
 
 					{/* CENTER WRAPPER */}
@@ -1429,6 +1430,14 @@ const UserDashboard = () => {
 														<h3 className="font-bold text-sm sm:text-lg notranslate">
 															{game || "Game"}
 														</h3>
+														{panels.some(p => p.panelName === game && p.isTrending) ? (
+															<div className="flex items-center gap-1 mt-0.5">
+																<span className="text-orange-400 text-xs">🏆</span>
+																<span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+															</div>
+														) : (
+															<div className="h-[18px]" />
+														)}
 													</div>
 												</div>
 
@@ -1687,6 +1696,14 @@ const UserDashboard = () => {
 														<h3 className="font-bold text-sm sm:text-lg notranslate">
 															{game.name}
 														</h3>
+														{panels.some(p => p.panelName === game.name && p.isTrending) ? (
+															<div className="flex items-center gap-1 mt-0.5">
+																<span className="text-orange-400 text-xs">🏆</span>
+																<span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+															</div>
+														) : (
+															<div className="h-[18px]" />
+														)}
 													</div>
 												</div>
 
@@ -1925,35 +1942,77 @@ const UserDashboard = () => {
 				/>
 			)}
 
-			  {/* Bottom padding to prevent content overlap */}
-      {/* Announcement Popup */}
-			{/* {announcement && (
-				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
-					<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
-					<button
-						onClick={() => setAnnouncement(null)}
-						className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-					>
-						<X className="w-4 h-4" />
-					</button>
-						{announcement.image && (
-							<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
-						)}
-						<div className="p-4">
-							{announcement.text && (
-								<p className="text-gray-700 text-sm whitespace-pre-wrap mb-4">{announcement.text}</p>
-							)}
+			{/* Bottom padding to prevent content overlap */}
+			{/* Announcement Popup */}
+			{
+				announcement && (
+					<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+						<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
 							<button
-								onClick={() => setAnnouncement(null)}
-								className="w-full py-2 rounded-xl text-white font-semibold"
-								style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								onClick={() => {
+									const video = announcement.video;
+									setAnnouncement(null);
+									if (video) setVideoAnnouncement({ video });
+								}}
+								className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
 							>
-								OK
+								<X className="w-4 h-4" />
 							</button>
+							{announcement.image && (
+								<img src={announcement.image} alt="Announcement" className="w-full object-cover" />
+							)}
+							<div className="p-4">
+								{announcement.text && (
+									<p className="text-gray-700 text-sm whitespace-pre-wrap mb-4">{announcement.text}</p>
+								)}
+								<button
+									onClick={() => {
+										const video = announcement.video;
+										setAnnouncement(null);
+										if (video) setVideoAnnouncement({ video });
+									}}
+									className="w-full py-2 rounded-xl text-white font-semibold"
+									style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								>
+									OK
+								</button>
+							</div>
 						</div>
 					</div>
-				</div>
-			)} */}
+				)
+			}
+
+			{/* Video Announcement Popup */}
+			{
+				videoAnnouncement && (
+					<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+						<div className="bg-black rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden relative">
+							<button
+								onClick={() => setVideoAnnouncement(null)}
+								className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+							>
+								<X className="w-4 h-4" />
+							</button>
+							<video
+								src={videoAnnouncement.video}
+								controls
+								autoPlay
+								className="w-full"
+								onError={(e) => { e.target.style.display = 'none'; }}
+							/>
+							<div className="p-4">
+								<button
+									onClick={() => setVideoAnnouncement(null)}
+									className="w-full py-2 rounded-xl text-white font-semibold"
+									style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}
+								>
+									OK
+								</button>
+							</div>
+						</div>
+					</div>
+				)
+			}
 
 
 			{/* Bottom padding to prevent content overlap */}

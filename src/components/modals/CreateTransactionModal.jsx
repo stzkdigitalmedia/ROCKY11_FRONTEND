@@ -225,9 +225,11 @@ const CreateTransactionModal = ({
 								type="number"
 								placeholder={transactionForm?.transactionType === "Deposit" ? "Enter amount (min 100)" : "Enter amount (min 500)"}
 								value={transactionForm.amount}
-								onChange={(e) =>
-									onFormChange({ ...transactionForm, amount: e.target.value })
-								}
+								onChange={(e) => {
+									const val = e.target.value.replace(/[^0-9]/g, '');
+									onFormChange({ ...transactionForm, amount: val });
+								}}
+								onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
 								onWheel={(e) => e.target.blur()}
 								className="gaming-input"
 								required
@@ -286,7 +288,7 @@ const CreateTransactionModal = ({
 														onChange={() => onBranchChange(branch.branchName)}
 														className="text-blue-600 focus:ring-blue-500"
 													/>
-													<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 500}-₹${user?.teirId?.maxAmount ?? 5000})` : branch.branchName}</span>
+													<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.min_withdraw ?? 1000}-₹${user?.teirId?.max_withdraw ?? 25000})` : branch.branchName}</span>
 												</div>
 											</div>
 										))}
@@ -319,7 +321,7 @@ const CreateTransactionModal = ({
 															onChange={() => onBranchChange(branch.branchName)}
 															className="text-blue-600 focus:ring-blue-500"
 														/>
-														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.minAmount ?? 500}-₹${user?.teirId?.maxAmount ?? 5000})` : branch.branchName}</span>
+														<span className="font-medium text-gray-900">{branch.branchName === 'ALLINONE' ? `INSTANT PAYOUT (₹${user?.teirId?.min_withdraw ?? 1000}-₹${user?.teirId?.max_withdraw ?? 25000})` : branch.branchName}</span>
 													</div>
 												</div>
 											))}

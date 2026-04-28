@@ -74,7 +74,11 @@ const SubUserWithdrawModal = ({
                                 type="number"
                                 placeholder="Enter Amount (min 500)"
                                 value={withdrawForm.amount}
-                                onChange={(e) => onFormChange({ ...withdrawForm, amount: e.target.value })}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    onFormChange({ ...withdrawForm, amount: val });
+                                }}
+                                onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
                                 onWheel={(e) => e.target.blur()}
                                 className="gaming-input"
                                 required

@@ -64,6 +64,7 @@ const MyIDs = ({
     phone: ''
   });
   const [localSubAccounts, setLocalSubAccounts] = useState([]);
+  const [panels, setPanels] = useState([]);
   const [subAccountsLoading, setSubAccountsLoading] = useState(false);
   const [selectedSubUser, setSelectedSubUser] = useState(null);
   const [showSubUserWithdraw, setShowSubUserWithdraw] = useState(false);
@@ -318,6 +319,7 @@ const MyIDs = ({
       );
 
       setLocalGames(availableGames);
+      setPanels(activePanels);
     } catch (error) {
       console.error('Failed to fetch games:', error);
       setLocalGames([]);
@@ -495,11 +497,13 @@ const MyIDs = ({
                           ? `${game.gameUrl.substring(0, 21)}...`
                           : game.gameUrl}
                       </p>
-
-                      {game.trending && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-blue-400">
-                          🏆 Trending
+                      {panels.some(p => p.panelName === game.name && p.isTrending) ? (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-orange-400 text-xs">🏆</span>
+                          <span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
                         </div>
+                      ) : (
+                        <div className="h-[18px]" />
                       )}
                     </div>
                   </div>
@@ -560,6 +564,14 @@ const MyIDs = ({
                           <p className="text-xs text-gray-300">
                             {acc?.clientName}
                           </p>
+                          {panels.some(p => p.panelName === acc.gameId?.name && p.isTrending) ? (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <span className="text-orange-400 text-xs">🏆</span>
+                              <span className="text-yellow-500 text-[11px] font-semibold tracking-wide animate-pulse">TRENDING</span>
+                            </div>
+                          ) : (
+                            <div className="h-[18px]" />
+                          )}
                         </div>
                       </div>
                     </div>

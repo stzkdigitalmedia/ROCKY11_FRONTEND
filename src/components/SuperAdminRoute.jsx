@@ -12,7 +12,7 @@ const SuperAdminRoute = ({ children }) => {
     );
   }
 
-  if (!user || (user.role !== 'SA' && user.role !== 'SubAdmin')) {
+  if (!user || (user.role !== 'SA' && user.role !== 'SubAdmin' && user.role !== 'TierRole')) {
     return <Navigate to="/suprime/super-admin" replace />;
   }
 

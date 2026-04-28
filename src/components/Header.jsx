@@ -166,7 +166,7 @@ const Header = () => {
 						: transactionForm?.transactionType,
 				role: "User",
 				mode: "PowerPay",
-				branchUserName: selectedBranch || "Rockybook",
+				branchUserName: selectedBranch || "RBIO1D",
 			};
 
 			// Add bank details for withdraw transactions

@@ -257,6 +257,7 @@ const PanelManagement = () => {
       await apiHelper.patch(`/panel/updatePanelVisibility/${panelId}`, {
         isDefault: panel.isDefault,
         isShow: !currentShow,
+        isTrending: panel.isTrending,
       });
       showToast("Panel show status updated successfully", "success");
     } catch (error) {
@@ -266,6 +267,30 @@ const PanelManagement = () => {
         ),
       );
       showToast(error.message || "Failed to update panel show status", "error");
+    }
+  };
+
+  const handleTrendingToggle = async (panelId, currentTrending, panel) => {
+    setPanels((prevPanels) =>
+      prevPanels.map((p) =>
+        (p._id || p.id) === panelId ? { ...p, isTrending: !currentTrending } : p,
+      ),
+    );
+
+    try {
+      await apiHelper.patch(`/panel/updatePanelVisibility/${panelId}`, {
+        isDefault: panel.isDefault,
+        isShow: panel.isShow,
+        isTrending: !currentTrending,
+      });
+      showToast("Panel trending status updated successfully", "success");
+    } catch (error) {
+      setPanels((prevPanels) =>
+        prevPanels.map((p) =>
+          (p._id || p.id) === panelId ? { ...p, isTrending: currentTrending } : p,
+        ),
+      );
+      showToast(error.message || "Failed to update panel trending status", "error");
     }
   };
 
@@ -551,6 +576,9 @@ const PanelManagement = () => {
                         <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Show panel
                         </th>
+                        <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trending
+                        </th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Edit
                         </th>
@@ -667,6 +695,26 @@ const PanelManagement = () => {
                                 className="sr-only peer"
                               />
                               <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <label
+                              className="relative inline-flex items-center cursor-pointer"
+                              title="Trending"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={panel.isTrending || false}
+                                onChange={() =>
+                                  handleTrendingToggle(
+                                    panel._id || panel.id,
+                                    panel.isTrending || false,
+                                    panel,
+                                  )
+                                }
+                                className="sr-only peer"
+                              />
+                              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                             </label>
                           </td>
                           <td className="py-3 px-4">

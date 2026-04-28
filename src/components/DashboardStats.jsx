@@ -5,6 +5,7 @@ import AddUserForm from './AddUserForm';
 import { Users, Plus, Calendar, RotateCcw } from 'lucide-react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
+import { useAuth } from '../hooks/useAuth';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -33,6 +34,7 @@ const DashboardStats = () => {
   ]);
   const hasFetched = useRef(false);
   const toast = useToastContext();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const refreshUsers = () => {
@@ -230,7 +232,7 @@ const DashboardStats = () => {
             onClick={() => navigate('/ftd-complete-users')}
           >
             <h3 className="text-sm font-medium text-gray-500">FTD Complete User</h3>
-            <p className="text-2xl font-bold text-green-600">{dashSummary?.ftd_users_count|| 0}</p>
+            <p className="text-2xl font-bold text-green-600">{dashSummary?.ftd_users_count || 0}</p>
           </div>
           <div
             className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
@@ -239,26 +241,35 @@ const DashboardStats = () => {
             <h3 className="text-sm font-medium text-gray-500">FTD Pending User</h3>
             <p className="text-2xl font-bold text-orange-600">{dashSummary?.userRegistrationsNoTranxCount || 0}</p>
           </div>
-          <div 
-            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => navigate('/active-users')}
-          >
-            <h3 className="text-sm font-medium text-gray-500">Active User</h3>
-            <p className="text-2xl font-bold text-green-600">{activeUsercount?.totalActiveUsers || 0}</p>
-          </div>
+          {user?.role !== 'TierRole' && (
+            <div
+              className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/active-users')}
+            >
+              <h3 className="text-sm font-medium text-gray-500">Active User</h3>
+              <p className="text-2xl font-bold text-green-600">{activeUsercount?.totalActiveUsers || 0}</p>
+            </div>
+          )}
         </>
       </div>
 
       {/* Status Wise Breakdown */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Wise Breakdown</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <div
             className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
           >
             <h3 className="text-sm font-medium text-gray-500">Bonus</h3>
             <p className="text-xl font-bold text-green-600">₹{dashSummary?.totalBonus?.totalAmount?.toLocaleString() || 0}</p>
             <p className="text-sm text-gray-500 mt-1">{dashSummary?.totalBonus?.count || 0} transactions</p>
+          </div>
+          <div
+            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <h3 className="text-sm font-medium text-gray-500">Refer & Earn</h3>
+            <p className="text-xl font-bold text-green-600">₹{dashSummary?.totalRefereEarning?.totalAmount?.toLocaleString() || 0}</p>
+            <p className="text-sm text-gray-500 mt-1">{dashSummary?.totalRefereEarning?.count || 0} transactions</p>
           </div>
           <div
             className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
@@ -354,14 +365,14 @@ const DashboardStats = () => {
                 ₹{totalBalance.toLocaleString()} Total Balance
               </div>
             </div> */}
-            {/* <button
+            <button
               onClick={() => setShowAddUser(true)}
               className="gaming-btn flex items-center gap-2 text-sm sm:text-base"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add New User</span>
               <span className="sm:hidden">Add User</span>
-            </button> */}
+            </button>
           </div>
         </div>
 

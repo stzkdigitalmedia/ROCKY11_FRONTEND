@@ -188,7 +188,7 @@ const UserProfile = () => {
 						: transactionForm?.transactionType,
 				role: "User",
 				mode: "PowerPay",
-				branchUserName: selectedBranch || "Rockybook",
+				branchUserName: selectedBranch || 'RBIO1D',
 			};
 
 			// Add bank details for withdraw transactions
@@ -346,11 +346,10 @@ const UserProfile = () => {
 								</h1>
 								<div className="flex items-center justify-start gap-2">
 									<span
-										className={`px-2 rounded-full text-[12px] font-medium ${
-											user?.isActive
+										className={`px-2 rounded-full text-[12px] font-medium ${user?.isActive
 												? "bg-green-100 text-green-800"
 												: "bg-red-100 text-red-800"
-										}`}
+											}`}
 									>
 										{user?.isActive ? t("active") : t("inactive")}
 									</span>

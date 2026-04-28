@@ -48,9 +48,12 @@ import TierDetails from './pages/TierDetails';
 import Passbook from './pages/Passbook';
 import WhatsAppButton from './components/WhatsAppButton';
 import { useAuth } from './hooks/useAuth';
+import useNotification from './hooks/useNotification';
 import SABonuses from './pages/SABonuses';
 import ActiveUsers from './pages/ActiveUsers';
 import Referral from './pages/Referral';
+import ReferralEarning from './pages/ReferralEarning';
+import ReferEarn from './pages/ReferEarn';
 import ReferralDepositTransactions from './pages/ReferralDepositTransactions';
 import ReferralWithdrawalTransactions from './pages/ReferralWithdrawalTransactions';
 import ReferralStatusDetails from './pages/ReferralStatusDetails';
@@ -63,7 +66,10 @@ import Success from './pages/Success';
 import Failed from './pages/Failed';
 import Pending from './pages/Pending';
 import Cancel from './pages/Cancel';
-
+import RoleManagement from './pages/RoleManagement';
+import ManagerLogin from './pages/ManagerLogin';
+import Notifications from './pages/Notifications';
+import ManualDash from './pages/ManualDash';
 
 const ToastContext = createContext();
 
@@ -78,6 +84,7 @@ export const useToastContext = () => {
 function App() {
   const toast = useToast();
   const { user } = useAuth();
+  useNotification();
   return (
     <div className='bg-gray-300'>
       <ToastContext.Provider value={toast}>
@@ -85,6 +92,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/suprime/super-admin" element={<AdminLogin />} />
+            <Route path="/tier-login" element={<ManagerLogin />} />
             <Route path="/panel-login" element={<PanelLogin />} />
             <Route path="/peer-login" element={<PeerLogin />} />
             <Route path="/transaction/success" element={<Success />} />
@@ -284,6 +292,29 @@ function App() {
                 <Overview />
               </SuperAdminRoute>
             } />
+            <Route path="/role-management" element={
+              <SuperAdminRoute>
+                <RoleManagement />
+              </SuperAdminRoute>
+            } />
+            <Route path="/referral-earning" element={
+              <SuperAdminRoute>
+                <ReferralEarning />
+              </SuperAdminRoute>
+            } />
+
+            <Route path="/notifications" element={
+              <SuperAdminRoute>
+                <Notifications />
+              </SuperAdminRoute>
+            } />
+
+            <Route path="/manual-dash" element={
+              <SuperAdminRoute>
+                <ManualDash />
+              </SuperAdminRoute>
+            } />
+
             <Route path="/user-dashboard" element={
               <UserRoute>
                 <UserDashboard />
@@ -304,6 +335,11 @@ function App() {
                 <Passbook />
               </UserRoute>
             } />
+            <Route path="/refer-earn" element={
+              <UserRoute>
+                <ReferEarn />
+              </UserRoute>
+            } />
             <Route path="/sub-accounts" element={
               <SuperAdminRoute>
                 <SubAccounts />
@@ -315,7 +351,7 @@ function App() {
           </Routes>
           <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
           {
-            user?.role !== 'SA' && user?.role !== 'SubAdmin' && user?.role !== 'Panel' && user?.role !== 'Peer' && <WhatsAppButton />
+            user?.role !== 'SA' && user?.role !== 'SubAdmin' && user?.role !== 'Panel' && user?.role !== 'Peer' && user?.role !== 'TierRole' && <WhatsAppButton />
           }
         </Router>
       </ToastContext.Provider>

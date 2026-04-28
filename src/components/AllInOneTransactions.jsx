@@ -207,6 +207,7 @@ const AllInOneTransactions = ({ onRegisterRefresh }) => {
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Details</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">remark</th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -227,6 +228,11 @@ const AllInOneTransactions = ({ onRegisterRefresh }) => {
                                         <div className="text-xs text-gray-500">IFSC: {tx.ifscCode?.toUpperCase() || 'N/A'}</div>
                                         <div className="text-xs text-gray-500">Holder Name: {tx.accHolderName?.trim() || ''}</div>
                                         <div className="text-xs text-gray-500">UPI: {tx.upiId}</div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium`}>
+                                            {tx.remarks || 'N/A'}
+                                        </span>
                                     </td>
                                     <td className="py-3 px-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.transactionType === 'Deposit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>

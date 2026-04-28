@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { X, Check } from 'lucide-react';
@@ -8,17 +8,21 @@ import PhoneInput from './PhoneInput';
 const AddUserForm = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     clientName: '',
-    fullName: '',
-    email: '',
     password: '',
-    transactionPassword: '',
-    city: '',
     phone: '',
-    branchName: '',
-    role: 'User'
+    branchName: 'RBIO1D',
+    referalCode: 'ADMIN',
+    teirId: ''
   });
   const [loading, setLoading] = useState(false);
+  const [tiers, setTiers] = useState([]);
   const toast = useToastContext();
+
+  useEffect(() => {
+    apiHelper.get('/tier/getAllTiers_WithoutPagination')
+      .then(res => setTiers(res?.data?.tiers || res?.data || []))
+      .catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -59,41 +63,24 @@ const AddUserForm = ({ onClose, onSuccess }) => {
               <input name="clientName" placeholder="Enter username" value={formData.clientName} onChange={handleChange} className="gaming-input" required />
             </div>
             <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input name="fullName" placeholder="Enter full name" value={formData.fullName} onChange={handleChange} className="gaming-input" required />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input name="email" type="email" placeholder="Enter email address" value={formData.email} onChange={handleChange} className="gaming-input" required />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <PasswordInput name="password" placeholder="Enter password" value={formData.password} onChange={handleChange} className="gaming-input" required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Transaction PIN</label>
-              <PasswordInput name="transactionPassword" placeholder="Enter PIN" value={formData.transactionPassword} onChange={handleChange} className="gaming-input" required />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="form-group">
-              <label className="form-label">City</label>
-              <input name="city" placeholder="Enter city" value={formData.city} onChange={handleChange} className="gaming-input" required />
-            </div>
-            <div className="form-group">
               <label className="form-label">Phone</label>
               <PhoneInput value={formData.phone} onChange={(value) => setFormData({...formData, phone: value})} placeholder="Enter mobile number" />
             </div>
           </div>
-          
+
+          <div className="form-group mb-4">
+            <label className="form-label">Password</label>
+            <PasswordInput name="password" placeholder="Enter password" value={formData.password} onChange={handleChange} className="gaming-input" required />
+          </div>
+
           <div className="form-group mb-6">
-            <label className="form-label">Branch Name</label>
-            <input name="branchName" placeholder="Enter branch name" value={formData.branchName} onChange={handleChange} className="gaming-input" required />
+            <label className="form-label">Tier</label>
+            <select name="teirId" value={formData.teirId} onChange={handleChange} className="gaming-input" required>
+              <option value="">Select Tier</option>
+              {tiers.map(tier => (
+                <option key={tier._id} value={tier._id}>{tier.teirName}</option>
+              ))}
+            </select>
           </div>
           
           <div className="flex gap-3">
