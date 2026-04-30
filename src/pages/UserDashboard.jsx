@@ -1317,8 +1317,8 @@ const UserDashboard = () => {
 				</div>
 
 				{/* Marquee */}
-				<div className="mt-3 mx-2 overflow-hidden rounded-lg bg-[#1a1a2e] border border-[#1477b0]/30 py-1 flex items-center gap-2 px-3">
-					<span className="text-sm flex-shrink-0">📢</span>
+				<div className="mt-2 mx-2 overflow-hidden rounded-xl bg-[#1a1a2e] border border-[#1477b0]/30 py-1 flex items-center gap-2 px-3">
+					<span className="text-lg flex-shrink-0">📢</span>
 					<div className="overflow-hidden flex-1">
 						<marquee
 							className="text-xs font-medium text-white"
