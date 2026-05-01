@@ -1321,7 +1321,7 @@ const UserDashboard = () => {
 					<span className="text-lg flex-shrink-0">📢</span>
 					<div className="overflow-hidden flex-1">
 						<marquee
-							className="text-xs font-medium text-white"
+							className="text-xs font-medium text-white mt-2"
 							onMouseOver={(e) => e.target.stop()}
 							onMouseOut={(e) => e.target.start()}
 						>
@@ -1339,7 +1339,7 @@ const UserDashboard = () => {
 
 				{/* Sub Accounts Slider */}
 				<div className="m-1 rounded-2xl mt-2 mx-2 p-4 sm:p-6 bg-[#1b1b1b] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-					<div className="flex justify-between items-center mb-6">
+					<div className="flex justify-between items-center mb-4">
 						<div>
 							<h2 className="text-xl font-semibold text-white">
 								{t("myIds")} ({subAccounts.length})
