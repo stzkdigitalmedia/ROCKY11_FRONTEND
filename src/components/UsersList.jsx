@@ -49,6 +49,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [deleteLogsLoading, setDeleteLogsLoading] = useState(false);
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
+  const [minCount, setMinCount] = useState('');
+  const [maxCount, setMaxCount] = useState('');
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusUser, setBonusUser] = useState(null);
   const [bonusAmount, setBonusAmount] = useState('');
@@ -723,6 +725,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       if (searchTerm) params.append('search', searchTerm);
       if (minAmount !== '') params.append('minAmount', minAmount);
       if (maxAmount !== '') params.append('maxAmount', maxAmount);
+      if (minCount !== '') params.append('minCount', minCount);
+      if (maxCount !== '') params.append('maxCount', maxCount);
 
       const response = await apiHelper.get(
         `/user/getUsers?${params.toString()}`
@@ -772,14 +776,13 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, minAmount, maxAmount]);
+  }, [searchTerm, minAmount, maxAmount, minCount, maxCount]);
 
 
   return (
     <div>
       {/* Search Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {/* Search */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
         <input
           type="text"
           placeholder="Search by name or phone"
@@ -787,22 +790,36 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
           onChange={(e) => setSearchTerm(e.target.value)}
           className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
-
-        {/* Min Amount */}
         <input
           type="number"
           placeholder="Min Amount"
           value={minAmount}
           onChange={(e) => setMinAmount(e.target.value)}
+          onWheel={(e) => e.target.blur()}
           className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
-
-        {/* Max Amount */}
         <input
           type="number"
           placeholder="Max Amount"
           value={maxAmount}
           onChange={(e) => setMaxAmount(e.target.value)}
+          onWheel={(e) => e.target.blur()}
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        />
+        <input
+          type="number"
+          placeholder="Min Deposit Count"
+          value={minCount}
+          onChange={(e) => setMinCount(e.target.value)}
+          onWheel={(e) => e.target.blur()}
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        />
+        <input
+          type="number"
+          placeholder="Max Deposit Count"
+          value={maxCount}
+          onChange={(e) => setMaxCount(e.target.value)}
+          onWheel={(e) => e.target.blur()}
           className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
       </div>
@@ -852,6 +869,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               {/* <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Location</th> */}
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet bal.</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Role</th>
+              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Deposite count</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
               {(authUser?.role !== 'TierRole' || true) && (
@@ -950,6 +968,11 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                       <span className="badge badge-green">
                         {user?.role}
                       </span>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4 hidden sm:table-cell">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate">{user?.powerPayDepositCount}</p>
+                      </div>
                     </td>
                     <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
                       <label className={`relative inline-flex items-center ${tierPerms && !tierPerms.is_Block_User ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>

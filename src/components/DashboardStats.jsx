@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UsersList from './UsersList';
 import AddUserForm from './AddUserForm';
-import { Users, Plus, Calendar, RotateCcw } from 'lucide-react';
+import { Users, Plus, Calendar, RotateCcw, RefreshCw } from 'lucide-react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { useAuth } from '../hooks/useAuth';
@@ -24,6 +24,8 @@ const DashboardStats = () => {
   const [todayDepositCount, setTodayDepositCount] = useState(0);
   const [todayWithdrawalCount, setTodayWithdrawalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [ftdPendingLoading, setFtdPendingLoading] = useState(false);
+  const [ftdCompleteLoading, setFtdCompleteLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
@@ -42,68 +44,126 @@ const DashboardStats = () => {
   };
 
   const fetchDashboardSummary = async (startDate, endDate) => {
+    if (loading) return; // Prevent multiple simultaneous calls
+    
     setLoading(true);
     try {
       const start = startDate || new Date();
       const end = endDate || new Date();
 
-      // Local API call for New User Registrations and FTD Pending User
+      // Format dates for API calls
       const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
       const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
 
-      const localResponse = await apiHelper.get(`/transaction/dash-summary?startDate=${startUTC}&endDate=${endUTC}`);
-      const summaryData = localResponse?.data || localResponse;
-      setDashSummary(summaryData);
+      // Make all API calls in parallel except FTD pending and complete
+      const [payInOutResponse, statusWiseResponse, userRegResponse, bonusResponse, referralResponse, deleteIdsResponse, activeUserResponse, todayDepositResponse, todayWithdrawalResponse, profitLossResponse] = await Promise.all([
+        apiHelper.get(`/transaction/dash-transaction-DW-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-transaction-statusWise-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-user-registration-count-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-bonus-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-referral-earning-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.post('/deletelog/getCount_of_DeleteId', {
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0]
+        }),
+        apiHelper.post('/user/getActiveUserLogsCount', {
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0]
+        }),
+        apiHelper.get(`/transaction/getDeposit_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/getWithdraw_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get('/transaction/profit_and_loss_for_SuperAdmin')
+      ]);
 
-      // External API call for all other data
-      const formatDate = (date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
+      // Extract data from responses
+      const payInOutData = payInOutResponse?.data || payInOutResponse;
+      const statusWiseData = statusWiseResponse?.data || statusWiseResponse;
+      const userRegData = userRegResponse?.data || userRegResponse;
+      const bonusData = bonusResponse?.data || bonusResponse;
+      const referralData = referralResponse?.data || referralResponse;
+      // Set all state data except FTD data
+      const combinedSummary = {
+        transactionsDetails: {
+          totalDeposit: payInOutData?.transactionsDetails?.totalDeposit || 0,
+          depositCount: payInOutData?.transactionsDetails?.depositCount || 0,
+          totalWithdrawal: payInOutData?.transactionsDetails?.totalWithdrawal || 0,
+          withdrawalCount: payInOutData?.transactionsDetails?.withdrawalCount || 0
+        },
+        userRegistrationsCount: userRegData?.userRegistrationsCount || 0,
+        userRegistrationsNoTranxCount: 0, // Will be loaded on demand
+        ftd_users_count: 0, // Will be loaded on demand
+        statusWiseBreakdown: statusWiseData?.statusWiseBreakdown || {},
+        totalBonus: {
+          totalAmount: bonusData?.totalAmount || 0,
+          count: bonusData?.count || 0
+        },
+        totalRefereEarning: {
+          totalAmount: referralData?.totalAmount || 0,
+          count: referralData?.count || 0
+        }
       };
-
-      const payload = {
-        startDate: formatDate(start),
-        endDate: formatDate(end),
-        platefrom: "PowerPay"
-      };
-      const Mirrpayload = {
-        startDate: formatDate(start),
-        endDate: formatDate(end),
-        platefrom: "PowerPay"
-      };
-
-      const externalResponse = await apiHelper.get(`/transaction/dash-summary?startDate=${startUTC}&endDate=${endUTC}`);
-      setExternalStats(externalResponse?.data?.statusWiseBreakdown || externalResponse?.statusWiseBreakdown || {});
-
-      // Fetch delete IDs count
-      const deleteIdsPayload = {
-        startDate: start.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0]
-      };
-      const deleteIdsResponse = await apiHelper.post('/deletelog/getCount_of_DeleteId', deleteIdsPayload);
+      
+      setDashSummary(combinedSummary);
+      setExternalStats({});
       setDeleteIdsCount(deleteIdsResponse?.data || 0);
-
-      const activeUser = await apiHelper.post('/user/getActiveUserLogsCount', deleteIdsPayload);
-      setActiveUsercount(activeUser)
-      // console.log(activeUser)
-      // Fetch today deposit requests count
-      const todayDepositResponse = await apiHelper.get(`/transaction/getDeposit_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
+      setActiveUsercount(activeUserResponse);
       setTodayDepositCount(todayDepositResponse?.userCount || 0);
-
-      // Fetch today withdrawal requests count
-      const todayWithdrawalResponse = await apiHelper.get(`/transaction/getWithdraw_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
       setTodayWithdrawalCount(todayWithdrawalResponse?.userCount || 0);
-
-      // Fetch profit & loss
-      const profitLossResponse = await apiHelper.get('/transaction/profit_and_loss_for_SuperAdmin');
+      
       const profitData = profitLossResponse?.data || profitLossResponse;
       setProfitLoss({ amount: profitData?.amount || 0, status: profitData?.status || 'Profit' });
     } catch (error) {
       toast.error('Failed to fetch dashboard summary: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Separate function to fetch FTD pending data
+  const fetchFtdPendingData = async () => {
+    if (ftdPendingLoading) return;
+    setFtdPendingLoading(true);
+    try {
+      const start = dateRange[0].startDate;
+      const end = dateRange[0].endDate;
+      const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
+      const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
+      
+      const ftdPendingResponse = await apiHelper.get(`/transaction/dash-user-registered-no-tranx-count-summary?startDate=${startUTC}&endDate=${endUTC}`);
+      const ftdPendingData = ftdPendingResponse?.data || ftdPendingResponse;
+      
+      setDashSummary(prev => ({
+        ...prev,
+        userRegistrationsNoTranxCount: ftdPendingData?.userRegistrationsNoTranxCount || 0
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch FTD pending data: ' + error.message);
+    } finally {
+      setFtdPendingLoading(false);
+    }
+  };
+
+  // Separate function to fetch FTD complete data
+  const fetchFtdCompleteData = async () => {
+    if (ftdCompleteLoading) return;
+    setFtdCompleteLoading(true);
+    try {
+      const start = dateRange[0].startDate;
+      const end = dateRange[0].endDate;
+      const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
+      const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
+      
+      const ftdCompleteResponse = await apiHelper.get(`/transaction/dash-ftd-summary?startDate=${startUTC}&endDate=${endUTC}`);
+      const ftdCompleteData = ftdCompleteResponse?.data || ftdCompleteResponse;
+      
+      setDashSummary(prev => ({
+        ...prev,
+        ftd_users_count: ftdCompleteData?.ftd_users_count || 0
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch FTD complete data: ' + error.message);
+    } finally {
+      setFtdCompleteLoading(false);
     }
   };
 
@@ -228,16 +288,36 @@ const DashboardStats = () => {
             <p className="text-2xl font-bold text-blue-600">{dashSummary?.userRegistrationsCount || 0}</p>
           </div>
           <div
-            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
+            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow relative"
             onClick={() => navigate('/ftd-complete-users')}
           >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                fetchFtdCompleteData();
+              }}
+              className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded"
+              disabled={ftdCompleteLoading}
+            >
+              <RefreshCw size={14} className={ftdCompleteLoading ? 'animate-spin' : ''} />
+            </button>
             <h3 className="text-sm font-medium text-gray-500">FTD Complete User</h3>
             <p className="text-2xl font-bold text-green-600">{dashSummary?.ftd_users_count || 0}</p>
           </div>
           <div
-            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow"
+            className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow relative"
             onClick={() => navigate('/no-transaction-users')}
           >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                fetchFtdPendingData();
+              }}
+              className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded"
+              disabled={ftdPendingLoading}
+            >
+              <RefreshCw size={14} className={ftdPendingLoading ? 'animate-spin' : ''} />
+            </button>
             <h3 className="text-sm font-medium text-gray-500">FTD Pending User</h3>
             <p className="text-2xl font-bold text-orange-600">{dashSummary?.userRegistrationsNoTranxCount || 0}</p>
           </div>

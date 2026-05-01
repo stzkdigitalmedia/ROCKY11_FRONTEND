@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UsersList from './UsersList';
 import AddUserForm from './AddUserForm';
-import { Users, Calendar, RotateCcw } from 'lucide-react';
+import { Users, Calendar, RotateCcw, RefreshCw } from 'lucide-react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { DateRangePicker } from 'react-date-range';
@@ -10,7 +10,7 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  PieChart, Pie, Cell
 } from 'recharts';
 
 const COLORS = ['#3b82f6', '#eab308', '#22c55e', '#ef4444', '#8b5cf6', '#f97316'];
@@ -67,7 +67,46 @@ const StatSideCards = ({ items, horizontal }) => (
   </div>
 );
 
+const CasinoTable = ({ title, columns, data, loading }) => (
+  <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+    <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>{title}</h2>
+    {loading ? (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+        <div className="loading-spinner" style={{ width: 36, height: 36 }}></div>
+      </div>
+    ) : (
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: '#f8fafc' }}>
+              {columns.map((col, i) => (
+                <th key={i} style={{ padding: '10px 14px', textAlign: i === 0 ? 'left' : 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.length === 0 ? (
+              <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No data available</td></tr>
+            ) : data.map((row, ri) => (
+              <tr key={ri} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                {columns.map((col, ci) => (
+                  <td key={ci} style={{ padding: '10px 14px', textAlign: ci === 0 ? 'left' : 'right', color: '#0f172a', fontWeight: ci === 0 ? 600 : 400 }}>
+                    {col.render ? col.render(row) : row[col.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+);
+
 const OverviewStats = () => {
+  const [activeTab, setActiveTab] = useState('overview');
   const [showAddUser, setShowAddUser] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
@@ -78,6 +117,8 @@ const OverviewStats = () => {
   const [todayDepositCount, setTodayDepositCount] = useState(0);
   const [todayWithdrawalCount, setTodayWithdrawalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [ftdPendingLoading, setFtdPendingLoading] = useState(false);
+  const [ftdCompleteLoading, setFtdCompleteLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection' }]);
   const [panelStats, setPanelStats] = useState(null);
@@ -95,34 +136,102 @@ const OverviewStats = () => {
       const startStr = start.toISOString().split('T')[0];
       const endStr = end.toISOString().split('T')[0];
 
-      const localResponse = await apiHelper.get(`/transaction/dash-summary?startDate=${startUTC}&endDate=${endUTC}`);
-      const summaryData = localResponse?.data || localResponse;
+      // Make main API calls in parallel (excluding FTD data)
+      const [payInOutResponse, userRegResponse, statusWiseResponse, bonusResponse, deleteIdsResponse, activeUserResponse, todayDepositResponse, todayWithdrawalResponse, panelResponse] = await Promise.all([
+        apiHelper.get(`/transaction/dash-transaction-DW-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-user-registration-count-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-transaction-statusWise-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/dash-bonus-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.post('/deletelog/getCount_of_DeleteId', { startDate: startStr, endDate: endStr }),
+        apiHelper.post('/user/getActiveUserLogsCount', { startDate: startStr, endDate: endStr }),
+        apiHelper.get(`/transaction/getDeposit_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/transaction/getWithdraw_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.post('/transaction/getMasterPanelStats', { startDate: startStr, endDate: endStr, panelId: '' })
+      ]);
+
+      // Extract data from responses
+      const payInOutData = payInOutResponse?.data || payInOutResponse;
+      const userRegData = userRegResponse?.data || userRegResponse;
+      const statusWiseData = statusWiseResponse?.data || statusWiseResponse;
+      const bonusData = bonusResponse?.data || bonusResponse;
+
+      // Combine data into dashSummary object (FTD data will be loaded on demand)
+      const summaryData = {
+        transactionsDetails: {
+          totalDeposit: payInOutData?.transactionsDetails?.totalDeposit || 0,
+          depositCount: payInOutData?.transactionsDetails?.depositCount || 0,
+          totalWithdrawal: payInOutData?.transactionsDetails?.totalWithdrawal || 0,
+          withdrawalCount: payInOutData?.transactionsDetails?.withdrawalCount || 0
+        },
+        userRegistrationsCount: userRegData?.userRegistrationsCount || 0,
+        userRegistrationsNoTranxCount: 0, // Will be loaded on demand
+        ftd_users_count: 0, // Will be loaded on demand
+        statusWiseBreakdown: statusWiseData?.statusWiseBreakdown || {},
+        totalBonus: {
+          totalAmount: bonusData?.totalAmount || 0,
+          count: bonusData?.count || 0
+        },
+        totalRefereEarning: { totalAmount: 0, count: 0 }
+      };
+      
       setDashSummary(summaryData);
-
-      const deleteIdsPayload = { startDate: startStr, endDate: endStr };
-      const deleteIdsResponse = await apiHelper.post('/deletelog/getCount_of_DeleteId', deleteIdsPayload);
       setDeleteIdsCount(deleteIdsResponse?.data || 0);
-
-      const activeUser = await apiHelper.post('/user/getActiveUserLogsCount', deleteIdsPayload);
-      setActiveUsercount(activeUser);
-
-      const todayDepositResponse = await apiHelper.get(`/transaction/getDeposit_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
+      setActiveUsercount(activeUserResponse);
       setTodayDepositCount(todayDepositResponse?.userCount || 0);
-
-      const todayWithdrawalResponse = await apiHelper.get(`/transaction/getWithdraw_Users_Transaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
       setTodayWithdrawalCount(todayWithdrawalResponse?.userCount || 0);
-
-      // Master Panel Stats
-      const panelRes = await apiHelper.post('/transaction/getMasterPanelStats', {
-        startDate: startStr,
-        endDate: endStr,
-        panelId: '',
-      });
-      setPanelStats(panelRes);
+      setPanelStats(panelResponse);
     } catch (error) {
       toast.error('Failed to fetch dashboard summary: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Separate function to fetch FTD pending data
+  const fetchFtdPendingData = async () => {
+    if (ftdPendingLoading) return;
+    setFtdPendingLoading(true);
+    try {
+      const start = dateRange[0].startDate;
+      const end = dateRange[0].endDate;
+      const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
+      const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
+      
+      const ftdPendingResponse = await apiHelper.get(`/transaction/dash-user-registered-no-tranx-count-summary?startDate=${startUTC}&endDate=${endUTC}`);
+      const ftdPendingData = ftdPendingResponse?.data || ftdPendingResponse;
+      
+      setDashSummary(prev => ({
+        ...prev,
+        userRegistrationsNoTranxCount: ftdPendingData?.userRegistrationsNoTranxCount || 0
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch FTD pending data: ' + error.message);
+    } finally {
+      setFtdPendingLoading(false);
+    }
+  };
+
+  // Separate function to fetch FTD complete data
+  const fetchFtdCompleteData = async () => {
+    if (ftdCompleteLoading) return;
+    setFtdCompleteLoading(true);
+    try {
+      const start = dateRange[0].startDate;
+      const end = dateRange[0].endDate;
+      const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
+      const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
+      
+      const ftdCompleteResponse = await apiHelper.get(`/transaction/dash-ftd-summary?startDate=${startUTC}&endDate=${endUTC}`);
+      const ftdCompleteData = ftdCompleteResponse?.data || ftdCompleteResponse;
+      
+      setDashSummary(prev => ({
+        ...prev,
+        ftd_users_count: ftdCompleteData?.ftd_users_count || 0
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch FTD complete data: ' + error.message);
+    } finally {
+      setFtdCompleteLoading(false);
     }
   };
 
@@ -163,8 +272,20 @@ const OverviewStats = () => {
 
   const userStatsData = [
     { name: 'New Registrations', value: dashSummary?.userRegistrationsCount || 0 },
-    { name: 'FTD Complete', value: dashSummary?.ftd_users_count || 0 },
-    { name: 'FTD Pending', value: dashSummary?.userRegistrationsNoTranxCount || 0 },
+    { 
+      name: 'FTD Complete', 
+      value: dashSummary?.ftd_users_count || 0,
+      hasReload: true,
+      loading: ftdCompleteLoading,
+      onReload: fetchFtdCompleteData
+    },
+    { 
+      name: 'FTD Pending', 
+      value: dashSummary?.userRegistrationsNoTranxCount || 0,
+      hasReload: true,
+      loading: ftdPendingLoading,
+      onReload: fetchFtdPendingData
+    },
     { name: 'Active Users', value: activeUsercount?.totalActiveUsers || 0 },
   ];
 
@@ -223,6 +344,8 @@ const OverviewStats = () => {
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: 0 }}>Overview</h1>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>Platform analytics & transaction summary</p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ position: 'relative' }}>
@@ -330,9 +453,20 @@ const OverviewStats = () => {
                     : { display: 'flex', flexDirection: 'column', gap: 12, width: 220, flexShrink: 0 }
                   }>
                     {userStatsData.map((item, i) => (
-                      <div key={i} style={{ background: '#f8fafc', borderRadius: 12, padding: '12px 16px', borderLeft: `4px solid ${COLORS[i]}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div key={i} style={{ background: '#f8fafc', borderRadius: 12, padding: '12px 16px', borderLeft: `4px solid ${COLORS[i]}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
                         <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{item.name}</span>
-                        <span style={{ fontSize: 20, fontWeight: 800, color: COLORS[i] }}>{item.value.toLocaleString()}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 20, fontWeight: 800, color: COLORS[i] }}>{item.value.toLocaleString()}</span>
+                          {item.hasReload && (
+                            <button
+                              onClick={item.onReload}
+                              disabled={item.loading}
+                              style={{ padding: '4px', background: 'none', border: 'none', cursor: item.loading ? 'not-allowed' : 'pointer', color: COLORS[i] }}
+                            >
+                              <RefreshCw size={14} className={item.loading ? 'animate-spin' : ''} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
