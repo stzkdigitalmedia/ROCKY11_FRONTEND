@@ -60,7 +60,7 @@ const ReferEarn = () => {
     <div className="min-h-screen max-w-[769px] mx-auto pb-24 bg-[#0e0e0e]">
 
       {/* Header */}
-      <div className="px-4 pt-5 pb-6 relative" style={{ background: 'url(/bghero.svg)', backgroundSize: '400px' }}>
+      <div className="px-4 pt-5 pb-6 relative" style={{ background: 'url(/bghero.svg)', backgroundSize: '800px' }}>
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => navigate(-1)} className="text-white p-1">
             <ChevronLeft className="w-6 h-6" />
