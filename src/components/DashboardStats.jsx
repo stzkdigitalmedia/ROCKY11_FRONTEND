@@ -79,7 +79,7 @@ const DashboardStats = () => {
       const payInOutData = payInOutResponse?.data || payInOutResponse;
       const statusWiseData = statusWiseResponse?.data || statusWiseResponse;
       const userRegData = userRegResponse?.data || userRegResponse;
-      const bonusData = bonusResponse?.data || bonusResponse;
+      const bonusData = bonusResponse?.data?.totalBonus || bonusResponse?.totalBonus || bonusResponse?.data || bonusResponse;
       const referralData = referralResponse?.data || referralResponse;
       // Set all state data except FTD data
       const combinedSummary = {
