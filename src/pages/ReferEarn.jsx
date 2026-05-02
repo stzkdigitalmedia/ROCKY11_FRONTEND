@@ -57,60 +57,60 @@ const ReferEarn = () => {
   const referralCriteria = referralData?.referralCriteria?.days || [];
 
   return (
-    <div className="min-h-screen max-w-[850px] mx-auto pb-24 bg-white">
+    <div className="min-h-screen max-w-[769px] mx-auto pb-24 bg-[#0e0e0e]">
 
       {/* Header */}
-      <div className="px-4 pt-5 pb-6 relative" style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}>
+      <div className="px-4 pt-5 pb-6 relative" style={{ background: 'url(/bghero.svg)', backgroundSize: '400px' }}>
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => navigate(-1)} className="text-white p-1">
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
             <h1 className="text-xl font-bold text-white">Refer & Earn</h1>
-            <p className="text-blue-100 text-xs">Invite friends and earn bonus</p>
+            <p className="text-blue-200 text-xs">Invite friends and earn bonus</p>
           </div>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              <Users className="w-4 h-4 text-white" />
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3 bg-[#1b1b1b] border border-white/10">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(20,119,176,0.3)' }}>
+              <Users className="w-4 h-4 text-[#1477b0]" />
             </div>
             <div>
-              <p className="text-blue-100 text-[10px] font-medium">Referred Users</p>
+              <p className="text-gray-400 text-[10px] font-medium">Referred Users</p>
               <p className="text-white text-base font-bold">{totalRecords}</p>
             </div>
           </div>
-          <div className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              <TrendingUp className="w-4 h-4 text-white" />
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3 bg-[#1b1b1b] border border-white/10">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(20,119,176,0.3)' }}>
+              <TrendingUp className="w-4 h-4 text-[#1477b0]" />
             </div>
             <div>
-              <p className="text-blue-100 text-[10px] font-medium">Total Earnings</p>
+              <p className="text-gray-400 text-[10px] font-medium">Total Earnings</p>
               <p className="text-white text-base font-bold">₹{totalEarnings}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-8 pt-4 space-y-4">
+      <div className="px-4 pt-4 space-y-4">
         {loading ? (
           <div className="text-center py-12">
             <div className="loading-spinner mx-auto mb-4" style={{ width: '36px', height: '36px' }}></div>
-            <p className="text-gray-500 text-sm">Loading...</p>
+            <p className="text-gray-400 text-sm">Loading...</p>
           </div>
         ) : referralData ? (
           <>
             {/* Referral Link Box */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border: '1px solid rgba(20,119,176,0.2)' }}>
-              <div className="px-4 py-3 flex items-center gap-2" style={{ background: 'linear-gradient(135deg, rgba(20,119,176,0.08), rgba(38,78,105,0.06))' }}>
+            <div className="rounded-2xl overflow-hidden bg-[#1b1b1b] border border-white/10">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
                 <Share2 className="w-4 h-4 text-[#1477b0]" />
-                <p className="text-[#1477b0] font-semibold text-sm">Your Referral Link</p>
+                <p className="text-white font-semibold text-sm">Your Referral Link</p>
               </div>
               <div className="px-4 py-3">
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: 'rgba(20,119,176,0.06)', border: '1px dashed rgba(20,119,176,0.3)' }}>
-                  <p className="text-xs text-[#1477b0] break-all flex-1 font-medium">{referralLink || 'No link available'}</p>
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-[#2a2a2a] border border-white/10">
+                  <p className="text-xs text-gray-300 break-all flex-1 font-medium">{referralLink || 'No link available'}</p>
                   {referralLink && (
                     <button
                       onClick={() => { navigator.clipboard.writeText(referralLink); toast.success('Referral link copied!'); }}
@@ -125,10 +125,10 @@ const ReferEarn = () => {
             </div>
 
             {/* How it works */}
-            <div className="bg-white rounded-2xl shadow-sm p-4" style={{ border: '1px solid rgba(20,119,176,0.15)' }}>
+            <div className="rounded-2xl bg-[#1b1b1b] border border-white/10 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Gift className="w-4 h-4 text-[#1477b0]" />
-                <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">How it works</p>
+                <p className="text-sm font-bold text-white uppercase tracking-wide">How it works</p>
               </div>
               <div className="space-y-3">
                 {[
@@ -138,7 +138,7 @@ const ReferEarn = () => {
                 ].map(({ step, text }) => (
                   <div key={step} className="flex items-center gap-3">
                     <span className="w-7 h-7 rounded-full text-white text-[12px] font-bold flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #1477b0, #264e69)' }}>{step}</span>
-                    <p className="text-sm text-gray-600">{text}</p>
+                    <p className="text-sm text-gray-300">{text}</p>
                   </div>
                 ))}
               </div>
@@ -146,14 +146,14 @@ const ReferEarn = () => {
 
             {/* Criteria Table */}
             {referralCriteria.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid rgba(20,119,176,0.15)' }}>
-                <div className="px-4 py-3 flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}>
+              <div className="rounded-2xl overflow-hidden bg-[#1b1b1b] border border-white/10">
+                <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
                   <span className="text-base">🏆</span>
                   <p className="text-white font-bold text-sm">Earning Criteria</p>
                 </div>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: 'rgba(20,119,176,0.06)' }}>
+                    <tr className="border-b border-white/10">
                       <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">Day</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">Max Bonus</th>
                       <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">You Earn</th>
@@ -162,12 +162,12 @@ const ReferEarn = () => {
                   </thead>
                   <tbody>
                     {referralCriteria.map((day, i) => (
-                      <tr key={i} className="border-t border-gray-100" style={{ background: i % 2 === 0 ? '#fff' : 'rgba(20,119,176,0.03)' }}>
+                      <tr key={i} className="border-t border-white/5" style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
                         <td className="px-4 py-3 font-semibold text-[#1477b0]">Day {day.dayNumber}</td>
-                        <td className="px-4 py-3 font-bold text-green-600">₹{day.maxAmount}</td>
-                        <td className="px-4 py-3 font-bold text-orange-500">{day.percentage}%</td>
+                        <td className="px-4 py-3 font-bold text-green-400">₹{day.maxAmount}</td>
+                        <td className="px-4 py-3 font-bold text-orange-400">{day.percentage}%</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${day.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${day.isActive ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
                             {day.isActive ? '✓ Active' : '✗ Off'}
                           </span>
                         </td>
@@ -179,9 +179,9 @@ const ReferEarn = () => {
             )}
 
             {/* Referred Users */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid rgba(20,119,176,0.15)' }}>
-              <div className="px-4 py-3 flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #1477b0 0%, #264e69 100%)' }}>
-                <Users className="w-4 h-4 text-white" />
+            <div className="rounded-2xl overflow-hidden bg-[#1b1b1b] border border-white/10">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
+                <Users className="w-4 h-4 text-[#1477b0]" />
                 <p className="text-white font-bold text-sm">Referred Users</p>
               </div>
               {referredLoading ? (
@@ -190,14 +190,14 @@ const ReferEarn = () => {
                 </div>
               ) : referredUsers.length === 0 ? (
                 <div className="text-center py-8">
-                  <Users className="w-10 h-10 mx-auto mb-2 text-gray-200" />
-                  <p className="text-gray-400 text-sm">No referred users yet</p>
+                  <Users className="w-10 h-10 mx-auto mb-2 text-gray-600" />
+                  <p className="text-gray-500 text-sm">No referred users yet</p>
                 </div>
               ) : (
                 <>
                   <table className="w-full text-xs">
                     <thead>
-                      <tr style={{ background: 'rgba(20,119,176,0.06)' }}>
+                      <tr className="border-b border-white/10">
                         <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">#</th>
                         <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">Name</th>
                         <th className="text-left px-4 py-2.5 font-semibold text-[#1477b0]">Joined</th>
@@ -206,29 +206,28 @@ const ReferEarn = () => {
                     </thead>
                     <tbody>
                       {referredUsers.map((u, i) => (
-                        <tr key={u._id || i} className="border-t border-gray-100" style={{ background: i % 2 === 0 ? '#fff' : 'rgba(20,119,176,0.03)' }}>
-                          <td className="px-4 py-3 text-gray-400 font-medium">{(referredPage - 1) * 10 + i + 1}</td>
+                        <tr key={u._id || i} className="border-t border-white/5" style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
+                          <td className="px-4 py-3 text-gray-500 font-medium">{(referredPage - 1) * 10 + i + 1}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style={{ background: 'linear-gradient(135deg, #1477b0, #264e69)' }}>
                                 {(u.clientName || u.fullName || 'U').charAt(0).toUpperCase()}
                               </div>
-                              <span className="font-medium text-gray-800">{u.clientName || u.fullName || 'N/A'}</span>
+                              <span className="font-medium text-gray-200">{u.clientName || u.fullName || 'N/A'}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-500">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : 'N/A'}</td>
-                          <td className="px-4 py-3 text-right font-bold text-green-600">₹{u.totalEarningsToReferrer || 0}</td>
+                          <td className="px-4 py-3 text-gray-400">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : 'N/A'}</td>
+                          <td className="px-4 py-3 text-right font-bold text-green-400">₹{u.totalEarningsToReferrer || 0}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {referredTotalPages > 1 && (
-                    <div className="flex justify-between items-center px-4 py-3 border-t border-gray-100">
+                    <div className="flex justify-between items-center px-4 py-3 border-t border-white/10">
                       <button
                         onClick={() => fetchReferredUsers(referredPage - 1)}
                         disabled={referredPage === 1}
-                        className="px-4 py-1.5 text-xs rounded-lg border disabled:opacity-40"
-                        style={{ borderColor: 'rgba(20,119,176,0.3)', color: '#1477b0' }}
+                        className="px-4 py-1.5 text-xs rounded-lg border border-white/20 text-gray-300 disabled:opacity-40"
                       >Prev</button>
                       <span className="text-xs text-gray-500">Page {referredPage} of {referredTotalPages}</span>
                       <button
@@ -244,7 +243,7 @@ const ReferEarn = () => {
             </div>
           </>
         ) : (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-600">
             <Gift className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No referral data available</p>
           </div>
