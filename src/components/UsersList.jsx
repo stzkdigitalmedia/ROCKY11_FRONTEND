@@ -688,6 +688,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
         'Phone': user?.phone || 'N/A',
         'Email': user?.email || 'N/A',
         'Balance': user?.balance || 0,
+        'Deposit Count': user?.powerPayDepositCount || 0,
         'Role': user?.role || 'N/A',
         'Status': user?.status || user?.isActive !== false ? 'Active' : 'Inactive',
         'Created Date': user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN') : 'N/A',
