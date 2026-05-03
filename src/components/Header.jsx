@@ -112,6 +112,38 @@ const Header = () => {
 				return;
 			}
 
+			// Check if it's a withdrawal with ALLINONE branch selected
+			if (transactionForm?.transactionType === 'Withdraw' && selectedBranch === 'ALLINONE') {
+				const selectedBank = savedBanks[parseInt(selectedBankId)];
+				if (!selectedBank) {
+					toast.error('Please select a bank account for withdrawal');
+					setTransactionProcessing(false);
+					return;
+				}
+
+				const allinonePayload = {
+					userId: userId,
+					amount: parseFloat(transactionForm?.amount),
+					transactionType: 'Withdrawal',
+					upiId: selectedBank.upiId || '',
+					bankName: selectedBank.bankName || '',
+					accNo: selectedBank.accNo || '',
+					branchUserName: 'ALLINONE',
+					role: 'User',
+					mode: 'ALLINONE',
+					accHolderName: selectedBank.accHolderName || '',
+					ifscCode: selectedBank.ifscCode || ''
+				};
+
+				await apiHelper.post('/transaction/createTransaction', allinonePayload);
+				toast.success('Withdrawal request submitted successfully!');
+				setShowCreateTransaction(false);
+				setTransactionForm({ amount: '', transactionType: 'Deposit', utrNo: '', userScreenShot: '' });
+				setSelectedBankId('');
+				fetchUserBalance();
+				return;
+			}
+
 			// Check if it's a withdrawal with ROCKY11 branch selected (peer transaction)
 			if (
 				transactionForm?.transactionType === "Withdraw" &&
@@ -157,6 +189,7 @@ const Header = () => {
 			}
 
 			// For all other cases (non-ROCKY11 branches) - use createTransaction API
+			const specialBranches = ['ALLINONE', 'LEOPAY'];
 			let payload = {
 				userId: userId,
 				amount: parseFloat(transactionForm?.amount),
@@ -165,8 +198,8 @@ const Header = () => {
 						? "Withdrawal"
 						: transactionForm?.transactionType,
 				role: "User",
-				mode: "PowerPay",
-				branchUserName: selectedBranch || "RBIO1D",
+				mode: specialBranches.includes(selectedBranch) ? selectedBranch : 'PowerPay',
+				branchUserName: selectedBranch || 'RBIO1D',
 			};
 
 			// Add bank details for withdraw transactions
@@ -204,14 +237,20 @@ const Header = () => {
 				fetchUserBalance();
 
 				// Handle different transaction types
-				if (transactionForm?.transactionType === "Deposit") {
+				if (transactionForm?.transactionType === 'Deposit') {
 					// For all non-ROCKY11 branches - redirect to powerdreams
-					toast.info("Processing payment... Please wait");
-					setTimeout(() => {
-						window.location.href = `https://www.powerdreams.co/online/pay/${selectedBranch}/${transaction?._id}`;
-					}, 2000);
-				} else if (transactionForm?.transactionType === "Withdraw") {
-					toast.info("Withdrawal request submitted successfully!");
+					toast.info('Processing payment... Please wait');
+					if (transaction.mode == 'LEOPAY') {
+						setTimeout(() => {
+							window.location.href = `${transaction?.redirectUrl}`;
+						}, 2000);
+					} else {
+						setTimeout(() => {
+							window.location.href = `https://www.powerdreams.co/online/pay/${selectedBranch}/${transaction?._id}`;
+						}, 2000);
+					}
+				} else if (transactionForm?.transactionType === 'Withdraw') {
+					toast.info('Withdrawal request submitted successfully!');
 				}
 
 				return;
@@ -292,13 +331,13 @@ const Header = () => {
 
 				{/* Marquee */}
 				<div className="mt-2 mx-[12px] sm:mx-5 overflow-hidden rounded-xl bg-[#1a1a2e] border border-[#1477b0]/30 py-0.5 flex items-center gap-2 px-3">
-                    <span className="text-lg flex-shrink-0">📢</span>
-                    <div className="overflow-hidden flex-1">
-                        <marquee className="text-sm font-medium mt-1.5 text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
-                            {userAnnouncement}
-                        </marquee>
-                    </div>
-                </div>
+					<span className="text-lg flex-shrink-0">📢</span>
+					<div className="overflow-hidden flex-1">
+						<marquee className="text-sm font-medium mt-1.5 text-white" onMouseOver={e => e.target.stop()} onMouseOut={e => e.target.start()}>
+							{userAnnouncement}
+						</marquee>
+					</div>
+				</div>
 			</div>
 
 			{/* Create Transaction Modal */}
