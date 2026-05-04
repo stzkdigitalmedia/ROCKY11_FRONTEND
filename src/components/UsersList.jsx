@@ -40,6 +40,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [profitLossUser, setProfitLossUser] = useState(null);
   const [userProfitLoss, setUserProfitLoss] = useState({ amount: 0, status: 'Profit', totalDeposit: 0, totalWithdrawal: 0 });
   const [profitLossLoading, setProfitLossLoading] = useState(false);
+  const [plStartDate, setPlStartDate] = useState('');
+  const [plEndDate, setPlEndDate] = useState('');
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [screenshotData, setScreenshotData] = useState(null);
   const [screenshotLoading, setScreenshotLoading] = useState(false);
@@ -495,12 +497,14 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
     }
   };
 
-  const fetchUserProfitLoss = async (user) => {
+  const fetchUserProfitLoss = async (user, startDate = '', endDate = '') => {
     setProfitLossUser(user);
     setProfitLossLoading(true);
     document.body.classList.add('modal-open');
     try {
-      const response = await apiHelper.get(`/transaction/profit_and_loss_for_User/${user?.id || user?._id}`);
+      let url = `/transaction/profit_and_loss_for_User/${user?.id || user?._id}`;
+      if (startDate && endDate) url += `?startDate=${startDate}&endDate=${endDate}`;
+      const response = await apiHelper.get(url);
       const profitData = response?.data || response;
       setUserProfitLoss({
         amount: profitData?.amount || 0,
@@ -519,6 +523,8 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const closeProfitLossModal = () => {
     setProfitLossUser(null);
     setUserProfitLoss({ amount: 0, status: 'Profit', totalDeposit: 0, totalWithdrawal: 0 });
+    setPlStartDate('');
+    setPlEndDate('');
     document.body.classList.remove('modal-open');
   };
 
@@ -1554,7 +1560,23 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                 <p className="text-gray-600">Loading profit & loss...</p>
               </div>
             ) : (
-              <div className="py-6">
+              <div className="py-2">
+                <div className="flex flex-col gap-3 mb-5 p-3 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                      <input type="date" value={plStartDate} onChange={(e) => setPlStartDate(e.target.value)} onClick={(e) => e.target.showPicker?.()} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                      <input type="date" value={plEndDate} onChange={(e) => setPlEndDate(e.target.value)} onClick={(e) => e.target.showPicker?.()} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => fetchUserProfitLoss(profitLossUser, plStartDate, plEndDate)} disabled={!plStartDate || !plEndDate} className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Apply</button>
+                    <button onClick={() => { setPlStartDate(''); setPlEndDate(''); fetchUserProfitLoss(profitLossUser); }} className="flex-1 px-3 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50">Reset</button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="text-center">
                     <h3 className="text-sm font-medium text-gray-500 mb-2">Total Deposit</h3>
