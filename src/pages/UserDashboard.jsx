@@ -23,6 +23,7 @@ import {
 	CheckCircle,
 	GiftIcon,
 	ArrowRight,
+	ArrowLeft,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
