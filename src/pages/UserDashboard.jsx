@@ -22,6 +22,7 @@ import {
 	LinkIcon,
 	CheckCircle,
 	GiftIcon,
+	ArrowRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "../components/BottomNavigation";
@@ -124,7 +125,23 @@ const UserDashboard = () => {
 		setNotification({ message, type });
 		setTimeout(() => setNotification(null), 4000);
 	};
-
+	  const [topProviders, setTopProviders] = useState([]);
+  const [dynamicStrips, setDynamicStrips] = useState([]);
+  const [mac88Games, setMac88Games] = useState([]);
+  const [mac88Loading, setMac88Loading] = useState(false);
+  const [spribeGames, setSpribeGames] = useState([]);
+  const [spribeLoading, setSpribeLoading] = useState(false);
+  const [ezugiGames, setEzugiGames] = useState([]);
+  const [ezugiLoading, setEzugiLoading] = useState(false);
+  const [jackpotGames, setJackpotGames] = useState([]);
+  const [jackpotLoading, setJackpotLoading] = useState(false);
+    const [heroBanners, setHeroBanners] = useState([]);
+  const [bannerSlideIdx, setBannerSlideIdx] = useState(0);
+  const [stripsLoading, setStripsLoading] = useState(false);
+  const [launchingGameId, setLaunchingGameId] = useState(null);
+  const [gameIframe, setGameIframe] = useState(null);
+  const [isGameOpen, setIsGameOpen] = useState(false);
+  const iframeRef = useRef(null);
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [touchStart, setTouchStart] = useState(0);
 	const [touchEnd, setTouchEnd] = useState(0);
@@ -276,6 +293,192 @@ const UserDashboard = () => {
 			setSubUserBalanceLoading(false);
 		}
 	};
+	 const fetchTopProviders = async () => {
+    try {
+      const res = await apiHelper.get("/game/featured/getTopProviders");
+      setTopProviders(res?.data?.providers || []);
+    } catch {}
+  };
+
+  const getProviderIcon = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("evolution")) return "🎬";
+    if (n.includes("pragmatic")) return "🔥";
+    if (n.includes("netent") || n.includes("net ent")) return "🌐";
+    if (n.includes("playtech")) return "⚡";
+    if (n.includes("microgaming")) return "🎰";
+    if (n.includes("betsoft")) return "🎲";
+    if (n.includes("habanero")) return "🌶️";
+    if (n.includes("yggdrasil")) return "🌳";
+    if (n.includes("nolimit") || n.includes("no limit")) return "💥";
+    if (n.includes("push gaming") || n.includes("pushgaming")) return "🚀";
+    if (n.includes("hacksaw")) return "🪚";
+    if (n.includes("relax")) return "😌";
+    if (n.includes("elk")) return "🦌";
+    if (n.includes("thunderkick")) return "⚡";
+    if (n.includes("quickspin")) return "🌀";
+    if (n.includes("red tiger") || n.includes("redtiger")) return "🐯";
+    if (n.includes("blueprint")) return "📐";
+    if (n.includes("big time") || n.includes("bigtime")) return "⏰";
+    if (
+      n.includes("play'n go") ||
+      n.includes("playngo") ||
+      n.includes("play n go")
+    )
+      return "🎡";
+    if (n.includes("wazdan")) return "💎";
+    if (n.includes("booming")) return "💣";
+    if (n.includes("spinomenal")) return "🌟";
+    if (n.includes("pgsoft") || n.includes("pg soft")) return "🐉";
+    if (n.includes("jili")) return "🎯";
+    if (n.includes("spribe")) return "✈️";
+    if (n.includes("aviator")) return "✈️";
+    if (n.includes("aura")) return "🌟";
+    if (n.includes("ezugi")) return "🃏";
+    if (n.includes("vivo")) return "📹";
+    if (n.includes("sexy") || n.includes("ae sexy")) return "💃";
+    if (n.includes("sa gaming") || n.includes("sagaming")) return "🎴";
+    if (n.includes("dream")) return "💭";
+    if (n.includes("live")) return "📡";
+    if (n.includes("slot")) return "🎰";
+    if (n.includes("fish")) return "🐟";
+    if (n.includes("sport")) return "⚽";
+    if (n.includes("poker")) return "♠️";
+    if (n.includes("baccarat")) return "🃏";
+    if (n.includes("roulette")) return "🎡";
+    if (n.includes("crash")) return "💥";
+    return "🎮";
+  };
+
+  const fetchDynamicStrips = async () => {
+    setStripsLoading(true);
+    try {
+      const res = await apiHelper.get("/game/games/strips");
+      const strips = res?.data?.strips || [];
+      const activeStrips = strips
+        .filter((strip) => strip.isActive !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .slice(0, 3);
+      setDynamicStrips(activeStrips);
+    } catch {
+      setDynamicStrips([]);
+    } finally {
+      setStripsLoading(false);
+    }
+  };
+
+  const fetchMac88Games = async () => {
+    setMac88Loading(true);
+    try {
+      const variations = ["mac88", "Mac88", "MAC88", "Mac 88", "mac 88"];
+      let found = [];
+      for (const name of variations) {
+        try {
+          const res = await apiHelper.post("/game/games/by-provider", { provider_name: name, page: 1, pageSize: 20 });
+          const games = res?.data?.data || res?.data?.games || (Array.isArray(res?.data) ? res.data : []);
+          console.log(`mac88 [${name}]:`, games.length, res);
+          if (games.length > 0) { found = games; break; }
+        } catch {}
+      }
+      setMac88Games(found);
+    } catch { setMac88Games([]); }
+    finally { setMac88Loading(false); }
+  };
+
+  const fetchSpribeGames = async () => {
+    setSpribeLoading(true);
+    try {
+      const variations = ["spribe", "Spribe", "SPRIBE"];
+      let found = [];
+      for (const name of variations) {
+        try {
+          const res = await apiHelper.post("/game/games/by-provider", { provider_name: name, page: 1, pageSize: 20 });
+          const games = res?.data?.data || res?.data?.games || (Array.isArray(res?.data) ? res.data : []);
+          console.log(`spribe [${name}]:`, games.length, res);
+          if (games.length > 0) { found = games; break; }
+        } catch {}
+      }
+      setSpribeGames(found);
+    } catch { setSpribeGames([]); }
+    finally { setSpribeLoading(false); }
+  };
+
+  const fetchEzugiGames = async () => {
+    setEzugiLoading(true);
+    try {
+      const variations = ["ezugi", "Ezugi", "EZUGI"];
+      let found = [];
+      for (const name of variations) {
+        try {
+          const res = await apiHelper.post("/game/games/by-provider", { provider_name: name, page: 1, pageSize: 20 });
+          const games = res?.data?.data || res?.data?.games || (Array.isArray(res?.data) ? res.data : []);
+          if (games.length > 0) { found = games; break; }
+        } catch {}
+      }
+      setEzugiGames(found);
+    } catch { setEzugiGames([]); }
+    finally { setEzugiLoading(false); }
+  };
+
+  const fetchJackpotGames = async () => {
+    setJackpotLoading(true);
+    try {
+      const variations = ["jackpot", "Jackpot", "JACKPOT", "jacktop", "Jacktop", "JACKTOP"];
+      let found = [];
+      for (const name of variations) {
+        try {
+          const res = await apiHelper.post("/game/games/by-provider", { provider_name: name, page: 1, pageSize: 20 });
+          const games = res?.data?.data || res?.data?.games || (Array.isArray(res?.data) ? res.data : []);
+          if (games.length > 0) { found = games; break; }
+        } catch {}
+      }
+      setJackpotGames(found);
+    } catch { setJackpotGames([]); }
+    finally { setJackpotLoading(false); }
+  };
+
+ 
+  const fetchHeroBanners = async () => {
+    try {
+      const res = await apiHelper.get("/game/featured/getHeroBannerGames");
+      setHeroBanners(
+        (res?.data?.games || []).filter((g) => g.isActive !== false),
+      );
+    } catch {}
+  };
+
+  const handleGameLaunch = async (game) => {
+    const gameId = game.game_id || game.id || game._id;
+    if (launchingGameId) return;
+    setLaunchingGameId(gameId);
+    try {
+      const response = await apiHelper.post("/game/games/launch", {
+        gameId,
+        providerName: game.provider_name || game.providerName,
+        platformId: "desktop",
+        lobby: false,
+        balance: user?.walletBalance ?? user?.balance ?? 0,
+      });
+      if (response?.data?.url) {
+        setGameIframe({ url: response.data.url, gameName: game.game_name || game.name, gameId });
+        setIsGameOpen(true);
+        window.dispatchEvent(new CustomEvent("gameOpen", { detail: true }));
+      } else {
+        toast.error("Failed to launch game: Game URL not received");
+      }
+    } catch (error) {
+      toast.error("Failed to launch game: " + (error?.message || "Network error"));
+    } finally {
+      setLaunchingGameId(null);
+    }
+  };
+
+  const closeGame = () => {
+    setGameIframe(null);
+    setIsGameOpen(false);
+    window.dispatchEvent(new CustomEvent("gameOpen", { detail: false }));
+  };
+
 
 	const handleSubUserWithdraw = async (e) => {
 		e.preventDefault();
@@ -1175,6 +1378,13 @@ const UserDashboard = () => {
 		fetchGames();
 		fetchSubAccounts();
 		fetchUserBalance();
+		 fetchHeroBanners();
+    fetchTopProviders();
+    fetchDynamicStrips();
+    fetchMac88Games();
+    fetchSpribeGames();
+    fetchEzugiGames();
+    fetchJackpotGames();
 		apiHelper.get('/announcement/getAnnouncement')
 			.then(res => setUserAnnouncement(res?.data?.userAnnouncement || res?.userAnnouncement || ''))
 			.catch(() => { });
@@ -1336,6 +1546,64 @@ const UserDashboard = () => {
 					subAccounts={subAccounts}
 					onBalanceUpdate={fetchUserBalance}
 				/>
+
+				 {heroBanners.length > 0 && (
+          <div className="mb-3 overflow-hidden rounded-xl mt-3 relative">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${bannerSlideIdx * 100}%)` }}
+            >
+              {heroBanners.map((banner, i) => (
+                <div
+                  key={banner._id || i}
+                  className="w-full flex-shrink-0 relative cursor-pointer"
+                  onClick={() => {
+                    if (banner.game_id || banner.id || banner._id) {
+                      // Launch the specific game
+                      handleGameLaunch(banner);
+                    } else {
+                      // Fallback to casino page if no game data
+                      navigate("/casino");
+                    }
+                  }}
+                >
+                  {banner.banner_thumbnail || banner.url_thumb ? (
+                    <img
+                      src={banner.banner_thumbnail || banner.url_thumb}
+                      alt={banner.game_name}
+                      className="w-full h-[180px] sm:h-[260px] object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-[180px] sm:h-[240px] flex items-center justify-center bg-gray-800">
+                      <Gamepad2 className="w-10 h-10 text-gray-600" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+                    <p className="text-white font-bold text-sm truncate">
+                      {banner.game_name}
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      {banner.provider_name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {heroBanners.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {heroBanners.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setBannerSlideIdx(i)}
+                    className={`w-2 h-2 rounded-full transition-all ${i === bannerSlideIdx ? "bg-white" : "bg-white/40"}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+
 
 				{/* Sub Accounts Slider */}
 				<div className="m-1 rounded-2xl mt-2 mx-2 p-4 sm:p-6 bg-[#1b1b1b] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl">
@@ -1798,6 +2066,310 @@ const UserDashboard = () => {
 						</div>
 					</div>
 				</div>
+				          {/* Casino Providers Section */}
+        {topProviders.length > 0 && (
+          <div
+            className="mb-3 mx-2 mt-3 rounded-xl p-3"
+            style={{
+              background: "#1b1b1b",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-white border-b-2 border-[#1477b0] pb-1">
+                🎰 Casino Providers
+              </h2>
+              <button
+                onClick={() => navigate("/casino")}
+                className="flex items-center gap-1 text-[#1477b0] text-xs font-semibold hover:text-blue-400 transition"
+              >
+                All <ArrowRight size={13} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {topProviders.map((p) => (
+                <button
+                  key={p.providerName}
+                  onClick={() => navigate(`/casino?provider=${encodeURIComponent(p.providerName)}`)}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-medium transition-all hover:scale-[1.03]"
+                  style={{
+                    background: "#2a2a2a",
+                    border: "1px solid rgba(20,119,176,0.4)",
+                  }}
+                >
+                  {getProviderIcon(p.providerName)} {p.providerName}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        
+
+        {/* Dynamic Strips from Admin */}
+        {dynamicStrips.map((strip, index) => (
+          <div
+            key={strip._id || index}
+            className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">
+                  {strip.title}
+                </h3>
+                {strip.games && strip.games.length > 0 && (
+                  <span className="bg-[#f59e0b] text-white text-xs  px-2 py-1 rounded-full font-semibold">
+                    {strip.games.length}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => navigate(`/casino?category=${encodeURIComponent(strip.category || strip.title)}`)}
+                className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold"
+              >
+                All <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {stripsLoading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl bg-gray-700 animate-pulse"
+                  />
+                ))
+              ) : strip.games && strip.games.length > 0 ? (
+                strip.games.map((game, gameIndex) => (
+                  <div
+                    key={`${strip._id}-${game.game_id || gameIndex}`}
+                    onClick={() => handleGameLaunch(game)}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                  >
+                    {game.url_thumb ? (
+                      <img
+                        src={game.url_thumb}
+                        alt={game.game_name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full bg-gradient-to-b from-blue-600 to-indigo-900 flex items-center justify-center"
+                      style={{ display: game.url_thumb ? "none" : "flex" }}
+                    >
+                      <span className="text-4xl">🎮</span>
+                    </div>
+                    
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                      {/* <h3 className="text-white font-bold text-[11px] uppercase leading-tight tracking-wide drop-shadow-md">
+                        {game.game_name || "Game"}
+                      </h3> */}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-lg font-bold ml-1">
+                          ▶
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex-shrink-0 w-full text-center py-8">
+                  <p className="text-gray-400 text-sm">
+                    No games available in {strip.title}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {/* Jackpot Provider Games */}
+        {(jackpotLoading || jackpotGames.length > 0) && (
+          <div
+            className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1"
+            style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">💰 Jackpot</h3>
+                {!jackpotLoading && <span className="bg-[#f59e0b] text-white text-xs px-2 py-1 rounded-full font-semibold">{jackpotGames.length}</span>}
+              </div>
+              <button onClick={() => navigate(`/casino?provider=${encodeURIComponent("jackpot")}`)} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                All <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {jackpotLoading
+                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl bg-gray-700 animate-pulse" />)
+                : jackpotGames.map((game, i) => (
+                  <div
+                    key={`jackpot-${game.game_id || i}`}
+                    onClick={() => handleGameLaunch(game)}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                  >
+                    {game.url_thumb ? (
+                      <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                    ) : null}
+                    <div className="w-full h-full bg-gradient-to-b from-yellow-600 to-orange-900 flex items-center justify-center" style={{ display: game.url_thumb ? "none" : "flex" }}>
+                      <span className="text-4xl">💰</span>
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                      {/* <h3 className="text-white font-bold text-[11px] uppercase leading-tight tracking-wide drop-shadow-md">{game.game_name || "Game"}</h3> */}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-lg font-bold ml-1">▶</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+     
+
+        {/* Spribe Provider Games */}
+        {(spribeLoading || spribeGames.length > 0) && (
+          <div
+            className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1"
+            style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">✈️ Spribe</h3>
+                {!spribeLoading && <span className="bg-[#f59e0b] text-white text-xs px-2 py-1 rounded-full font-semibold">{spribeGames.length}</span>}
+              </div>
+              <button onClick={() => navigate(`/casino?provider=${encodeURIComponent("spribe")}`)} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                All <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {spribeLoading
+                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl bg-gray-700 animate-pulse" />)
+                : spribeGames.map((game, i) => (
+                  <div
+                    key={`spribe-${game.game_id || i}`}
+                    onClick={() => handleGameLaunch(game)}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                  >
+                    {game.url_thumb ? (
+                      <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                    ) : null}
+                    <div className="w-full h-full bg-gradient-to-b from-purple-600 to-indigo-900 flex items-center justify-center" style={{ display: game.url_thumb ? "none" : "flex" }}>
+                      <span className="text-4xl">✈️</span>
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                      {/* <h3 className="text-white font-bold text-[11px] uppercase leading-tight tracking-wide drop-shadow-md">{game.game_name || "Game"}</h3> */}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-lg font-bold ml-1">▶</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Ezugi Provider Games */}
+        {(ezugiLoading || ezugiGames.length > 0) && (
+          <div
+            className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1"
+            style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🃏 Ezugi</h3>
+                {!ezugiLoading && <span className="bg-[#f59e0b] text-white text-xs px-2 py-1 rounded-full font-semibold">{ezugiGames.length}</span>}
+              </div>
+              <button onClick={() => navigate(`/casino?provider=${encodeURIComponent("ezugi")}`)} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                All <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {ezugiLoading
+                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl bg-gray-700 animate-pulse" />)
+                : ezugiGames.map((game, i) => (
+                  <div
+                    key={`ezugi-${game.game_id || i}`}
+                    onClick={() => handleGameLaunch(game)}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                  >
+                    {game.url_thumb ? (
+                      <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                    ) : null}
+                    <div className="w-full h-full bg-gradient-to-b from-green-600 to-teal-900 flex items-center justify-center" style={{ display: game.url_thumb ? "none" : "flex" }}>
+                      <span className="text-4xl">🃏</span>
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-lg font-bold ml-1">▶</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+
+           {/* Mac88 Provider Games */}
+        {(mac88Loading || mac88Games.length > 0) && (
+          <div
+            className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1"
+            style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🎰 Mac88</h3>
+                {!mac88Loading && <span className="bg-[#f59e0b] text-white text-xs px-2 py-1 rounded-full font-semibold">{mac88Games.length}</span>}
+              </div>
+              <button onClick={() => navigate(`/casino?provider=${encodeURIComponent("mac88")}`)} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                All <ArrowRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {mac88Loading
+                ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl bg-gray-700 animate-pulse" />)
+                : mac88Games.map((game, i) => (
+                  <div
+                    key={`mac88-${game.game_id || i}`}
+                    onClick={() => handleGameLaunch(game)}
+                    className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                  >
+                    {game.url_thumb ? (
+                      <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                    ) : null}
+                    <div className="w-full h-full bg-gradient-to-b from-blue-600 to-indigo-900 flex items-center justify-center" style={{ display: game.url_thumb ? "none" : "flex" }}>
+                      <span className="text-4xl">🎰</span>
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center">
+                      {/* <h3 className="text-white font-bold text-[11px] uppercase leading-tight tracking-wide drop-shadow-md">{game.game_name || "Game"}</h3> */}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-lg font-bold ml-1">▶</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
 			</div>
 
 			{/* Create ID Modal */}
@@ -1985,6 +2557,36 @@ const UserDashboard = () => {
 					</div>
 				)
 			}
+
+			    {/* Game Iframe Overlay */}
+      {gameIframe && (
+        <div className="fixed inset-0 z-[100] bg-black">
+          <div className="flex items-center justify-between p-3 bg-gray-900 border-b border-gray-700">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={closeGame}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+              <div className="text-white">
+                <h3 className="text-sm font-semibold">{gameIframe.gameName}</h3>
+                <p className="text-xs text-gray-400">ID: {gameIframe.gameId}</p>
+              </div>
+            </div>
+          </div>
+          <iframe
+            ref={iframeRef}
+            src={gameIframe.url}
+            className="w-full border-0"
+            style={{ height: "calc(100vh - 60px)" }}
+            allow="fullscreen; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-pointer-lock allow-orientation-lock allow-modals"
+            title={gameIframe.gameName}
+          />
+        </div>
+      )}
 
 			{/* Video Announcement Popup */}
 			{

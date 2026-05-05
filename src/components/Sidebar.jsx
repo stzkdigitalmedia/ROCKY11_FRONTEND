@@ -11,6 +11,13 @@ const allMenuItems = [
   { id: 'role-management',     label: 'Role Management',      icon: Shield,          path: '/role-management',     roles: ['SA', 'SubAdmin'] },
   { id: 'overview',            label: 'Overview',             icon: BarChart2,       path: '/overview',            roles: ['SA', 'SubAdmin', 'TierRole'] },
   { id: 'allinreq',            label: 'Instant Payout Req',   icon: Zap,             path: '/allinreq',            roles: ['SA', 'SubAdmin', 'TierRole'] },
+    {
+    id: "casino",
+    label: "Casino",
+    icon: Gamepad2,
+    path: "/casino-admin",
+    roles: ["SA", "SubAdmin"],
+  },
   // { id: 'quickpayreq',         label: 'QuickPay Req',         icon: Zap,             path: '/quickpayreq',         roles: ['SA', 'SubAdmin', 'TierRole'] },
   { id: 'games',               label: 'Games',                icon: Gamepad2,        path: '/games',               roles: ['SA', 'SubAdmin'] },
   { id: 'panels',              label: 'Manage Panel',         icon: Shield,          path: '/panels',              roles: ['SA', 'SubAdmin'] },

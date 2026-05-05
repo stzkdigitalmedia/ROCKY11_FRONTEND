@@ -12,15 +12,23 @@ import {
   ArrowUp,
   ArrowDown,
   LinkIcon,
+  ArrowRight,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import LanguageSelector from "../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
+import { apiHelper } from "../utils/apiHelper";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [topProviders, setTopProviders] = useState([]);
+  const [dynamicStrips, setDynamicStrips] = useState([]);
+  const [mac88Games, setMac88Games] = useState([]);
+  const [spribeGames, setSpribeGames] = useState([]);
+  const [ezugiGames, setEzugiGames] = useState([]);
+  const [jackpotGames, setJackpotGames] = useState([]);
 
   // Dummy data
   const dummyUser = {
@@ -115,11 +123,79 @@ const LandingPage = () => {
         return prev >= maxSlides ? 0 : prev + 1;
       });
     }, 2000);
+    
+    fetchTopProviders();
+    fetchDynamicStrips();
+    fetchMac88Games();
+    fetchSpribeGames();
+    fetchEzugiGames();
+    fetchJackpotGames();
+    
     return () => clearInterval(interval);
   }, []);
 
   const handleRedirectToLogin = () => {
     window.location.href = "/login";
+  };
+
+  const handleRedirectToDemo = () => {
+    navigate("/demo");
+  };
+
+  const fetchTopProviders = async () => {
+    try {
+      const res = await apiHelper.get("/game/featured/getTopProviders");
+      setTopProviders(res?.data?.providers || []);
+    } catch {}
+  };
+
+  const getProviderIcon = (name = "") => {
+    const n = name.toLowerCase();
+    if (n.includes("spribe")) return "✈️";
+    if (n.includes("ezugi")) return "🃏";
+    if (n.includes("mac88")) return "🎰";
+    if (n.includes("jackpot")) return "💰";
+    return "🎮";
+  };
+
+  const fetchDynamicStrips = async () => {
+    try {
+      const res = await apiHelper.get("/game/games/strips");
+      const strips = res?.data?.strips || [];
+      const activeStrips = strips
+        .filter((strip) => strip.isActive !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .slice(0, 3);
+      setDynamicStrips(activeStrips);
+    } catch {}
+  };
+
+  const fetchMac88Games = async () => {
+    try {
+      const res = await apiHelper.post("/game/games/by-provider", { provider_name: "mac88", page: 1, pageSize: 20 });
+      setMac88Games(res?.data?.data || []);
+    } catch {}
+  };
+
+  const fetchSpribeGames = async () => {
+    try {
+      const res = await apiHelper.post("/game/games/by-provider", { provider_name: "spribe", page: 1, pageSize: 20 });
+      setSpribeGames(res?.data?.data || []);
+    } catch {}
+  };
+
+  const fetchEzugiGames = async () => {
+    try {
+      const res = await apiHelper.post("/game/games/by-provider", { provider_name: "ezugi", page: 1, pageSize: 20 });
+      setEzugiGames(res?.data?.data || []);
+    } catch {}
+  };
+
+  const fetchJackpotGames = async () => {
+    try {
+      const res = await apiHelper.post("/game/games/by-provider", { provider_name: "jackpot", page: 1, pageSize: 20 });
+      setJackpotGames(res?.data?.data || []);
+    } catch {}
   };
 
   return (
@@ -145,14 +221,22 @@ const LandingPage = () => {
               </div>
             </div>
 
-            <div className="absolute top-0 right-0 flex">
+            <div className="absolute top-0 right-0 flex items-center gap-2">
+              <button 
+                onClick={handleRedirectToDemo}
+                className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold px-2 mt-5 sm:mt-4 rounded-lg border border-yellow-400 cursor-pointer hover:from-yellow-600 hover:to-yellow-700 transition-all shadow-lg"
+              >
+                Demo
+              </button>
               <button 
                 onClick={handleRedirectToLogin}
-                className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-3 sm:mr-1.5 px-2 mt-5 sm:mt-4 boeder border-1 rounded-lg border-black cursor-pointer hover:bg-gray-800 transition-colors"
+                className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white px-2 mt-5 sm:mt-4 border border-white/20 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
               >
                 {t("loginSignup")}
               </button>
-              <LanguageSelector />
+              <div className="mt-5 sm:mt-4">
+                <LanguageSelector />
+              </div>
             </div>
 
             {/* CENTER WRAPPER */}
@@ -397,6 +481,120 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Casino Providers Section */}
+          {topProviders.length > 0 && (
+            <div className="mb-3 mx-2 mt-3 rounded-xl p-3" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-white border-b-2 border-[#1477b0] pb-1">🎰 Casino Providers</h2>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#1477b0] text-xs font-semibold">
+                  All <ArrowRight size={13} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {topProviders.map((p) => (
+                  <button key={p.providerName} onClick={handleRedirectToLogin} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-medium transition-all" style={{ background: "#2a2a2a", border: "1px solid rgba(20,119,176,0.4)" }}>
+                    {getProviderIcon(p.providerName)} {p.providerName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dynamic Strips */}
+          {dynamicStrips.map((strip, index) => (
+            <div key={strip._id || index} className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">{strip.title}</h3>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                  All <ArrowRight size={14} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {strip.games?.map((game, i) => (
+                  <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
+                    {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Jackpot Games */}
+          {jackpotGames.length > 0 && (
+            <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">💰 Jackpot</h3>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                  All <ArrowRight size={14} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {jackpotGames.map((game, i) => (
+                  <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
+                    {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Spribe Games */}
+          {spribeGames.length > 0 && (
+            <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">✈️ Spribe</h3>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                  All <ArrowRight size={14} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {spribeGames.map((game, i) => (
+                  <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
+                    {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ezugi Games */}
+          {ezugiGames.length > 0 && (
+            <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🃏 Ezugi</h3>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                  All <ArrowRight size={14} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {ezugiGames.map((game, i) => (
+                  <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
+                    {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mac88 Games */}
+          {mac88Games.length > 0 && (
+            <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🎰 Mac88</h3>
+                <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
+                  All <ArrowRight size={14} />
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {mac88Games.map((game, i) => (
+                  <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
+                    {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Bottom padding to prevent content overlap */}
