@@ -10,7 +10,7 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 
 const COLORS = ['#3b82f6', '#eab308', '#22c55e', '#ef4444', '#8b5cf6', '#f97316'];
@@ -119,6 +119,18 @@ const OverviewStats = () => {
   const [loading, setLoading] = useState(false);
   const [ftdPendingLoading, setFtdPendingLoading] = useState(false);
   const [ftdCompleteLoading, setFtdCompleteLoading] = useState(false);
+  const [casinoLoading, setCasinoLoading] = useState(false);
+  const [casinoSubTab, setCasinoSubTab] = useState('games');
+  const [topGames, setTopGames] = useState([]);
+  const [gamesPagination, setGamesPagination] = useState({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
+  const [gamesPage, setGamesPage] = useState(1);
+  const [topProviders, setTopProviders] = useState([]);
+  const [providerPagination, setProviderPagination] = useState({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
+  const [providerPage, setProviderPage] = useState(1);
+  const [expandedProvider, setExpandedProvider] = useState(null);
+  const [topPlayers, setTopPlayers] = useState([]);
+  const [playersPagination, setPlayersPagination] = useState({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
+  const [playersPage, setPlayersPage] = useState(1);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection' }]);
   const [panelStats, setPanelStats] = useState(null);
@@ -180,6 +192,34 @@ const OverviewStats = () => {
       setTodayDepositCount(todayDepositResponse?.userCount || 0);
       setTodayWithdrawalCount(todayWithdrawalResponse?.userCount || 0);
       setPanelStats(panelResponse);
+
+      // Casino Stats
+      setCasinoLoading(true);
+      try {
+        const [gamesRes, providersRes, playersRes] = await Promise.all([
+          apiHelper.get(`/game/games/dashboard/top-games?startDate=${startStr}&endDate=${endStr}&page=1&pageSize=10`),
+          apiHelper.get(`/game/games/dashboard/top-providers?startDate=${startStr}&endDate=${endStr}&page=1&pageSize=10`),
+          apiHelper.get(`/game/games/dashboard/top-players?startDate=${startStr}&endDate=${endStr}&page=1&pageSize=10`),
+        ]);
+        // games: { data: { games: [], pagination: {} } }
+        setTopGames(gamesRes?.data?.games ?? []);
+        setGamesPagination(gamesRes?.data?.pagination ?? { total: 0, page: 1, pageSize: 10, totalPages: 1 });
+        setGamesPage(1);
+        // providers: { data: { providers: [], pagination: {} } }
+        setTopProviders(providersRes?.data?.providers ?? []);
+        setProviderPagination(providersRes?.data?.pagination ?? { total: 0, page: 1, pageSize: 10, totalPages: 1 });
+        setProviderPage(1);
+        setExpandedProvider(null);
+        // players: { data: { players: [], pagination: {} } } or { data: [] }
+        const playersData = playersRes?.data;
+        setTopPlayers(Array.isArray(playersData) ? playersData : (playersData?.players ?? []));
+        setPlayersPagination(playersData?.pagination ?? { total: 0, page: 1, pageSize: 10, totalPages: 1 });
+        setPlayersPage(1);
+      } catch (casinoErr) {
+        toast.error('Failed to fetch casino stats: ' + casinoErr.message);
+      } finally {
+        setCasinoLoading(false);
+      }
     } catch (error) {
       toast.error('Failed to fetch dashboard summary: ' + error.message);
     } finally {
@@ -241,6 +281,52 @@ const OverviewStats = () => {
       fetchDashboardSummary();
     }
   }, []);
+
+  const fetchGamesPage = async (page) => {
+    const startStr = dateRange[0].startDate.toISOString().split('T')[0];
+    const endStr = dateRange[0].endDate.toISOString().split('T')[0];
+    setCasinoLoading(true);
+    try {
+      const res = await apiHelper.get(`/game/games/dashboard/top-games?startDate=${startStr}&endDate=${endStr}&page=${page}&pageSize=10`);
+      setTopGames(res?.data?.games ?? []);
+      setGamesPagination(res?.data?.pagination ?? gamesPagination);
+      setGamesPage(page);
+    } catch (err) { toast.error('Failed to fetch games: ' + err.message); }
+    finally { setCasinoLoading(false); }
+  };
+
+  const fetchPlayersPage = async (page) => {
+    const startStr = dateRange[0].startDate.toISOString().split('T')[0];
+    const endStr = dateRange[0].endDate.toISOString().split('T')[0];
+    setCasinoLoading(true);
+    try {
+      const res = await apiHelper.get(`/game/games/dashboard/top-players?startDate=${startStr}&endDate=${endStr}&page=${page}&pageSize=10`);
+      const d = res?.data;
+      setTopPlayers(Array.isArray(d) ? d : (d?.players ?? []));
+      setPlayersPagination(d?.pagination ?? playersPagination);
+      setPlayersPage(page);
+    } catch (err) { toast.error('Failed to fetch players: ' + err.message); }
+    finally { setCasinoLoading(false); }
+  };
+
+  const fetchProviderPage = async (page) => {
+    const start = dateRange[0].startDate;
+    const end = dateRange[0].endDate;
+    const startStr = start.toISOString().split('T')[0];
+    const endStr = end.toISOString().split('T')[0];
+    setCasinoLoading(true);
+    try {
+      const res = await apiHelper.get(`/game/games/dashboard/top-providers?startDate=${startStr}&endDate=${endStr}&page=${page}&pageSize=10`);
+      setTopProviders(res?.data?.providers ?? []);
+      setProviderPagination(res?.data?.pagination ?? providerPagination);
+      setProviderPage(page);
+      setExpandedProvider(null);
+    } catch (err) {
+      toast.error('Failed to fetch providers: ' + err.message);
+    } finally {
+      setCasinoLoading(false);
+    }
+  };
 
   const applyDateFilter = () => {
     fetchDashboardSummary(dateRange[0].startDate, dateRange[0].endDate);
@@ -345,7 +431,16 @@ const OverviewStats = () => {
             <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: 0 }}>Overview</h1>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>Platform analytics & transaction summary</p>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              </div>
+              {[{ key: 'overview', label: 'Overview' }, { key: 'casino', label: '🎰 Casino Stats' }].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{ padding: '6px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: activeTab === tab.key ? '#2563eb' : 'rgba(255,255,255,0.12)', color: activeTab === tab.key ? '#fff' : '#cbd5e1', transition: 'all 0.2s' }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ position: 'relative' }}>
@@ -386,6 +481,268 @@ const OverviewStats = () => {
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
             <div className="loading-spinner" style={{ width: 44, height: 44 }}></div>
+          </div>
+        ) : activeTab === 'casino' ? (
+          <div>
+            {/* Casino Sub-Tabs */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+              {[
+                { key: 'games',     label: '🎮 Top Games' },
+                { key: 'providers', label: '🏢 Top Providers' },
+                { key: 'players',   label: '👤 Top Players' },
+              ].map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setCasinoSubTab(t.key)}
+                  style={{
+                    padding: '8px 20px', borderRadius: 10, cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
+                    background: casinoSubTab === t.key ? '#0f172a' : '#fff',
+                    color: casinoSubTab === t.key ? '#fff' : '#64748b',
+                    boxShadow: casinoSubTab === t.key ? '0 4px 12px rgba(15,23,42,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
+                    border: casinoSubTab === t.key ? 'none' : '1px solid #e2e8f0',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {casinoSubTab === 'games' && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>🎮 Top Games by GGR</h2>
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>Total: {gamesPagination.total} games</span>
+                </div>
+                {casinoLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="loading-spinner" style={{ width: 36, height: 36 }}></div></div>
+                ) : (
+                  <>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            {['Game ID','Game Name','Provider','Rounds','Players','Total Bet (₹)','Total Win (₹)','GGR (₹)'].map((h, i) => (
+                              <th key={i} style={{ padding: '10px 14px', textAlign: i < 3 ? 'left' : 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topGames.length === 0 ? (
+                            <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No data available</td></tr>
+                          ) : topGames.map((r, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '10px 14px', color: '#64748b' }}>{r._id}</td>
+                              <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>{r.game_name}</td>
+                              <td style={{ padding: '10px 14px' }}>{r.provider}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>{r.rounds?.toLocaleString()}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>{r.playerCount}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{r.totalBet?.toLocaleString()}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{r.totalWin?.toLocaleString()}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}><span style={{ color: r.ggr >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 }}>₹{r.ggr?.toLocaleString()}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {gamesPagination.totalPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>Page {gamesPagination.page} of {gamesPagination.totalPages} ({gamesPagination.total} total)</span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button disabled={gamesPage <= 1} onClick={() => fetchGamesPage(gamesPage - 1)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: gamesPage <= 1 ? '#f8fafc' : '#fff', color: gamesPage <= 1 ? '#cbd5e1' : '#0f172a', cursor: gamesPage <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>← Prev</button>
+                          {Array.from({ length: gamesPagination.totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === gamesPagination.totalPages || Math.abs(p - gamesPage) <= 1).reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx-1] > 1) acc.push('...'); acc.push(p); return acc; }, []).map((p, i) => p === '...' ? <span key={i} style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 13 }}>...</span> : <button key={i} onClick={() => fetchGamesPage(p)} style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0', background: gamesPage === p ? '#0f172a' : '#fff', color: gamesPage === p ? '#fff' : '#0f172a', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{p}</button>)}
+                          <button disabled={gamesPage >= gamesPagination.totalPages} onClick={() => fetchGamesPage(gamesPage + 1)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: gamesPage >= gamesPagination.totalPages ? '#f8fafc' : '#fff', color: gamesPage >= gamesPagination.totalPages ? '#cbd5e1' : '#0f172a', cursor: gamesPage >= gamesPagination.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>Next →</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {casinoSubTab === 'providers' && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>🏢 Top Providers by GGR</h2>
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>Total: {providerPagination.total} providers</span>
+                </div>
+                {casinoLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                    <div className="loading-spinner" style={{ width: 36, height: 36 }}></div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Provider</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Rounds</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Games</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Players</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Total Bet (₹)</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Total Win (₹)</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>GGR (₹)</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Top Games</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topProviders.length === 0 ? (
+                            <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No data available</td></tr>
+                          ) : topProviders.map((row, ri) => (
+                            <>
+                              <tr key={ri} style={{ borderBottom: '1px solid #f1f5f9', background: expandedProvider === ri ? '#f8fafc' : 'transparent' }}>
+                                <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>{row._id}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>{row.rounds?.toLocaleString()}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>{row.gameCount}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>{row.playerCount}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{row.totalBet?.toLocaleString()}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{row.totalWin?.toLocaleString()}</td>
+                                <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                                  <span style={{ color: row.ggr >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 }}>₹{row.ggr?.toLocaleString()}</span>
+                                </td>
+                                <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                                  {row.topGames?.length > 0 && (
+                                    <button
+                                      onClick={() => setExpandedProvider(expandedProvider === ri ? null : ri)}
+                                      style={{ padding: '4px 12px', fontSize: 12, borderRadius: 6, border: '1px solid #e2e8f0', background: expandedProvider === ri ? '#0f172a' : '#f8fafc', color: expandedProvider === ri ? '#fff' : '#64748b', cursor: 'pointer', fontWeight: 600 }}
+                                    >
+                                      {expandedProvider === ri ? '▲ Hide' : '▼ View'}
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                              {expandedProvider === ri && row.topGames?.length > 0 && (
+                                <tr key={`exp-${ri}`}>
+                                  <td colSpan={8} style={{ padding: '0 14px 12px 32px', background: '#f8fafc' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                      <thead>
+                                        <tr>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Game Name</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Game ID</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Rounds</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Players</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Bet (₹)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Win (₹)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>GGR (₹)</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {row.topGames.map((g, gi) => (
+                                          <tr key={gi} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                            <td style={{ padding: '6px 10px', fontWeight: 500, color: '#334155' }}>{g.game_name}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right', color: '#64748b' }}>{g.gameId}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right' }}>{g.rounds?.toLocaleString()}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right' }}>{g.playerCount}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right' }}>₹{g.totalBet?.toLocaleString()}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right' }}>₹{g.totalWin?.toLocaleString()}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'right' }}>
+                                              <span style={{ color: g.ggr >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 }}>₹{g.ggr?.toLocaleString()}</span>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {providerPagination.totalPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                          Page {providerPagination.page} of {providerPagination.totalPages} ({providerPagination.total} total)
+                        </span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            disabled={providerPage <= 1}
+                            onClick={() => fetchProviderPage(providerPage - 1)}
+                            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: providerPage <= 1 ? '#f8fafc' : '#fff', color: providerPage <= 1 ? '#cbd5e1' : '#0f172a', cursor: providerPage <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}
+                          >← Prev</button>
+                          {Array.from({ length: providerPagination.totalPages }, (_, i) => i + 1)
+                            .filter(p => p === 1 || p === providerPagination.totalPages || Math.abs(p - providerPage) <= 1)
+                            .reduce((acc, p, idx, arr) => {
+                              if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                              acc.push(p);
+                              return acc;
+                            }, [])
+                            .map((p, i) => p === '...' ? (
+                              <span key={i} style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 13 }}>...</span>
+                            ) : (
+                              <button
+                                key={i}
+                                onClick={() => fetchProviderPage(p)}
+                                style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0', background: providerPage === p ? '#0f172a' : '#fff', color: providerPage === p ? '#fff' : '#0f172a', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                              >{p}</button>
+                            ))}
+                          <button
+                            disabled={providerPage >= providerPagination.totalPages}
+                            onClick={() => fetchProviderPage(providerPage + 1)}
+                            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: providerPage >= providerPagination.totalPages ? '#f8fafc' : '#fff', color: providerPage >= providerPagination.totalPages ? '#cbd5e1' : '#0f172a', cursor: providerPage >= providerPagination.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}
+                          >Next →</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {casinoSubTab === 'players' && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>👤 Top Players</h2>
+                  <span style={{ fontSize: 12, color: '#94a3b8' }}>Total: {playersPagination.total || topPlayers.length} players</span>
+                </div>
+                {casinoLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="loading-spinner" style={{ width: 36, height: 36 }}></div></div>
+                ) : (
+                  <>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            {['Name','Phone','Bets','Wins','Total Bet (₹)','Total Win (₹)','Net Loss (₹)'].map((h, i) => (
+                              <th key={i} style={{ padding: '10px 14px', textAlign: i < 2 ? 'left' : 'right', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topPlayers.length === 0 ? (
+                            <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No data available</td></tr>
+                          ) : topPlayers.map((r, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0f172a' }}>{r.clientName}</td>
+                              <td style={{ padding: '10px 14px', color: '#64748b' }}>{r.phone || '—'}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>{r.betCount}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>{r.winCount}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{r.totalBet?.toLocaleString()}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>₹{r.totalWin?.toLocaleString()}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}><span style={{ color: r.netLoss >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 }}>₹{r.netLoss?.toLocaleString()}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {playersPagination.totalPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>Page {playersPagination.page} of {playersPagination.totalPages} ({playersPagination.total} total)</span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button disabled={playersPage <= 1} onClick={() => fetchPlayersPage(playersPage - 1)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: playersPage <= 1 ? '#f8fafc' : '#fff', color: playersPage <= 1 ? '#cbd5e1' : '#0f172a', cursor: playersPage <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>← Prev</button>
+                          {Array.from({ length: playersPagination.totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === playersPagination.totalPages || Math.abs(p - playersPage) <= 1).reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx-1] > 1) acc.push('...'); acc.push(p); return acc; }, []).map((p, i) => p === '...' ? <span key={i} style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 13 }}>...</span> : <button key={i} onClick={() => fetchPlayersPage(p)} style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0', background: playersPage === p ? '#0f172a' : '#fff', color: playersPage === p ? '#fff' : '#0f172a', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{p}</button>)}
+                          <button disabled={playersPage >= playersPagination.totalPages} onClick={() => fetchPlayersPage(playersPage + 1)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e2e8f0', background: playersPage >= playersPagination.totalPages ? '#f8fafc' : '#fff', color: playersPage >= playersPagination.totalPages ? '#cbd5e1' : '#0f172a', cursor: playersPage >= playersPagination.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>Next →</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <>
