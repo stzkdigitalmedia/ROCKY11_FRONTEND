@@ -938,7 +938,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                         </td> */}
                     <td className="py-4 px-2 sm:px-4">
                       <div className="flex-col items-center gap-1">
-                        <p className="text-sm font-semibold text-green-600">₹{user?.balance || 0}</p>
+                        <p className="text-sm font-semibold text-green-600">₹{Number(user?.balance || 0).toFixed(2)}</p>
                         <div flex-col className="flex items-center gap-1.5">
                           {(!tierPerms || tierPerms.is_Deposit_RoleBack || tierPerms.is_Withdraw_RoleBack) ? (
                             <button
