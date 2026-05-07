@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
-import UserSidebar from '../components/UserSidebar';
-import UserHeader from '../components/UserHeader';
-import { Play, Users } from 'lucide-react';
+import BottomNavigation from '../components/BottomNavigation';
+import { Play, Users, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const UserGames = () => {
   const [availableGames, setAvailableGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const toast = useToastContext();
+  const navigate = useNavigate();
 
   const fetchAvailableExchanges = async () => {
     setLoading(true);

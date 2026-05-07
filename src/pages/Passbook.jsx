@@ -1,120 +1,87 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { apiHelper } from '../utils/apiHelper';
-import { useToastContext } from '../App';
-import BottomNavigation from '../components/BottomNavigation';
-import LanguageSelector from '../components/LanguageSelector';
-import { useTranslation } from 'react-i18next';
-import { BookOpen, Filter, Search, X, Eye } from 'lucide-react';
-import Header from '../components/Header';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { apiHelper } from "../utils/apiHelper";
+import { useToastContext } from "../App";
+import BottomNavigation from "../components/BottomNavigation";
+import { useTranslation } from "react-i18next";
+import { BookOpen, Filter, X, Eye, ArrowDown, ArrowUp } from "lucide-react";
 
 const Passbook = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const toast = useToastContext();
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState("transactions");
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    status: '',
-    transactionType: '',
-    minAmount: '',
-    maxAmount: ''
-  });
+  const [filters, setFilters] = useState({ status: "", transactionType: "", minAmount: "", maxAmount: "" });
+  const [casinoFilters, setCasinoFilters] = useState({ type: "", startDate: "", endDate: "" });
+  const [casinoHistory, setCasinoHistory] = useState([]);
+  const [casinoLoading, setCasinoLoading] = useState(false);
+  const [casinoPage, setCasinoPage] = useState(1);
+  const [casinoTotalPages, setCasinoTotalPages] = useState(1);
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [screenshotData, setScreenshotData] = useState(null);
   const [screenshotLoading, setScreenshotLoading] = useState(false);
-  const [expandedTransactions, setExpandedTransactions] = useState(null);
 
   useEffect(() => {
     if (user?._id) {
-      fetchTransactions();
+      if (activeTab === "transactions") fetchTransactions();
+      else if (activeTab === "casino") fetchCasinoHistory();
     }
-  }, [page, user]);
+  }, [page, casinoPage, user, activeTab]);
 
   const fetchTransactions = async (currentPage = page, currentFilters = filters) => {
     setLoading(true);
     try {
-      const payload = {
-        page: currentPage,
-        limit: 15,
-        ...currentFilters
-      };
-
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '' || payload[key] === null || payload[key] === undefined) {
-          delete payload[key];
-        }
-      });
-
+      const payload = { page: currentPage, limit: 20, ...currentFilters };
+      Object.keys(payload).forEach((k) => { if (!payload[k] && payload[k] !== 0) delete payload[k]; });
       const response = await apiHelper.post(`/transaction/getUserTransactions/${user?._id}`, payload);
-      const data = response?.data?.transactions || [];
-      const totalPagesFromAPI = response?.data?.totalPages || 1;
-
-      setTransactions(data);
-      setTotalPages(totalPagesFromAPI);
+      setTransactions(response?.data?.transactions || []);
+      setTotalPages(response?.data?.totalPages || 1);
     } catch (error) {
-      toast.error('Failed to fetch transactions: ' + error.message);
+      toast.error("Failed to fetch transactions: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
-  const applyFilters = () => {
-    setPage(1);
-    fetchTransactions(1, filters);
-    setShowFilters(false);
-  };
+  const applyFilters = () => { setPage(1); fetchTransactions(1, filters); setShowFilters(false); };
 
   const clearFilters = () => {
-    const clearedFilters = {
-      status: '',
-      transactionType: '',
-      minAmount: '',
-      maxAmount: ''
-    };
-    setFilters(clearedFilters);
-    setPage(1);
-    fetchTransactions(1, clearedFilters);
+    if (activeTab === "transactions") {
+      const c = { status: "", transactionType: "", minAmount: "", maxAmount: "" };
+      setFilters(c); setPage(1); fetchTransactions(1, c);
+    } else {
+      const c = { type: "", startDate: "", endDate: "" };
+      setCasinoFilters(c); setCasinoPage(1); fetchCasinoHistory(1, c);
+    }
     setShowFilters(false);
   };
 
-  const getStatusPill = (status) => {
-    if (status === 'Accept') return 'bg-green-100 text-green-700';
-    if (status === 'Reject') return 'bg-red-100 text-red-600';
-    return 'bg-orange-100 text-orange-600';
-  };
-
-  const getIconConfig = (type) => {
-    if (type === 'Deposit') {
-      return {
-        bg: 'bg-green-50',
-        icon: 'text-green-600',
-        sign: '+',
-      };
-    }
-    return {
-      bg: 'bg-red-50',
-      icon: 'text-red-600',
-      sign: '-',
-    };
-  };
-
-  const toggleTransactionDetails = (transactionId) => {
-    if (expandedTransactions === transactionId) {
-      setExpandedTransactions(null);
-    } else {
-      setExpandedTransactions(transactionId);
+  const fetchCasinoHistory = async (currentPage = casinoPage, currentFilters = casinoFilters) => {
+    setCasinoLoading(true);
+    try {
+      const payload = { userId: user?._id, page: currentPage, pageSize: 20, ...currentFilters };
+      Object.keys(payload).forEach((k) => { if (!payload[k] && payload[k] !== 0) delete payload[k]; });
+      const response = await apiHelper.post("/getGAPTransactions", payload);
+      setCasinoHistory(response?.data?.transactions || []);
+      setCasinoTotalPages(response?.data?.totalPages || 1);
+    } catch (error) {
+      toast.error("Failed to fetch casino history: " + error.message);
+    } finally {
+      setCasinoLoading(false);
     }
   };
+
+  const handleCasinoFilterChange = (key, value) => setCasinoFilters((prev) => ({ ...prev, [key]: value }));
+  const applyCasinoFilters = () => { setCasinoPage(1); fetchCasinoHistory(1, casinoFilters); setShowFilters(false); };
 
   const fetchTransactionScreenshot = async (transactionId) => {
     setScreenshotLoading(true);
@@ -123,401 +90,364 @@ const Passbook = () => {
       setScreenshotData(response);
       setShowScreenshot(true);
     } catch (error) {
-      toast.error('Failed to fetch screenshot: ' + error.message);
+      toast.error("Failed to fetch screenshot: " + error.message);
     } finally {
       setScreenshotLoading(false);
     }
   };
 
+  const getStatusStyle = (status) => {
+    if (status === "Accept") return { bg: "rgba(34,197,94,0.15)", color: "#22c55e", label: "Accept" };
+    if (status === "Reject") return { bg: "rgba(239,68,68,0.15)", color: "#ef4444", label: "Rejected" };
+    if (status === "Initial") return { bg: "rgba(99,102,241,0.15)", color: "#818cf8", label: "Initial" };
+    return { bg: "rgba(251,146,60,0.15)", color: "#fb923c", label: status || "Pending" };
+  };
+
+  const inputCls = "w-full px-4 py-3 rounded-xl outline-none text-white text-sm bg-[#2a2a2a] border border-white/10 focus:border-[#1477b0]";
+  const labelCls = "text-xs font-medium text-gray-400 mb-1 block";
+
   return (
-    <div className="bg-[#0e0e0e]">
-      <Header />
-      <div className="!min-h-screen">
-        <div className="max-w-[769px] bg-[#0e0e0e] min-h-screen mx-auto">
-          <div className="flex items-center justify-end pt-2.5 px-4 flex-wrap gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="p-1 px-1 sm:px-2 text-black bg-white flex text-[12px] rounded-lg hover:bg-gray-200"
-            >
-              <Filter size={20} className='my-auto text-black' />
-              {/* {t('applyFilters')} */}
-            </button>
+    <div className="min-h-screen bg-[#0e0e0e] max-w-[769px] mx-auto">
+
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style={{ background: "#1b1b1b", borderBottom: "1px solid rgba(20,119,176,0.3)" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(20,119,176,0.2)" }}>
+            <BookOpen size={18} className="text-[#1477b0]" />
           </div>
           <div>
-            {showFilters && (
-              <div className="fixed max-w-[769px] mx-auto inset-0 z-[9999]">
-                {/* BACKDROP */}
-                <div
-                  className="absolute inset-0 bg-black/50"
-                  onClick={() => setShowFilters(false)}
-                />
-
-                {/* BOTTOM SHEET */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 animate-slideUp"
-                >
-                  {/* DRAG HANDLE */}
-                  <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
-
-                  {/* HEADER */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {t("applyFilters")}
-                    </h3>
-                    <button onClick={() => setShowFilters(false)}>
-                      <X className="w-5 h-5 text-gray-500" />
-                    </button>
-                  </div>
-
-                  {/* FILTER FORM */}
-                  <div className="space-y-4">
-                    {/* STATUS */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        {t("status")}
-                      </label>
-                      <select
-                        value={filters.status}
-                        onChange={(e) =>
-                          handleFilterChange("status", e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"
-                      >
-                        <option value="">{t("allStatus")}</option>
-                        <option value="Initial">{t("initial")}</option>
-                        <option value="Pending">{t("pending")}</option>
-                        <option value="Accept">{t("accept")}</option>
-                        <option value="Reject">{t("reject")}</option>
-                      </select>
-                    </div>
-
-                    {/* TYPE */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        {t("type")}
-                      </label>
-                      <select
-                        value={filters.transactionType}
-                        onChange={(e) =>
-                          handleFilterChange("transactionType", e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"
-                      >
-                        <option value="">{t("allTypes")}</option>
-                        <option value="Deposit">{t("deposit")}</option>
-                        <option value="Withdrawal">{t("withdraw")}</option>
-                      </select>
-                    </div>
-
-                    {/* AMOUNT */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="number"
-                        placeholder={`${t("amount")} (Min)`}
-                        value={filters.minAmount}
-                        onChange={(e) =>
-                          handleFilterChange("minAmount", e.target.value)
-                        }
-                        className="px-4 py-3 border border-gray-200 rounded-xl outline-none"
-                      />
-                      <input
-                        type="number"
-                        placeholder={`${t("amount")} (Max)`}
-                        value={filters.maxAmount}
-                        onChange={(e) =>
-                          handleFilterChange("maxAmount", e.target.value)
-                        }
-                        className="px-4 py-3 border border-gray-200 rounded-xl outline-none"
-                      />
-                    </div>
-
-                    {/* ACTION BUTTONS */}
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={applyFilters}
-                        className="flex-1 py-3 rounded-xl bg-gray-700 text-white font-medium"
-                      >
-                        {t("applyFilters")}
-                      </button>
-                      <button
-                        onClick={clearFilters}
-                        className="flex-1 py-3 rounded-xl border border-gray-600 text-gray-600 font-medium"
-                      >
-                        {t("clear")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-            <div className="space-y-3 mt-3 px-2 sm:px-4">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading transactions...</p>
-                </div>
-              ) : transactions.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <p>No transactions found</p>
-                </div>
-              ) : (
-                transactions.map((transaction, index) => {
-                  const icon = getIconConfig(transaction.transactionType);
-
-                  return (
-                    <div
-                      key={transaction?._id || index}
-                      className="bg-[#1b1b1b] rounded-2xl p-4 shadow-sm"
-                    >
-                      {/* TOP ROW - CLICKABLE */}
-                      <div
-                        className="flex items-start gap-4 cursor-pointer"
-                        onClick={() => toggleTransactionDetails(transaction._id)}
-                      >
-                        {/* ICON */}
-                        <div
-                          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${icon.bg}`}
-                        >
-                          {transaction.transactionType === 'Deposit' ? (
-                            // <ArrowDown className={`w-7 h-7 ${icon.icon}`} />
-
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M2 8.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M6 16.5H8" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M10.5 16.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M20 3.5V9.5L22 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M20 9.5L18 7.5" stroke="#0B930B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-
-                          ) : (
-                            // <ArrowUp className={`w-7 h-7 ${icon.icon}`} />
-
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M2 8.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M6 16.5H8" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M10.5 16.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M22 14.03V16.11C22 19.62 21.11 20.5 17.56 20.5H6.44C2.89 20.5 2 19.62 2 16.11V7.89C2 4.38 2.89 3.5 6.44 3.5H14.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M20 9.5V3.5L22 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                              <path d="M20 3.5L18 5.5" stroke="#FF1212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-
-                          )}
-                        </div>
-
-                        {/* MAIN INFO */}
-                        <div className="flex-1">
-                          <p className="text-base text-[14px] font-semibold text-gray-300">
-                            {transaction.transactionType}
-                          </p>
-
-                          <p className="text-sm text-gray-400 mt-1">
-                            Tra_ID: #{transaction._id?.slice(-4)} •{' '}
-                            {transaction.createdAt
-                              ? new Date(transaction.createdAt).toLocaleTimeString('en-IN', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                              : ''}
-                          </p>
-                        </div>
-
-                        {/* AMOUNT + STATUS */}
-                        <div className="text-right">
-                          <p
-                            className={`text-[14px] font-bold ${transaction.transactionType === 'Deposit'
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                              }`}
-                          >
-                            {icon.sign}₹{transaction.amount}
-                          </p>
-
-                          <span
-                            className={`inline-block mt-1 px-1 py-0 sm:px-3 sm:py-1 rounded-full sm:text-xs text-[12px] font-medium ${getStatusPill(
-                              transaction.status
-                            )}`}
-                          >
-                            {transaction.status === 'Accept'
-                              ? t('Accept')
-                              : transaction.status === 'Reject'
-                                ? t('rejected')
-                                : transaction.status === 'pending'
-                                  ? t('pending')
-                                  : transaction.status === 'Initial'
-                                    ? t('initial')
-                                    : transaction.status || t('pending')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* EXTRA DETAILS (MANDATORY DATA) - EXPANDABLE */}
-                      {expandedTransactions === transaction._id && (
-                        <div className="mt-4 space-y-2 text-sm text-gray-300 border-t border-gray-300 pt-4">
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">{t('gameName')}:</span>
-                            <span className="font-medium">{transaction.gameName || 'N/A'}</span>
-                          </div>
-
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">{t('clientName')}:</span>
-                            <span className="font-medium">{transaction.clientName || 'N/A'}</span>
-                          </div>
-
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">{t('remark')}:</span>
-                            <span className="font-medium">{transaction.remarks || '-'}</span>
-                          </div>
-
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">{t('transactionFrom')}:</span>
-                            <span className="font-medium">
-                              {transaction.mode === 'ALLINONE' ? 'INSTANT PAYOUT' : transaction.mode || 'N/A'}
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between text-xs pt-2 border-t border-gray-100">
-                            <span className="text-gray-300">{t('createdAt')}:</span>
-                            <span>
-                              {transaction.createdAt
-                                ? new Date(transaction.createdAt).toLocaleString('en-IN')
-                                : 'N/A'}
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between text-xs">
-                            <span className="text-gray-300">{t('updatedAt')}:</span>
-                            <span>
-                              {transaction.updatedAt
-                                ? new Date(transaction.updatedAt).toLocaleString('en-IN')
-                                : 'N/A'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SCREENSHOT BUTTON (KEEP LOGIC) - ONLY SHOW WHEN EXPANDED */}
-                      {expandedTransactions === transaction._id &&
-                        transaction?.transactionType === 'Withdrawal' &&
-                        transaction?.mode === 'PowerPay' &&
-                        transaction?.status !== 'Reject' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fetchTransactionScreenshot(transaction?._id);
-                            }}
-                            className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Screenshot
-                          </button>
-                        )
-                      }
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Pagination */}
-            {!loading && totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 py-6 px-4">
-                <button
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${page === 1
-                      ? 'bg-[#1b1b1b] text-gray-600 cursor-not-allowed'
-                      : 'bg-[#005993] text-white hover:bg-[#004a7a] shadow-lg'
-                    }`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="hidden sm:inline">Previous</span>
-                </button>
-
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#1b1b1b] rounded-xl">
-                  <span className="text-white font-semibold">{page}</span>
-                  <span className="text-gray-500">/</span>
-                  <span className="text-gray-400">{totalPages}</span>
-                </div>
-
-                <button
-                  onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={page === totalPages}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${page === totalPages
-                      ? 'bg-[#1b1b1b] text-gray-600 cursor-not-allowed'
-                      : 'bg-[#005993] text-white hover:bg-[#004a7a] shadow-lg'
-                    }`}
-                >
-                  <span className="hidden sm:inline">Next</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
+            <h1 className="text-base font-bold text-white leading-tight">{t("history")}</h1>
+            <p className="text-[11px] text-gray-500">{t("viewHistory")}</p>
           </div>
         </div>
+        <button onClick={() => setShowFilters(true)} className="p-2 rounded-xl transition" style={{ background: "rgba(20,119,176,0.15)", border: "1px solid rgba(20,119,176,0.3)" }}>
+          <Filter size={18} className="text-[#1477b0]" />
+        </button>
+      </div>
 
-        {/* Screenshot Modal */}
-        {
-          showScreenshot && (
-            <div className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center p-4 border-b">
-                  <h3 className="text-lg font-semibold text-gray-900">Transaction Screenshot</h3>
-                  <button
-                    onClick={() => {
-                      setShowScreenshot(false);
-                      setScreenshotData(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
+      {/* Tabs */}
+      <div className="px-3 pt-3 pb-1">
+        <div className="flex rounded-xl p-1 gap-1" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
+          {["transactions", "casino"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: activeTab === tab ? "#1477b0" : "transparent",
+                color: activeTab === tab ? "#fff" : "#666",
+              }}
+            >
+              {tab === "transactions" ? "Transactions" : "Casino History"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-3 pb-24 pt-2 space-y-3">
+
+        {/* TRANSACTIONS TAB */}
+        {activeTab === "transactions" && (
+          <>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="w-8 h-8 border-2 border-[#1477b0] border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-gray-500 text-sm">Loading...</p>
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <BookOpen size={40} className="text-gray-700 mb-3" />
+                <p className="text-gray-500 text-sm">No transactions found</p>
+              </div>
+            ) : (
+              transactions.map((tx, i) => {
+                const isDeposit = tx.transactionType === "Deposit";
+                const status = getStatusStyle(tx.status);
+                return (
+                  <div key={tx._id || i} className="rounded-2xl p-4" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    {/* Top row */}
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: isDeposit ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)" }}>
+                        {isDeposit
+                          ? <ArrowDown size={20} style={{ color: "#22c55e" }} />
+                          : <ArrowUp size={20} style={{ color: "#ef4444" }} />}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">
+                          {tx.transactionType} — {tx.mode === "ALLINONE" ? "INSTANT PAYOUT" : tx.mode === "LEOPAY" ? "QUICKPAY" : tx.mode || "N/A"}
+                        </p>
+                        <p className="text-gray-500 text-xs mt-0.5">
+                          #{tx._id?.slice(-6)} · {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}
+                        </p>
+                      </div>
+                      {/* Amount + Status */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-base font-bold" style={{ color: isDeposit ? "#22c55e" : "#ef4444" }}>
+                          {isDeposit ? "+" : "-"}₹{tx.amount}
+                        </p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                          style={{ background: status.bg, color: status.color }}>
+                          {status.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="mt-3 pt-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      {[
+                        { label: t("gameName"), value: tx.gameName || "N/A" },
+                        { label: t("clientName"), value: tx.clientName || "N/A" },
+                        { label: t("remark"), value: tx.remarks || "—" },
+                        { label: t("createdAt"), value: tx.createdAt ? new Date(tx.createdAt).toLocaleString("en-IN") : "N/A" },
+                        { label: t("updatedAt"), value: tx.updatedAt ? new Date(tx.updatedAt).toLocaleString("en-IN") : "N/A" },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex justify-between items-start gap-2">
+                          <span className="text-gray-100 text-xs flex-shrink-0">{label}:</span>
+                          <span className="text-gray-300 text-xs text-right">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Screenshot button */}
+                    {tx.transactionType === "Withdrawal" && tx.mode === "PowerPay" && tx.status !== "Reject" && (
+                      <button
+                        onClick={() => fetchTransactionScreenshot(tx._id)}
+                        className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition"
+                        style={{ background: "rgba(20,119,176,0.15)", color: "#1477b0", border: "1px solid rgba(20,119,176,0.3)" }}
+                      >
+                        <Eye size={15} /> View Screenshot
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-1 pt-2">
+                <span className="text-gray-500 text-sm">Page {page} of {totalPages}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setPage(page - 1)} disabled={page === 1}
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    Prev
+                  </button>
+                  <button onClick={() => setPage(page + 1)} disabled={page === totalPages}
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    Next
                   </button>
                 </div>
-                <div className="p-4">
-                  {screenshotLoading ? (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading screenshot...</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* CASINO TAB */}
+        {activeTab === "casino" && (
+          <>
+            {casinoLoading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="w-8 h-8 border-2 border-[#1477b0] border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-gray-500 text-sm">Loading casino history...</p>
+              </div>
+            ) : casinoHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <p className="text-gray-500 text-sm">No casino history found</p>
+              </div>
+            ) : (
+              casinoHistory.map((game, i) => {
+                const isWin = game.type === "win" || game.type === "rollback";
+                const typeColors = {
+                  win: { bg: "rgba(34,197,94,0.15)", color: "#22c55e", sign: "+" },
+                  loss: { bg: "rgba(239,68,68,0.15)", color: "#ef4444", sign: "-" },
+                  bet: { bg: "rgba(99,102,241,0.15)", color: "#818cf8", sign: "-" },
+                  rollback: { bg: "rgba(251,146,60,0.15)", color: "#fb923c", sign: "+" },
+                };
+                const tc = typeColors[game.type] || { bg: "rgba(156,163,175,0.15)", color: "#9ca3af", sign: "" };
+                return (
+                  <div key={game._id || i} className="rounded-2xl p-4" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: tc.bg }}>
+                        {isWin ? <ArrowDown size={20} style={{ color: tc.color }} /> : <ArrowUp size={20} style={{ color: tc.color }} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">
+                          {game?.gameDetails?.game_name || "Casino Game"} — {game.type?.toUpperCase() || "N/A"}
+                        </p>
+                        <p className="text-gray-500 text-xs mt-0.5">
+                          #{game._id?.slice(-6)} · {game.createdAt ? new Date(game.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-base font-bold" style={{ color: tc.color }}>
+                          {tc.sign}₹{game.amount || 0}
+                        </p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                          style={{ background: tc.bg, color: tc.color }}>
+                          {game.type?.toUpperCase() || "N/A"}
+                        </span>
+                      </div>
                     </div>
-                  ) : screenshotData ? (
-                    <div className="space-y-4">
-                      {screenshotData?.data?.data?.screenshotPeer ? (
-                        <img
-                          src={screenshotData?.data?.data.screenshotPeer}
-                          alt="Transaction Screenshot"
-                          className="w-full h-auto rounded-lg border"
-                        />
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <p>No screenshot available for this transaction</p>
+
+                    <div className="mt-3 pt-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      {[
+                        { label: "Game", value: game?.gameDetails?.game_name || "N/A" },
+                        { label: "Provider", value: game?.gameDetails?.provider_name || "N/A" },
+                        { label: "Round ID", value: game.gap_gameRoundId || "N/A" },
+                        { label: "Remark", value: game.remarks || "N/A" },
+                        { label: "Created At", value: game.createdAt ? new Date(game.createdAt).toLocaleString("en-IN") : "N/A" },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex justify-between items-start gap-2">
+                          <span className="text-gray-100 text-xs flex-shrink-0">{label}:</span>
+                          <span className="text-gray-300 text-xs text-right">{value}</span>
                         </div>
-                      )}
-                      {screenshotData.message && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <p className="text-sm text-gray-600">{screenshotData.message}</p>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>Failed to load screenshot</p>
-                    </div>
-                  )}
+                  </div>
+                );
+              })
+            )}
+
+            {casinoTotalPages > 1 && (
+              <div className="flex items-center justify-between px-1 pt-2">
+                <span className="text-gray-500 text-sm">Page {casinoPage} of {casinoTotalPages}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setCasinoPage(casinoPage - 1)} disabled={casinoPage === 1}
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    Prev
+                  </button>
+                  <button onClick={() => setCasinoPage(casinoPage + 1)} disabled={casinoPage === casinoTotalPages}
+                    className="px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    Next
+                  </button>
                 </div>
               </div>
-            </div>
-          )
-        }
+            )}
+          </>
+        )}
+      </div>
 
-        <BottomNavigation activePage="passbook" />
-      </div >
+      {/* Filter Bottom Sheet */}
+      {showFilters && (
+        <div className="fixed inset-0 z-[9999] max-w-[769px] mx-auto">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowFilters(false)} />
+          <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl p-5" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold text-base">{t("applyFilters")}</h3>
+              <button onClick={() => setShowFilters(false)}><X size={20} className="text-gray-400" /></button>
+            </div>
+
+            {activeTab === "transactions" ? (
+              <div className="space-y-3">
+                <div>
+                  <label className={labelCls}>{t("status")}</label>
+                  <select value={filters.status} onChange={(e) => handleFilterChange("status", e.target.value)} className={inputCls}>
+                    <option value="">{t("allStatus")}</option>
+                    <option value="Initial">{t("initial")}</option>
+                    <option value="Pending">{t("pending")}</option>
+                    <option value="Accept">{t("accept")}</option>
+                    <option value="Reject">{t("reject")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>{t("type")}</label>
+                  <select value={filters.transactionType} onChange={(e) => handleFilterChange("transactionType", e.target.value)} className={inputCls}>
+                    <option value="">{t("allTypes")}</option>
+                    <option value="Deposit">{t("deposit")}</option>
+                    <option value="Withdrawal">{t("withdraw")}</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Min Amount</label>
+                    <input type="number" placeholder="0" value={filters.minAmount} onChange={(e) => handleFilterChange("minAmount", e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Max Amount</label>
+                    <input type="number" placeholder="0" value={filters.maxAmount} onChange={(e) => handleFilterChange("maxAmount", e.target.value)} className={inputCls} />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={applyFilters} className="flex-1 py-3 rounded-xl text-white font-medium text-sm" style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    {t("applyFilters")}
+                  </button>
+                  <button onClick={clearFilters} className="flex-1 py-3 rounded-xl font-medium text-sm" style={{ background: "#2a2a2a", color: "#1477b0", border: "1px solid rgba(20,119,176,0.4)" }}>
+                    {t("clear")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className={labelCls}>Type</label>
+                  <select value={casinoFilters.type} onChange={(e) => handleCasinoFilterChange("type", e.target.value)} className={inputCls}>
+                    <option value="">All Types</option>
+                    <option value="bet">Bet</option>
+                    <option value="win">Win</option>
+                    <option value="loss">Loss</option>
+                    <option value="rollback">Rollback</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Start Date</label>
+                    <input type="date" value={casinoFilters.startDate} onChange={(e) => handleCasinoFilterChange("startDate", e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>End Date</label>
+                    <input type="date" value={casinoFilters.endDate} onChange={(e) => handleCasinoFilterChange("endDate", e.target.value)} className={inputCls} />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={applyCasinoFilters} className="flex-1 py-3 rounded-xl text-white font-medium text-sm" style={{ background: "linear-gradient(135deg, #1477b0 0%, #264e69 100%)" }}>
+                    Apply Filters
+                  </button>
+                  <button onClick={clearFilters} className="flex-1 py-3 rounded-xl font-medium text-sm" style={{ background: "#2a2a2a", color: "#1477b0", border: "1px solid rgba(20,119,176,0.4)" }}>
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot Modal */}
+      {showScreenshot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <h3 className="text-white font-semibold text-sm">Transaction Screenshot</h3>
+              <button onClick={() => { setShowScreenshot(false); setScreenshotData(null); }}>
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="p-4">
+              {screenshotLoading ? (
+                <div className="flex flex-col items-center py-8">
+                  <div className="w-8 h-8 border-2 border-[#1477b0] border-t-transparent rounded-full animate-spin mb-3" />
+                  <p className="text-gray-500 text-sm">Loading...</p>
+                </div>
+              ) : screenshotData?.data?.data?.screenshotPeer ? (
+                <img src={screenshotData.data.data.screenshotPeer} alt="Screenshot" className="w-full rounded-xl" />
+              ) : (
+                <p className="text-center text-gray-500 text-sm py-8">No screenshot available</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <BottomNavigation activePage="passbook" />
     </div>
   );
 };

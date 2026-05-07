@@ -24,7 +24,7 @@ const TransactionHistoryPage = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
-            case 'overview':
+      case 'overview':
         navigate('/overview');
         break;
       case 'games':

@@ -70,7 +70,10 @@ import RoleManagement from './pages/RoleManagement';
 import ManagerLogin from './pages/ManagerLogin';
 import Notifications from './pages/Notifications';
 import ManualDash from './pages/ManualDash';
-
+import DemoPage from "./pages/DemoPage";
+import Casino from "./pages/Casino";
+import CasinoAdmin from "./pages/CasinoAdmin";
+import GamePage from "./pages/GamePage";
 const ToastContext = createContext();
 
 export const useToastContext = () => {
@@ -345,6 +348,24 @@ function App() {
                 <SubAccounts />
               </SuperAdminRoute>
             } />
+                  <Route
+              path="/casino"
+              element={
+                <UserRoute>
+                  <Casino />
+                </UserRoute>
+              }
+            />
+            <Route
+              path="/casino-admin"
+              element={
+                <SuperAdminRoute>
+                  <CasinoAdmin />
+                </SuperAdminRoute>
+              }
+            />
+               <Route path="/game/:gameId/:gameName" element={<GamePage />} />
+            <Route path="/demo" element={<DemoPage />} />
             <Route path="/" element={<LandingPage />} />
 
 

@@ -17,6 +17,7 @@ const DashboardStats = () => {
   const [usersCount, setUsersCount] = useState(0);
   const [totalBalance, setTotalBalance] = useState(0);
   const [dashSummary, setDashSummary] = useState(null);
+  const [gameDashboardSummary, setGameDashboardSummary] = useState(null);
   const [externalStats, setExternalStats] = useState(null);
   const [activeUsercount, setActiveUsercount] = useState(null);
   const [profitLoss, setProfitLoss] = useState({ amount: 0, status: 'Profit' });
@@ -56,12 +57,13 @@ const DashboardStats = () => {
       const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
 
       // Make all API calls in parallel except FTD pending and complete
-      const [payInOutResponse, statusWiseResponse, userRegResponse, bonusResponse, referralResponse, deleteIdsResponse, activeUserResponse, todayDepositResponse, todayWithdrawalResponse, profitLossResponse] = await Promise.all([
+      const [payInOutResponse, statusWiseResponse, userRegResponse, bonusResponse, referralResponse, gameResponse, deleteIdsResponse, activeUserResponse, todayDepositResponse, todayWithdrawalResponse, profitLossResponse] = await Promise.all([
         apiHelper.get(`/transaction/dash-transaction-DW-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-transaction-statusWise-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-user-registration-count-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-bonus-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-referral-earning-summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/game/games/dashboard/summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.post('/deletelog/getCount_of_DeleteId', {
           startDate: start.toISOString().split('T')[0],
           endDate: end.toISOString().split('T')[0]
@@ -79,8 +81,10 @@ const DashboardStats = () => {
       const payInOutData = payInOutResponse?.data || payInOutResponse;
       const statusWiseData = statusWiseResponse?.data || statusWiseResponse;
       const userRegData = userRegResponse?.data || userRegResponse;
-      const bonusData = bonusResponse?.data?.totalBonus || bonusResponse?.totalBonus || bonusResponse?.data || bonusResponse;
+      const bonusData = bonusResponse?.data || bonusResponse;
       const referralData = referralResponse?.data || referralResponse;
+      const gameData = gameResponse?.data || gameResponse;
+
       // Set all state data except FTD data
       const combinedSummary = {
         transactionsDetails: {
@@ -104,6 +108,7 @@ const DashboardStats = () => {
       };
       
       setDashSummary(combinedSummary);
+      setGameDashboardSummary(gameData);
       setExternalStats({});
       setDeleteIdsCount(deleteIdsResponse?.data || 0);
       setActiveUsercount(activeUserResponse);
@@ -332,6 +337,39 @@ const DashboardStats = () => {
           )}
         </>
       </div>
+
+      {/* Casino Summary */}
+      {gameDashboardSummary && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Casino Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow">
+            <h3 className="text-sm font-medium text-gray-500">Total Bets</h3>
+            <p className="text-2xl font-bold text-blue-600">₹{gameDashboardSummary?.bets?.total?.toLocaleString() || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">Count: {gameDashboardSummary?.bets?.count || 0}</p>
+          </div>
+          <div className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow">
+            <h3 className="text-sm font-medium text-gray-500">Total Wins</h3>
+            <p className="text-2xl font-bold text-green-600">₹{gameDashboardSummary?.wins?.total?.toLocaleString() || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">Count: {gameDashboardSummary?.wins?.count || 0}</p>
+          </div>
+          <div className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow">
+            <h3 className="text-sm font-medium text-gray-500">{gameDashboardSummary?.ggr?.label || 'House Profit'}</h3>
+            <p className="text-2xl font-bold text-purple-600">₹{gameDashboardSummary?.ggr?.total?.toLocaleString() || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">GGR</p>
+          </div>
+          <div className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow">
+            <h3 className="text-sm font-medium text-gray-500">Rollbacks</h3>
+            <p className="text-2xl font-bold text-orange-600">₹{gameDashboardSummary?.rollbacks?.total?.toLocaleString() || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">Count: {gameDashboardSummary?.rollbacks?.count || 0}</p>
+          </div>
+          <div className="gaming-card p-4 cursor-pointer hover:shadow-lg transition-shadow">
+            <h3 className="text-sm font-medium text-gray-500">Lost Rounds</h3>
+            <p className="text-2xl font-bold text-red-600">{gameDashboardSummary?.lostRounds?.count || 0}</p>
+          </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Wise Breakdown */}
       <div className="mb-6">
