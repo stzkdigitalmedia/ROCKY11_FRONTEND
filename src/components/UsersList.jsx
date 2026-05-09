@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { useAuth } from '../hooks/useAuth';
-import { Eye, Trash2, X, Edit, History, Download, Bell } from 'lucide-react';
+import { Eye, Trash2, X, Edit, History, Download, Bell, Info } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) => {
@@ -71,9 +71,26 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [sendingNotification, setSendingNotification] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [sendingMultiple, setSendingMultiple] = useState(false);
+  const [userInfoModal, setUserInfoModal] = useState(null);
+  const [userInfoData, setUserInfoData] = useState(null);
+  const [userInfoLoading, setUserInfoLoading] = useState(false);
 
   const toast = useToastContext();
   const { user: authUser } = useAuth();
+
+  const fetchUserInfo = async (user) => {
+    setUserInfoModal(user);
+    setUserInfoData(null);
+    setUserInfoLoading(true);
+    try {
+      const res = await apiHelper.post('/user/getUserMiniDetails', { userId: user?.id || user?._id });
+      setUserInfoData(res?.data || res);
+    } catch (error) {
+      toast.error('Failed to fetch user info: ' + error.message);
+    } finally {
+      setUserInfoLoading(false);
+    }
+  };
 
   const sendMultipleNotification = async () => {
     if (selectedUsers.length === 0) { toast.error('Please select at least one user'); return; }
@@ -876,7 +893,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               {/* <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Location</th> */}
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet bal.</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Role</th>
-              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Deposite count</th>
+              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Deposit<br/>count</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
               {(authUser?.role !== 'TierRole' || true) && (
@@ -885,6 +902,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Profit & Loss</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Delete Id</th>
               {/* <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Notification</th> */}
+              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Info</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <input type="checkbox" checked={users.length > 0 && selectedUsers.length === users.length} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer" />
@@ -1050,6 +1068,15 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                         : <Bell size={16} />}
                     </button>
                   </td> */}
+                    <td className="py-4 px-2 sm:px-4">
+                      <button
+                        onClick={() => fetchUserInfo(user)}
+                        className="text-indigo-600 hover:text-indigo-800"
+                        title="User Info"
+                      >
+                        <Info size={16} />
+                      </button>
+                    </td>
                     <td className="py-4 px-2 sm:px-4">
                       <div className="flex items-center gap-1 sm:gap-2">
                         <button
@@ -1870,6 +1897,45 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                 {bonusLoading ? 'Processing...' : 'Add Bonus'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {userInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">User Info</h3>
+                <p className="text-sm text-gray-500">{userInfoModal?.clientName}</p>
+              </div>
+              <button onClick={() => setUserInfoModal(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            {userInfoLoading ? (
+              <div className="text-center py-8">
+                <div className="loading-spinner mx-auto mb-3" style={{ width: '28px', height: '28px' }}></div>
+                <p className="text-sm text-gray-500">Loading...</p>
+              </div>
+            ) : userInfoData ? (
+              <div className="space-y-3">
+                {[
+                  { label: 'Total Deposit', value: `₹${userInfoData.totalDeposit?.toLocaleString() || 0}`, color: 'text-green-600' },
+                  { label: 'Total Withdraw', value: `₹${userInfoData.totalWithdraw?.toLocaleString() || 0}`, color: 'text-red-600' },
+                  { label: 'Deposit Count', value: userInfoData.depositCount || 0, color: 'text-blue-600' },
+                  { label: 'Withdraw Count', value: userInfoData.withdrawCount || 0, color: 'text-orange-600' },
+                  { label: 'First Txn Date', value: userInfoData.firstTxnDate ? new Date(userInfoData.firstTxnDate).toLocaleDateString('en-IN') : 'N/A', color: 'text-gray-700' },
+                  { label: 'Last Txn Date', value: userInfoData.lastTxnDate ? new Date(userInfoData.lastTxnDate).toLocaleDateString('en-IN') : 'N/A', color: 'text-gray-700' },
+                  { label: 'Days Since Last Txn', value: userInfoData.daysSinceLastTxn ?? 'N/A', color: 'text-purple-600' },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-500">{item.label}</span>
+                    <span className={`text-sm font-semibold ${item.color}`}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-6">No data available</p>
+            )}
+            <button onClick={() => setUserInfoModal(null)} className="w-full mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">Close</button>
           </div>
         </div>
       )}
