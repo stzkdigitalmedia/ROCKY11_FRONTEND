@@ -117,58 +117,14 @@ const DemoPage = () => {
 
   const dummySubAccounts = [
     {
-      id: 15,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "DIAMONDEXCH",
-        image: "/diamound1.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 16,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "SKYEXCH",
-        image: "/sky.jpg",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 14,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "99EXCH",
-        image: "/exch.jpg",
-        gameUrl: "https://****",
-      },
-    },
-    {
       id: 1,
       clientName: "****",
       password: "****",
       status: "Accept",
       gameId: {
-        name: "ALLPANEL",
-        image: "/ALLPENEL.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 9,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "WINADDA",
-        image: "/winadda.png",
-        gameUrl: "https://****",
+        name: "WILLSEXCH",
+        image: "/will1.png",
+        gameUrl: "https://**",
       },
     },
     {
@@ -177,9 +133,9 @@ const DemoPage = () => {
       password: "****",
       status: "Accept",
       gameId: {
-        name: "LASER",
-        image: "/LASER.png",
-        gameUrl: "https://****",
+        name: "R9EXCH",
+        image: "/r9x.png",
+        gameUrl: "https://**",
       },
     },
     {
@@ -188,9 +144,9 @@ const DemoPage = () => {
       password: "****",
       status: "Accept",
       gameId: {
-        name: "LOTUS365",
-        image: "/LOTUS.png",
-        gameUrl: "https://****",
+        name: "DIAMOND99",
+        image: "/diamond.png",
+        gameUrl: "https://**",
       },
     },
     {
@@ -199,8 +155,9 @@ const DemoPage = () => {
       password: "****",
       status: "Accept",
       gameId: {
-        name: "BETBHAI",
-        image: "/BETBHAI.png",
+        name: "ALLPANEL",
+
+        image: "/ALL.png",
         gameUrl: "https://****",
       },
     },
@@ -210,9 +167,9 @@ const DemoPage = () => {
       password: "****",
       status: "Accept",
       gameId: {
-        name: "FAIRPLAY",
-        image: "/FAIRPLAY.png",
-        gameUrl: "https://****",
+        name: "WILLSWIN",
+        image: "/will1.png",
+        gameUrl: "https://**",
       },
     },
     {
@@ -221,75 +178,9 @@ const DemoPage = () => {
       password: "****",
       status: "Accept",
       gameId: {
-        name: "KHILADI",
-        image: "/KHILADI.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 7,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "TIGER",
-        image: "/TIGER.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 8,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "WINBUZZ",
-        image: "/WINBUSS.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 10,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "FAIR DEAL",
-        image: "/DEAL.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 11,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "WORLD777",
-        image: "/World777.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 12,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "LOTUS247",
-        image: "/Lotus247.png",
-        gameUrl: "https://****",
-      },
-    },
-    {
-      id: 13,
-      clientName: "****",
-      password: "****",
-      status: "Accept",
-      gameId: {
-        name: "KINGEXCH",
-        image: "/king.png",
-        gameUrl: "https://****",
+        name: "DURGA247",
+        image: "/Durga.png",
+        gameUrl: "https://**",
       },
     },
   ];
@@ -383,35 +274,35 @@ const DemoPage = () => {
         <div
           className="relative w-full pt-10 pb-8 flex justify-center items-center"
           style={{
-            background: "url(/bghero.png)",
-            backgroundSize: "800px",
+            background: 'url(/bghero.svg)',
+            backgroundSize: '400px'
           }}
         >
+
           <div
-            onClick={() => navigate("/")}
+            onClick={handleDepositWithdraw}
             className="absolute top-0 left-4 cursor-pointer"
           >
             <div className="w-7 h-7 p-4 sm:w-9 sm:h-9 border-1 border-white mt-3 bg-gray-800 rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-md sm:text-md">
-                {dummyUser?.clientName?.charAt(0)?.toUpperCase() || "D"}
+                {dummyUser?.clientName?.charAt(0)?.toUpperCase() || 'D'}
               </span>
             </div>
           </div>
 
-          <div className="absolute top-0 right-0 flex">
+          <div className='absolute top-0 right-0 flex items-start gap-1' onClick={e => e.stopPropagation()}>
             <button
               onClick={() => navigate("/login")}
               className=" text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-1 sm:mr-1.5 px-2 mt-5 sm:mt-4 boeder border-1 rounded-lg border-black"
             >
               {t("loginSignup")}
             </button>
-            <div className="mt-3.5 mr-5">
-              <LanguageSelector />
-            </div>
+            <LanguageSelector />
           </div>
 
           {/* CENTER WRAPPER */}
-          <div className="relative flex items-center mt-2 sm:mt-0">
+          <div className="relative flex items-center mt-4">
+
             {/* LEFT – DEPOSIT */}
             <div
               onClick={handleDepositWithdraw}
@@ -419,24 +310,29 @@ const DemoPage = () => {
       flex flex-col items-center justify-center gap-2
       cursor-pointer shadow-2xl"
             >
-              <span className="text-white text-sm">{t("deposit")}</span>
-              <img src="/arrowup.svg" className="h-7 leading-none" />
+              <span className="text-white text-sm">{t('deposit')}</span>
+              <img src='/arrowup.svg' className="h-7 leading-none" />
             </div>
 
             {/* CENTER – MAIN WALLET */}
             <div
+              onClick={handleDepositWithdraw}
               className="w-[150px] h-[160px] bg-[#141414] rounded-3xl
       flex flex-col items-center justify-center
-      mx-[-14px] z-10 shadow-2xl shadow-black"
+      mx-[-14px] z-10 shadow-2xl shadow-black cursor-pointer"
             >
-              <img src="/logoforlogin.png" alt="Logo" className="h-24 " />
+              <img
+                src="/logoforlogin.png"
+                alt="Logo"
+                className="h-12 mb-4"
+              />
 
               <p className="text-white/70 text-xs tracking-widest mb-1">
-                DEMO BALANCE
+                WALLET BALANCE
               </p>
 
               <div className="flex items-center gap-2 text-white text-xl font-semibold">
-                <img src="/coinsicon.png" className="w-5" alt="" />
+                <img src="/coinsicon.png" className='w-5' alt="" />
                 <span>{dummyUser.balance.toLocaleString()}</span>
               </div>
             </div>
@@ -448,9 +344,10 @@ const DemoPage = () => {
       flex flex-col items-center justify-center gap-2
       cursor-pointer shadow-2xl"
             >
-              <span className="text-white text-sm">{t("withdraw")}</span>
-              <img src="/arrowdown.svg" className="h-7 leading-none" />
+              <span className="text-white text-sm">{t('withdraw')}</span>
+              <img src='/arrowdown.svg' className="h-7 leading-none" />
             </div>
+
           </div>
         </div>
 
