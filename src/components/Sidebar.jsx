@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap, Bell } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap, Bell, DollarSign } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const allMenuItems = [
@@ -18,6 +18,7 @@ const allMenuItems = [
     path: "/casino-admin",
     roles: ["SA", "SubAdmin"],
   },
+  { id: 'casino-settlement',   label: 'Casino Settlement',    icon: DollarSign,      path: '/casino-settlement',   roles: ['SA'] },
   // { id: 'quickpayreq',         label: 'QuickPay Req',         icon: Zap,             path: '/quickpayreq',         roles: ['SA', 'SubAdmin', 'TierRole'] },
   { id: 'games',               label: 'Games',                icon: Gamepad2,        path: '/games',               roles: ['SA', 'SubAdmin'] },
   { id: 'panels',              label: 'Manage Panel',         icon: Shield,          path: '/panels',              roles: ['SA', 'SubAdmin'] },

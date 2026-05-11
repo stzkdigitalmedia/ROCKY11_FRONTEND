@@ -70,6 +70,7 @@ import RoleManagement from './pages/RoleManagement';
 import ManagerLogin from './pages/ManagerLogin';
 import Notifications from './pages/Notifications';
 import ManualDash from './pages/ManualDash';
+import CasinoSettlement from './pages/CasinoSettlement';
 import DemoPage from "./pages/DemoPage";
 import Casino from "./pages/Casino";
 import CasinoAdmin from "./pages/CasinoAdmin";
@@ -318,6 +319,12 @@ function App() {
               </SuperAdminRoute>
             } />
 
+            <Route path="/casino-settlement" element={
+              <SuperAdminRoute>
+                <CasinoSettlement />
+              </SuperAdminRoute>
+            } />
+
             <Route path="/user-dashboard" element={
               <UserRoute>
                 <UserDashboard />
@@ -348,7 +355,7 @@ function App() {
                 <SubAccounts />
               </SuperAdminRoute>
             } />
-                  <Route
+            <Route
               path="/casino"
               element={
                 <UserRoute>
@@ -364,7 +371,7 @@ function App() {
                 </SuperAdminRoute>
               }
             />
-               <Route path="/game/:gameId/:gameName" element={<GamePage />} />
+            <Route path="/game/:gameId/:gameName" element={<GamePage />} />
             <Route path="/demo" element={<DemoPage />} />
             <Route path="/" element={<LandingPage />} />
 
