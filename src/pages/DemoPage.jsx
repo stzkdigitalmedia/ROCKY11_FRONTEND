@@ -73,7 +73,7 @@ const DemoPage = () => {
   };
 
   useEffect(() => {
-    toast.showToast("You can access casino games only. This is a damo ID.", "info");
+    toast.showToast("You can access casino games only. This is a demo ID.", "info");
 
     fetchDynamicStrips();
     apiHelper.get("/game/featured/getTopProviders").then(res => setTopProviders(res?.data?.providers || [])).catch(() => { });
