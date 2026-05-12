@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Hide all scrollbars */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* Disable scroll on number inputs */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -13,4 +23,20 @@ input[type="number"] {
 /* Prevent iOS Safari auto-zoom on input focus */
 input, select, textarea {
   font-size: 16px !important;
+}
+
+/* Announcement popup animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
 }

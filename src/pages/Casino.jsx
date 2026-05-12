@@ -849,46 +849,45 @@ const Casino = () => {
           className="relative px-3 py-3 mb-3"
           style={{ background: "#0e0e0e" }}
         >
-          {/* Row 1: Avatar | Marquee+Search | Lang */}
-          <div className="flex items-center gap-2 mb-2">
+          {/* Row 1: Avatar + Marquee+Search + Lang - all in one line */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Avatar */}
             <Link
               to="/profile"
-              className="flex flex-col items-start hover:opacity-80 transition-opacity flex-shrink-0"
+              className="flex-shrink-0 hover:opacity-80 transition-opacity"
             >
               <div
-                className="w-8 h-8 sm:w-9 sm:h-9 border border-white mt- rounded-full flex items-center justify-center"
+                className="w-8 h-8 border border-white rounded-full flex items-center justify-center"
                 style={{
                   background: "linear-gradient(to bottom, #1477b0, #264e69)",
                 }}
               >
-                <span className="text-white font-semibold text-sm">
+                <span className="text-white font-semibold text-xs">
                   {user?.clientName?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               </div>
-              {/* <p className="text-white font-semibold text-[13px] notranslate">{user?.clientName}</p> */}
             </Link>
 
             {/* Marquee + Search together */}
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-2 py-1 flex-1 min-w-0 overflow-hidden">
-              <span className="text-sm flex-shrink-0">📢</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 rounded-lg sm:rounded-xl px-1.5 sm:px-2 py-1.5 flex-1 min-w-0 overflow-hidden">
+              <span className="text-xs sm:text-sm flex-shrink-0">📢</span>
               <div className="overflow-hidden flex-1 min-w-0">
                 <marquee
-                  className="text-xs font-medium text-white"
+                  className="text-[10px] sm:text-xs font-medium text-white"
                   onMouseOver={(e) => e.target.stop()}
                   onMouseOut={(e) => e.target.start()}
                 >
                   {userAnnouncement}
                 </marquee>
               </div>
-              <button
+              {/* <button
                 onClick={() => {
                   setSearchOpen((o) => !o);
                   if (!searchOpen)
                     setTimeout(() => searchInputRef.current?.focus(), 50);
                   else setSearch("");
                 }}
-                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200"
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200"
                 style={{
                   background: searchOpen
                     ? "rgba(255,255,255,0.9)"
@@ -896,14 +895,14 @@ const Casino = () => {
                 }}
               >
                 <Search
-                  className="w-3 h-3"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                   style={{ color: searchOpen ? "#1477b0" : "#fff" }}
                 />
-              </button>
+              </button> */}
             </div>
 
-            {/* Lang */}
-            <div className="flex-shrink-0">
+            {/* Lang - same size as avatar */}
+            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
               <LanguageSelector />
             </div>
           </div>

@@ -290,10 +290,10 @@ const DemoPage = () => {
             </div>
           </div>
 
-          <div className='absolute top-0 right-0 flex items-start gap-1' onClick={e => e.stopPropagation()}>
+          <div className='absolute top-3 right-4 flex items-center gap-2' onClick={e => e.stopPropagation()}>
             <button
               onClick={() => navigate("/login")}
-              className=" text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-1 sm:mr-1.5 px-2 mt-5 sm:mt-4 boeder border-1 rounded-lg border-black"
+              className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white px-2 border-1 rounded-lg border-black"
             >
               {t("loginSignup")}
             </button>
@@ -568,7 +568,7 @@ const DemoPage = () => {
                 Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex-shrink-0 w-[140px] h-[175px] rounded-2xl bg-gray-700 animate-pulse"
+                    className="flex-shrink-0 w-[120px] sm:w-[140px] h-[150px] sm:h-[175px] rounded-2xl bg-gray-700 animate-pulse"
                   />
                 ))
               ) : strip.games?.length > 0 ? (
@@ -576,7 +576,7 @@ const DemoPage = () => {
                   <div
                     key={`${strip._id}-${game.game_id || gameIndex}`}
                     onClick={() => handleGameLaunch(game)}
-                    className="flex-shrink-0 w-[140px] h-[175px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
+                    className="flex-shrink-0 w-[120px] sm:w-[140px] h-[150px] sm:h-[175px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]"
                   >
                     {game.url_thumb ? (
                       <img
@@ -593,21 +593,21 @@ const DemoPage = () => {
                       className="w-full h-full bg-gradient-to-b from-blue-600 to-indigo-900 flex items-center justify-center"
                       style={{ display: game.url_thumb ? "none" : "flex" }}
                     >
-                      <span className="text-4xl">🎮</span>
+                      <span className="text-3xl sm:text-4xl">🎮</span>
                     </div>
                     <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md rounded-full px-2 py-0.5">
-                      <span className="text-white text-[10px] font-medium">
+                      <span className="text-white text-[9px] sm:text-[10px] font-medium">
                         🎯 {game.provider_name || "GAME"}
                       </span>
                     </div>
                     <div className="absolute bottom-2 left-2 right-2 text-center">
-                      <h3 className="text-white font-bold text-[11px] uppercase leading-tight tracking-wide drop-shadow-md">
+                      <h3 className="text-white font-bold text-[10px] sm:text-[11px] uppercase leading-tight tracking-wide drop-shadow-md line-clamp-2">
                         {game.game_name || "Game"}
                       </h3>
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                      <div className="bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-xl">
-                        <span className="text-black text-lg font-bold ml-1">▶</span>
+                      <div className="bg-[#f59e0b] w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-xl">
+                        <span className="text-black text-base sm:text-lg font-bold ml-1">▶</span>
                       </div>
                     </div>
                   </div>
