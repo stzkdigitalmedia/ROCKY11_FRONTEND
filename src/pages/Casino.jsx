@@ -27,6 +27,16 @@ import {
   Maximize2,
   RotateCcw as RefreshIcon,
   ArrowLeft,
+  Plane,
+  Film,
+  Gem,
+  Globe,
+  Sparkles,
+  Target,
+  Rocket,
+  Shuffle,
+  Clover,
+  Wallet2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import LanguageSelector from "../components/LanguageSelector";
@@ -107,56 +117,62 @@ const PROVIDER_IMAGES = {
   // popok: popok,
 };
 const PROVIDER_ICONS = {
-  spribe: "🎯",
-  evolution: "🎬",
-  pragmatic: "💎",
-  "pragmatic play": "💎",
-  netent: "🌐",
-  playtech: "🕹️",
-  microgaming: "🎰",
-  habanero: "🌶️",
-  pgsoft: "🐉",
-  "pg soft": "🐉",
-  yggdrasil: "🌳",
-  quickspin: "⚡",
-  nolimit: "🔥",
-  "nolimit city": "🔥",
-  relax: "😎",
-  "relax gaming": "😎",
-  hacksaw: "🪚",
-  push: "🚀",
-  "push gaming": "🚀",
-  betsoft: "🃏",
-  booongo: "🎪",
-  kagaming: "🀄",
-  "ka gaming": "🀄",
-  playson: "🎭",
-  spinomenal: "🌀",
-  bgaming: "🎮",
-  onlyplay: "🎲",
-  wazdan: "⭐",
-  thunderkick: "⚡",
-  elk: "🦌",
-  "elk studios": "🦌",
-  blueprint: "📐",
-  redtiger: "🐯",
-  "red tiger": "🐯",
-  isoftbet: "💻",
-  ezugi: "🎡",
-  vivo: "📱",
-  "vivo gaming": "📱",
-  superspade: "♠️",
-  "super spade": "♠️",
-  jili: "🌟",
-  cq9: "🎯",
-  fachai: "🀄",
-  joker: "🃏",
-  spadegaming: "♠️",
-  "spade gaming": "♠️",
+  spribe: Target,
+  evolution: Film,
+  pragmatic: Gem,
+  "pragmatic play": Gem,
+  netent: Globe,
+  playtech: Joystick,
+  microgaming: Dices,
+  habanero: Flame,
+  pgsoft: Sparkles,
+  "pg soft": Sparkles,
+  yggdrasil: Star,
+  quickspin: Zap,
+  nolimit: Flame,
+  "nolimit city": Flame,
+  relax: Star,
+  "relax gaming": Star,
+  hacksaw: Zap,
+  push: Rocket,
+  "push gaming": Rocket,
+  betsoft: Spade,
+  booongo: Crown,
+  kagaming: Trophy,
+  "ka gaming": Trophy,
+  playson: Gamepad2,
+  spinomenal: Shuffle,
+  bgaming: Gamepad2,
+  onlyplay: Dices,
+  wazdan: Star,
+  thunderkick: Zap,
+  elk: Trophy,
+  "elk studios": Trophy,
+  blueprint: Grid2x2,
+  redtiger: Crown,
+  "red tiger": Crown,
+  isoftbet: Monitor,
+  ezugi: CircleDot,
+  vivo: Tv2,
+  "vivo gaming": Tv2,
+  superspade: Spade,
+  "super spade": Spade,
+  jili: Sparkles,
+  cq9: Target,
+  fachai: Clover,
+  joker: Spade,
+  spadegaming: Spade,
+  "spade gaming": Spade,
+  aviator: Plane,
+  mac88: Dices,
+  "mac 88": Dices,
+  rich88: Wallet2,
+  jacktop: Crown,
+  jackpot: Crown,
 };
 const getProviderDisplay = (name) => ({
   img: PROVIDER_IMAGES[name?.toLowerCase()] || null,
-  icon: PROVIDER_ICONS[name?.toLowerCase()] || "🎮",
+  IconComponent: PROVIDER_ICONS[name?.toLowerCase()] || Gamepad2,
 });
 
 const CATEGORY_ICONS = {
@@ -214,15 +230,16 @@ const CatIcon = ({ name, size = 14, className = "" }) => {
   return <Icon size={size} className={className} />;
 };
 
-const ProviderImg = ({ src, name, icon, isActive }) => {
+const ProviderImg = ({ src, name, IconComponent, isActive }) => {
   const [failed, setFailed] = useState(false);
-  if (failed) {
+  if (failed || !src) {
     return (
       <span
-        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1 px-2"
-        style={{ color: isActive ? "#1477b0" : "#fff" }}
+        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5 px-2"
+        style={{ color: isActive ? "#fff" : "#fff" }}
       >
-        {icon} {name}
+        {IconComponent && <IconComponent size={14} />}
+        {name}
       </span>
     );
   }
@@ -230,9 +247,12 @@ const ProviderImg = ({ src, name, icon, isActive }) => {
     <img
       src={src}
       alt={name}
-      className="w-full h-full object-contain p-1.5 rounded-lg"
+      className="w-full h-full object-contain p-1.5 rounded-lg transition-all duration-200 group-hover:brightness-0 group-hover:invert"
       loading="lazy"
       onError={() => setFailed(true)}
+      style={{
+        filter: isActive ? 'brightness(0) invert(1)' : 'none'
+      }}
     />
   );
 };
@@ -981,7 +1001,7 @@ const Casino = () => {
               {providers.map((p) => {
                 const name =
                   typeof p === "object" ? p.provider_name || p.name || p : p;
-                const { img, icon } = getProviderDisplay(name);
+                const { img, IconComponent } = getProviderDisplay(name);
                 const isActive = activeProvider === name;
                 return (
                   <button
@@ -998,7 +1018,7 @@ const Casino = () => {
                         fetchProviderGames(name, 1);
                       }
                     }}
-                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden hover:scale-105"
+                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden group hover:bg-gradient-to-r hover:from-[#1477b0] hover:to-[#264e69]"
                     style={{
                       width: img ? "130px" : "auto",
                       height: "41px",
@@ -1019,12 +1039,13 @@ const Casino = () => {
                       <ProviderImg
                         src={img}
                         name={name}
-                        icon={icon}
+                        IconComponent={IconComponent}
                         isActive={isActive}
                       />
                     ) : (
-                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1">
-                        {icon} {name}
+                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5">
+                        {IconComponent && <IconComponent size={14} />}
+                        {name}
                       </span>
                     )}
                   </button>
