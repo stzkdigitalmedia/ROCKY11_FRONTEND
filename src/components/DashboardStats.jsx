@@ -98,12 +98,12 @@ const DashboardStats = () => {
         ftd_users_count: 0, // Will be loaded on demand
         statusWiseBreakdown: statusWiseData?.statusWiseBreakdown || {},
         totalBonus: {
-          totalAmount: bonusData?.totalAmount || 0,
-          count: bonusData?.count || 0
+          totalAmount: bonusData?.totalBonus?.totalAmount || 0,
+          count: bonusData?.totalBonus?.count || 0
         },
         totalRefereEarning: {
-          totalAmount: referralData?.totalAmount || 0,
-          count: referralData?.count || 0
+          totalAmount: referralData?.totalRefereEarning?.totalAmount || referralData?.totalAmount || 0,
+          count: referralData?.totalRefereEarning?.count || referralData?.count || 0
         }
       };
       
