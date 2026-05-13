@@ -1460,10 +1460,10 @@ const UserDashboard = () => {
 						</div>
 					</Link>
 
-					<div className="absolute top-0 right-0">
+					<div className="absolute top-3 right-4">
 						<div className='flex items-center gap-2'>
 							<button onClick={() => navigate('/refer-earn')}
-								className="p-[7px] mt-[12.5px] h-fit bg-gray-800 rounded-full border-1 border-white transition-colors">
+								className="p-[7px] h-fit bg-gray-800 rounded-full border-1 border-white transition-colors">
 								<GiftIcon className="w-5 h-5 text-white" />
 							</button>
 							<LanguageSelector />

@@ -127,10 +127,7 @@ const LandingPage = () => {
 
     fetchTopProviders();
     fetchDynamicStrips();
-    fetchMac88Games();
-    fetchSpribeGames();
-    fetchEzugiGames();
-    fetchJackpotGames();
+   
 
     return () => clearInterval(interval);
   }, []);
@@ -175,8 +172,7 @@ const LandingPage = () => {
       const strips = res?.data?.strips || [];
       const activeStrips = strips
         .filter((strip) => strip.isActive !== false)
-        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-        .slice(0, 3);
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setDynamicStrips(activeStrips);
     } catch { }
   };
@@ -232,16 +228,16 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <div className='absolute top-0 right-0 flex items-start gap-1' onClick={e => e.stopPropagation()}>
+          <div className='absolute top-3 right-4 flex items-center gap-2' onClick={e => e.stopPropagation()}>
             <button
               onClick={() => navigate("/demo")}
-              className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-1 sm:mr-1.5 px-2 mt-5 sm:mt-4 rounded-lg"
+              className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white px-2 rounded-lg"
             >
               Demo ID
             </button>
             <button
               onClick={() => navigate("/login")}
-              className=" text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white mr-1 sm:mr-1.5 px-2 mt-5 sm:mt-4 boeder border-1 rounded-lg border-black"
+              className="text-[10px] sm:text-[12px] h-5 sm:h-7 bg-black text-white px-2 border-1 rounded-lg border-black"
             >
               {t("loginSignup")}
             </button>
@@ -506,7 +502,7 @@ const LandingPage = () => {
 
         {/* Casino Providers Section */}
         {topProviders.length > 0 && (
-          <div className="mb-3 mx-2 mt-3 rounded-xl p-3" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="mb-3 mx-2 mt-3  rounded-xl p-3" style={{ background: "#1b1b1b", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-white border-b-2 border-[#1477b0] pb-1">🎰 Casino Providers</h2>
               <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#1477b0] text-xs font-semibold">
@@ -515,7 +511,7 @@ const LandingPage = () => {
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {topProviders.map((p) => (
-                <button key={p.providerName} onClick={handleRedirectToLogin} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-medium transition-all" style={{ background: "#2a2a2a", border: "1px solid rgba(20,119,176,0.4)" }}>
+                <button key={p.providerName} onClick={handleRedirectToLogin} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl  text-white text-xs font-medium transition-all" style={{ background: "#2a2a2a", border: "1px solid rgba(20,119,176,0.4)" }}>
                   {getProviderIcon(p.providerName)} {p.providerName}
                 </button>
               ))}
@@ -532,91 +528,32 @@ const LandingPage = () => {
                 All <ArrowRight size={14} />
               </button>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
               {strip.games?.map((game, i) => (
-                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
-                  {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
+                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[120px] sm:w-[140px] h-[150px] sm:h-[175px] rounded-2xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-[#f59e0b] transition-all duration-300 hover:scale-[1.04]">
+                  {game.url_thumb ? (
+                    <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                  ) : null}
+                  <div className="w-full h-full bg-gradient-to-b from-blue-600 to-indigo-900 flex items-center justify-center" style={{ display: game.url_thumb ? "none" : "flex" }}>
+                    <span className="text-3xl sm:text-4xl">🎮</span>
+                  </div>
+                  <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md rounded-full px-2 py-0.5">
+                    <span className="text-white text-[9px] sm:text-[10px] font-medium">🎯 {game.provider_name || "GAME"}</span>
+                  </div>
+                  <div className="absolute bottom-2 left-2 right-2 text-center">
+                    <h3 className="text-white font-bold text-[10px] sm:text-[11px] uppercase leading-tight tracking-wide drop-shadow-md line-clamp-2">{game.game_name || "Game"}</h3>
+                  </div>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <div className="bg-[#f59e0b] w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-xl">
+                      <span className="text-black text-base sm:text-lg font-bold ml-1">▶</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         ))}
 
-        {/* Jackpot Games */}
-        {jackpotGames.length > 0 && (
-          <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">💰 Jackpot</h3>
-              <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
-                All <ArrowRight size={14} />
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {jackpotGames.map((game, i) => (
-                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
-                  {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Spribe Games */}
-        {spribeGames.length > 0 && (
-          <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">✈️ Spribe</h3>
-              <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
-                All <ArrowRight size={14} />
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {spribeGames.map((game, i) => (
-                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
-                  {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Ezugi Games */}
-        {ezugiGames.length > 0 && (
-          <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🃏 Ezugi</h3>
-              <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
-                All <ArrowRight size={14} />
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {ezugiGames.map((game, i) => (
-                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
-                  {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mac88 Games */}
-        {mac88Games.length > 0 && (
-          <div className="px-1 pb-2 rounded-xl py-1 mx-2 mb-1" style={{ background: "linear-gradient(135deg, rgba(20,119,176,0.15) 0%, rgba(38,78,105,0.15) 100%)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-gray-300 font-bold text-sm border-b-2 border-[#f59e0b] pb-1">🎰 Mac88</h3>
-              <button onClick={handleRedirectToLogin} className="flex items-center gap-1 text-[#f59e0b] text-xs font-semibold">
-                All <ArrowRight size={14} />
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {mac88Games.map((game, i) => (
-                <div key={i} onClick={handleRedirectToLogin} className="flex-shrink-0 w-[30vw] sm:w-[160px] h-[30vw] sm:h-[200px] rounded-2xl overflow-hidden relative cursor-pointer border border-white/10">
-                  {game.url_thumb && <img src={game.url_thumb} alt={game.game_name} className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bottom padding to prevent content overlap */}

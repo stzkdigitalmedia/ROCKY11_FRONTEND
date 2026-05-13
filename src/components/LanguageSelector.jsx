@@ -48,19 +48,15 @@ const LanguageSelector = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div className="w-7 h-7 sm:w-9 p-4 sm:h-9 mr-4 border-1 border-white mt-3 bg-gray-800 rounded-full flex items-center justify-center cursor-pointer">
-
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors"
-        >
-          <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-          <span className="text-[10px] sm:text-[12px] font-medium text-white uppercase">
-            {getCurrentLanguage().code}
-          </span>
-        </button>
-      </div>
-
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-8 h-8 border border-white bg-gray-800 rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors hover:opacity-80"
+      >
+        <Globe className="w-3 h-3 text-white" />
+        <span className="text-[8px] font-medium text-white uppercase leading-none mt-0.5">
+          {getCurrentLanguage().code}
+        </span>
+      </button>
 
       {isOpen && (
         <div className="absolute top-full right-0 mt-1 w-28 bg-white border border-gray-300 rounded-lg shadow-lg z-50">

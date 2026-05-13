@@ -27,6 +27,16 @@ import {
   Maximize2,
   RotateCcw as RefreshIcon,
   ArrowLeft,
+  Plane,
+  Film,
+  Gem,
+  Globe,
+  Sparkles,
+  Target,
+  Rocket,
+  Shuffle,
+  Clover,
+  Wallet2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import LanguageSelector from "../components/LanguageSelector";
@@ -107,56 +117,62 @@ const PROVIDER_IMAGES = {
   // popok: popok,
 };
 const PROVIDER_ICONS = {
-  spribe: "🎯",
-  evolution: "🎬",
-  pragmatic: "💎",
-  "pragmatic play": "💎",
-  netent: "🌐",
-  playtech: "🕹️",
-  microgaming: "🎰",
-  habanero: "🌶️",
-  pgsoft: "🐉",
-  "pg soft": "🐉",
-  yggdrasil: "🌳",
-  quickspin: "⚡",
-  nolimit: "🔥",
-  "nolimit city": "🔥",
-  relax: "😎",
-  "relax gaming": "😎",
-  hacksaw: "🪚",
-  push: "🚀",
-  "push gaming": "🚀",
-  betsoft: "🃏",
-  booongo: "🎪",
-  kagaming: "🀄",
-  "ka gaming": "🀄",
-  playson: "🎭",
-  spinomenal: "🌀",
-  bgaming: "🎮",
-  onlyplay: "🎲",
-  wazdan: "⭐",
-  thunderkick: "⚡",
-  elk: "🦌",
-  "elk studios": "🦌",
-  blueprint: "📐",
-  redtiger: "🐯",
-  "red tiger": "🐯",
-  isoftbet: "💻",
-  ezugi: "🎡",
-  vivo: "📱",
-  "vivo gaming": "📱",
-  superspade: "♠️",
-  "super spade": "♠️",
-  jili: "🌟",
-  cq9: "🎯",
-  fachai: "🀄",
-  joker: "🃏",
-  spadegaming: "♠️",
-  "spade gaming": "♠️",
+  spribe: Target,
+  evolution: Film,
+  pragmatic: Gem,
+  "pragmatic play": Gem,
+  netent: Globe,
+  playtech: Joystick,
+  microgaming: Dices,
+  habanero: Flame,
+  pgsoft: Sparkles,
+  "pg soft": Sparkles,
+  yggdrasil: Star,
+  quickspin: Zap,
+  nolimit: Flame,
+  "nolimit city": Flame,
+  relax: Star,
+  "relax gaming": Star,
+  hacksaw: Zap,
+  push: Rocket,
+  "push gaming": Rocket,
+  betsoft: Spade,
+  booongo: Crown,
+  kagaming: Trophy,
+  "ka gaming": Trophy,
+  playson: Gamepad2,
+  spinomenal: Shuffle,
+  bgaming: Gamepad2,
+  onlyplay: Dices,
+  wazdan: Star,
+  thunderkick: Zap,
+  elk: Trophy,
+  "elk studios": Trophy,
+  blueprint: Grid2x2,
+  redtiger: Crown,
+  "red tiger": Crown,
+  isoftbet: Monitor,
+  ezugi: CircleDot,
+  vivo: Tv2,
+  "vivo gaming": Tv2,
+  superspade: Spade,
+  "super spade": Spade,
+  jili: Sparkles,
+  cq9: Target,
+  fachai: Clover,
+  joker: Spade,
+  spadegaming: Spade,
+  "spade gaming": Spade,
+  aviator: Plane,
+  mac88: Dices,
+  "mac 88": Dices,
+  rich88: Wallet2,
+  jacktop: Crown,
+  jackpot: Crown,
 };
 const getProviderDisplay = (name) => ({
   img: PROVIDER_IMAGES[name?.toLowerCase()] || null,
-  icon: PROVIDER_ICONS[name?.toLowerCase()] || "🎮",
+  IconComponent: PROVIDER_ICONS[name?.toLowerCase()] || Gamepad2,
 });
 
 const CATEGORY_ICONS = {
@@ -214,15 +230,16 @@ const CatIcon = ({ name, size = 14, className = "" }) => {
   return <Icon size={size} className={className} />;
 };
 
-const ProviderImg = ({ src, name, icon, isActive }) => {
+const ProviderImg = ({ src, name, IconComponent, isActive }) => {
   const [failed, setFailed] = useState(false);
-  if (failed) {
+  if (failed || !src) {
     return (
       <span
-        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1 px-2"
-        style={{ color: isActive ? "#1477b0" : "#fff" }}
+        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5 px-2"
+        style={{ color: isActive ? "#fff" : "#fff" }}
       >
-        {icon} {name}
+        {IconComponent && <IconComponent size={14} />}
+        {name}
       </span>
     );
   }
@@ -230,9 +247,12 @@ const ProviderImg = ({ src, name, icon, isActive }) => {
     <img
       src={src}
       alt={name}
-      className="w-full h-full object-contain p-1.5 rounded-lg"
+      className="w-full h-full object-contain p-1.5 rounded-lg transition-all duration-200 group-hover:brightness-0 group-hover:invert"
       loading="lazy"
       onError={() => setFailed(true)}
+      style={{
+        filter: isActive ? 'brightness(0) invert(1)' : 'none'
+      }}
     />
   );
 };
@@ -849,46 +869,45 @@ const Casino = () => {
           className="relative px-3 py-3 mb-3"
           style={{ background: "#0e0e0e" }}
         >
-          {/* Row 1: Avatar | Marquee+Search | Lang */}
-          <div className="flex items-center gap-2 mb-2">
+          {/* Row 1: Avatar + Marquee+Search + Lang - all in one line */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Avatar */}
             <Link
               to="/profile"
-              className="flex flex-col items-start hover:opacity-80 transition-opacity flex-shrink-0"
+              className="flex-shrink-0 hover:opacity-80 transition-opacity"
             >
               <div
-                className="w-8 h-8 sm:w-9 sm:h-9 border border-white mt- rounded-full flex items-center justify-center"
+                className="w-8 h-8 border border-white rounded-full flex items-center justify-center"
                 style={{
                   background: "linear-gradient(to bottom, #1477b0, #264e69)",
                 }}
               >
-                <span className="text-white font-semibold text-sm">
+                <span className="text-white font-semibold text-xs">
                   {user?.clientName?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               </div>
-              {/* <p className="text-white font-semibold text-[13px] notranslate">{user?.clientName}</p> */}
             </Link>
 
             {/* Marquee + Search together */}
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-2 py-1 flex-1 min-w-0 overflow-hidden">
-              <span className="text-sm flex-shrink-0">📢</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 rounded-lg sm:rounded-xl px-1.5 sm:px-2 py-1.5 flex-1 min-w-0 overflow-hidden">
+              <span className="text-xs sm:text-sm flex-shrink-0">📢</span>
               <div className="overflow-hidden flex-1 min-w-0">
                 <marquee
-                  className="text-xs font-medium text-white"
+                  className="text-[10px] sm:text-xs font-medium text-white"
                   onMouseOver={(e) => e.target.stop()}
                   onMouseOut={(e) => e.target.start()}
                 >
                   {userAnnouncement}
                 </marquee>
               </div>
-              <button
+              {/* <button
                 onClick={() => {
                   setSearchOpen((o) => !o);
                   if (!searchOpen)
                     setTimeout(() => searchInputRef.current?.focus(), 50);
                   else setSearch("");
                 }}
-                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200"
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200"
                 style={{
                   background: searchOpen
                     ? "rgba(255,255,255,0.9)"
@@ -896,14 +915,14 @@ const Casino = () => {
                 }}
               >
                 <Search
-                  className="w-3 h-3"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                   style={{ color: searchOpen ? "#1477b0" : "#fff" }}
                 />
-              </button>
+              </button> */}
             </div>
 
-            {/* Lang */}
-            <div className="flex-shrink-0">
+            {/* Lang - same size as avatar */}
+            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
               <LanguageSelector />
             </div>
           </div>
@@ -982,7 +1001,7 @@ const Casino = () => {
               {providers.map((p) => {
                 const name =
                   typeof p === "object" ? p.provider_name || p.name || p : p;
-                const { img, icon } = getProviderDisplay(name);
+                const { img, IconComponent } = getProviderDisplay(name);
                 const isActive = activeProvider === name;
                 return (
                   <button
@@ -999,7 +1018,7 @@ const Casino = () => {
                         fetchProviderGames(name, 1);
                       }
                     }}
-                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden hover:scale-105"
+                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden group hover:bg-gradient-to-r hover:from-[#1477b0] hover:to-[#264e69]"
                     style={{
                       width: img ? "130px" : "auto",
                       height: "41px",
@@ -1020,12 +1039,13 @@ const Casino = () => {
                       <ProviderImg
                         src={img}
                         name={name}
-                        icon={icon}
+                        IconComponent={IconComponent}
                         isActive={isActive}
                       />
                     ) : (
-                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1">
-                        {icon} {name}
+                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5">
+                        {IconComponent && <IconComponent size={14} />}
+                        {name}
                       </span>
                     )}
                   </button>
