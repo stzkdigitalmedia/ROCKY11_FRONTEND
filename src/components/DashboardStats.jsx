@@ -63,7 +63,8 @@ const DashboardStats = () => {
         apiHelper.get(`/transaction/dash-user-registration-count-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-bonus-summary?startDate=${startUTC}&endDate=${endUTC}`),
         apiHelper.get(`/transaction/dash-referral-earning-summary?startDate=${startUTC}&endDate=${endUTC}`),
-        apiHelper.get(`/game/games/dashboard/summary?startDate=${startUTC}&endDate=${endUTC}`),
+        // apiHelper.get(`/game/games/dashboard/summary?startDate=${startUTC}&endDate=${endUTC}`),
+        apiHelper.get(`/game/games/dashboard/summary`),
         apiHelper.post('/deletelog/getCount_of_DeleteId', {
           startDate: start.toISOString().split('T')[0],
           endDate: end.toISOString().split('T')[0]
