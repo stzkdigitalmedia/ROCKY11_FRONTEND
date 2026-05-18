@@ -4,7 +4,7 @@ import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import Sidebar from '../components/Sidebar';
 import AdminHeader from '../components/AdminHeader';
-import { ArrowLeft, Calendar, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Calendar, RotateCcw, Download } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
@@ -14,7 +14,7 @@ const NoTransactionUsers = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const toast = useToastContext();
-
+  
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -43,7 +43,7 @@ const NoTransactionUsers = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
-            case 'overview':
+      case 'overview':
         navigate('/overview');
         break;
       case 'games':
@@ -51,6 +51,9 @@ const NoTransactionUsers = () => {
         break;
       case 'allinreq':
         navigate('/allinreq');
+        break;
+      case 'quickpayreq':
+        navigate('/quickpayreq');
         break;
       case 'panels':
         navigate('/panels');
@@ -68,10 +71,10 @@ const NoTransactionUsers = () => {
     try {
       const start = startDate || new Date();
       const end = endDate || new Date();
-
+      
       const startUTC = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())).toISOString();
       const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate() + 1)).toISOString();
-
+      
       const response = await apiHelper.get(`/transaction/getUsers_of_NoTransaction_forDashboard?startDate=${startUTC}&endDate=${endUTC}`);
       const userData = response?.users || response?.data || response;
       setUsers(Array.isArray(userData) ? userData : []);
@@ -102,30 +105,59 @@ const NoTransactionUsers = () => {
     fetchNoTransactionUsers(today, today);
   };
 
+  const downloadExcel = () => {
+    if (users.length === 0) {
+      toast.error('No data to download');
+      return;
+    }
+
+    const csvData = [
+      ['#', 'User Name', 'Contact', 'Branch', 'Registration Date'],
+      ...users.map((user, index) => [
+        index + 1,
+        user?.clientName || user?.fullName || 'N/A',
+        user?.phone || 'N/A',
+        user?.branchName || 'N/A',
+        user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'
+      ])
+    ];
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `no-transaction-users-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
-    // First time load
+  // First time load
+  fetchNoTransactionUsers();
+
+  // Auto refresh every 30 seconds
+  const interval = setInterval(() => {
     fetchNoTransactionUsers();
+  }, 30000); // 30 sec
 
-    // Auto refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchNoTransactionUsers();
-    }, 30000); // 30 sec
-
-    // Cleanup when component unmounts
-    return () => clearInterval(interval);
-  }, []);
+  // Cleanup when component unmounts
+  return () => clearInterval(interval);
+}, []);
 
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar activeTab="" setActiveTab={handleNavigation} onLogout={handleLogout} />
-
+      
       <div className="flex-1 lg:ml-64">
-        <AdminHeader
+        <AdminHeader 
           title="FTD Pending User"
           subtitle="Users with no transactions"
         />
-
+        
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex justify-between items-center">
             <button
@@ -135,7 +167,7 @@ const NoTransactionUsers = () => {
               <ArrowLeft size={16} />
               Back to Dashboard
             </button>
-
+            
             <div className="flex items-center gap-2">
               <div className="relative">
                 <button
@@ -143,7 +175,7 @@ const NoTransactionUsers = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <Calendar size={16} />
-                  {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString()
+                  {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString() 
                     ? dateRange[0].startDate.toDateString()
                     : `${dateRange[0].startDate.toDateString()} - ${dateRange[0].endDate.toDateString()}`
                   }
@@ -160,16 +192,16 @@ const NoTransactionUsers = () => {
                     />
                     <div className="p-3 border-t flex justify-end gap-2">
                       <button
-                        onClick={applyDateFilter}
-                        className="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        Apply
-                      </button>
-                      <button
                         onClick={() => setShowDatePicker(false)}
                         className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                       >
                         Cancel
+                      </button>
+                      <button
+                        onClick={applyDateFilter}
+                        className="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Apply
                       </button>
                     </div>
                   </div>
@@ -193,11 +225,20 @@ const NoTransactionUsers = () => {
               <span className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
                 {users.length} users
               </span>
+              {users.length > 0 && (
+                <button
+                  onClick={downloadExcel}
+                  className="flex items-center gap-2 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                >
+                  <Download size={16} />
+                  Download Excel
+                </button>
+              )}
             </div>
 
             {loading ? (
               <div className="text-center py-8">
-                <div className="loading-spinner mx-auto mb-4" style={{ width: '32px', height: '32px' }}></div>
+                <div className="loading-spinner mx-auto mb-4" style={{width: '32px', height: '32px'}}></div>
                 <p className="text-gray-600">Loading users...</p>
               </div>
             ) : users.length === 0 ? (
