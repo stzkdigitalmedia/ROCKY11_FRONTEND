@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UsersList from './UsersList';
 import AddUserForm from './AddUserForm';
-import { Users, Plus, Calendar, RotateCcw, RefreshCw } from 'lucide-react';
+import { Users, Plus, Calendar, RotateCcw, RefreshCw, X, Copy, Check } from 'lucide-react';
 import { apiHelper } from '../utils/apiHelper';
 import { useToastContext } from '../App';
 import { useAuth } from '../hooks/useAuth';
@@ -13,6 +13,11 @@ import axios from 'axios';
 
 const DashboardStats = () => {
   const [showAddUser, setShowAddUser] = useState(false);
+  const [showFindUser, setShowFindUser] = useState(false);
+  const [gameIdSearch, setGameIdSearch] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState(null);
+  const [copiedField, setCopiedField] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
   const [totalBalance, setTotalBalance] = useState(0);
@@ -42,6 +47,50 @@ const DashboardStats = () => {
 
   const refreshUsers = () => {
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleFindUserByGameId = async () => {
+    if (!gameIdSearch.trim()) {
+      toast.error('Please enter a Game ID');
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const response = await apiHelper.get(`/subAccount/getMainUserBySubUserName/${gameIdSearch.trim()}`);
+      const data = response?.data || response;
+      
+      if (data?.success && data?.parent) {
+        setSearchResult(data.parent);
+        toast.success(data.message || 'User found successfully');
+      } else {
+        toast.error('No user found with this Game ID');
+        setSearchResult(null);
+      }
+    } catch (error) {
+      toast.error('Failed to find user: ' + error.message);
+      setSearchResult(null);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const closeFindUserModal = () => {
+    setShowFindUser(false);
+    setGameIdSearch('');
+    setSearchResult(null);
+    setCopiedField('');
+  };
+
+  const copyToClipboard = async (text, fieldName) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      toast.success(`${fieldName} copied to clipboard`);
+      setTimeout(() => setCopiedField(''), 2000);
+    } catch (error) {
+      toast.error('Failed to copy to clipboard');
+    }
   };
 
   const fetchDashboardSummary = async (startDate, endDate) => {
@@ -492,6 +541,13 @@ const DashboardStats = () => {
               <span className="hidden sm:inline">Add New User</span>
               <span className="sm:hidden">Add User</span>
             </button>
+            <button
+              onClick={() => setShowFindUser(true)}
+              className="gaming-btn flex items-center gap-2 text-sm sm:text-base bg-blue-600 hover:bg-blue-700"
+            >
+              <span className="hidden sm:inline">Find User by Game ID</span>
+              <span className="sm:hidden">Find User</span>
+            </button>
           </div>
         </div>
 
@@ -511,6 +567,107 @@ const DashboardStats = () => {
             setShowAddUser(false);
           }}
         />
+      )}
+
+      {/* Find User Modal */}
+      {showFindUser && (
+        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Find User by Game ID</h3>
+              <button
+                onClick={closeFindUserModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Game ID
+                </label>
+                <input
+                  type="text"
+                  value={gameIdSearch}
+                  onChange={(e) => setGameIdSearch(e.target.value)}
+                  placeholder="Enter Game ID (e.g., testAL29)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => e.key === 'Enter' && handleFindUserByGameId()}
+                />
+              </div>
+              
+              <button
+                onClick={handleFindUserByGameId}
+                disabled={searchLoading || !gameIdSearch.trim()}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {searchLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    Search User
+                  </>
+                )}
+              </button>
+              
+              {/* Search Result */}
+              {searchResult && (
+                <div className="mt-6">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-1">
+                    {/* <div className="bg-white rounded-lg p-4 shadow-sm"> */}
+                      {/* User Details */}
+                      <div className="space-y-3">
+                        
+                        {/* Client Name */}
+                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                          <div className='flex'>
+                            <p className=" text-lg text-gray-600">Client Name: </p>
+                            <p className="font-medium text-lg text-gray-900">&nbsp;{searchResult.clientName || 'N/A'}</p>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard(searchResult.clientName, 'Client Name')}
+                            className="p-2 hover:bg-blue-100 rounded-md transition-colors"
+                            title="Copy Client Name"
+                          >
+                            {copiedField === 'Client Name' ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-blue-500" />
+                            )}
+                          </button>
+                        </div>
+                        
+                        {/* Phone Number */}
+                        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                          <div className='flex'>
+                            <p className=" text-lg text-gray-600">Phone Number: </p>
+                            <p className="font-medium text-lg text-gray-900">&nbsp;{searchResult.phone || 'N/A'}</p>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard(searchResult.phone, 'Phone Number')}
+                            className="p-2 hover:bg-purple-100 rounded-md transition-colors"
+                            title="Copy Phone Number"
+                          >
+                            {copiedField === 'Phone Number' ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-purple-500" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    {/* </div> */}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
