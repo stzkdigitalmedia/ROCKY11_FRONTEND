@@ -545,7 +545,7 @@ const DashboardStats = () => {
               onClick={() => setShowFindUser(true)}
               className="gaming-btn flex items-center gap-2 text-sm sm:text-base bg-blue-600 hover:bg-blue-700"
             >
-              <span className="hidden sm:inline">Find User by Game ID</span>
+              <span className="hidden sm:inline">Find User From Game ID</span>
               <span className="sm:hidden">Find User</span>
             </button>
           </div>
