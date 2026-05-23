@@ -41,6 +41,7 @@ const TransactionHistory = () => {
   const [bettingPage, setBettingPage] = useState(1);
   const [bettingTotalPages, setBettingTotalPages] = useState(1);
   const [bettingTotal, setBettingTotal] = useState(0);
+  const [bettingSearch, setBettingSearch] = useState("");
 
   // Filter states for user transactions
   const [filters, setFilters] = useState({
@@ -143,6 +144,19 @@ const TransactionHistory = () => {
     }
   };
 
+  // Client-side filtered betting users based on search input
+  const filteredBettingUsers = bettingSearch.trim()
+    ? bettingUsers.filter((u) => {
+        const q = bettingSearch.toLowerCase();
+        return (
+          (u?.userName || "").toLowerCase().includes(q) ||
+          (u?.userMobile || "").toLowerCase().includes(q) ||
+          (u?.userEmail || "").toLowerCase().includes(q) ||
+          (u?.userId || "").toLowerCase().includes(q)
+        );
+      })
+    : bettingUsers;
+
   const openHistory = async (userId, pg = 1, filters = historyFilters) => {
     setHistoryModal(true);
     setHistoryUserId(userId);
@@ -221,6 +235,8 @@ const TransactionHistory = () => {
     }
   }, [page, activeTab]);
 
+
+
   useEffect(() => {
     const fetchGames = async () => {
       try {
@@ -277,6 +293,53 @@ const TransactionHistory = () => {
           </nav>
         </div>
       </div>
+
+      {/* Game Transaction User Search */}
+      {activeTab === "game" && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Search size={20} className="text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Search User</h3>
+                <p className="text-sm text-gray-600">Search by username or mobile number</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="relative max-w-md">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={bettingSearch}
+                onChange={(e) => {
+                  setBettingSearch(e.target.value);
+                }}
+                placeholder="Search by username or mobile..."
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all duration-200"
+              />
+              {bettingSearch && (
+                <button
+                  onClick={() => {
+                    setBettingSearch("");
+                    fetchBettingUsers(1, "");
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            {bettingSearch && (
+              <p className="mt-2 text-sm text-purple-600 font-medium">
+                Searching for: &quot;{bettingSearch}&quot;
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
@@ -483,7 +546,7 @@ const TransactionHistory = () => {
                 <div className="flex gap-3">
                   {activeTab === "game" && (
                   <button
-                    onClick={fetchBettingUsers}
+                    onClick={() => fetchBettingUsers(1)}
                     className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     <RefreshCw size={16} />
@@ -564,7 +627,7 @@ const TransactionHistory = () => {
         <div className="gaming-card">
           {(() => {
             const userTxns = Array.isArray(transactions) ? transactions : [];
-            const gameTxns = Array.isArray(bettingUsers) ? bettingUsers : [];
+            const gameTxns = Array.isArray(filteredBettingUsers) ? filteredBettingUsers : [];
             const currentTransactions =
               activeTab === "user" ? userTxns : gameTxns;
 
