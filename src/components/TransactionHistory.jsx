@@ -38,6 +38,10 @@ const TransactionHistory = () => {
   const [gameTransactionPage, setGameTransactionPage] = useState(1);
   const [gameTransactionTotalPages, setGameTransactionTotalPages] = useState(1);
   const [gameTransactionTotal, setGameTransactionTotal] = useState(0);
+  const [bettingPage, setBettingPage] = useState(1);
+  const [bettingTotalPages, setBettingTotalPages] = useState(1);
+  const [bettingTotal, setBettingTotal] = useState(0);
+  const [bettingSearch, setBettingSearch] = useState("");
 
   // Filter states for user transactions
   const [filters, setFilters] = useState({
@@ -110,13 +114,28 @@ const TransactionHistory = () => {
     }
   };
 
-  const fetchBettingUsers = async () => {
+  const fetchBettingUsers = async (pg = 1) => {
     setLoading(true);
+    setBettingPage(pg);
     try {
-      const response = await apiHelper.post("/getBettingUsers");
-      const data =
-        response?.data?.users || response?.users || response?.data || [];
+      const response = await apiHelper.post("/getBettingUsers", { page: pg, limit: 10 });
+      console.log("getBettingUsers response:", response);
+      const data = response?.data?.users || response?.data?.data || response?.users || response?.data || [];
       setBettingUsers(Array.isArray(data) ? data : []);
+      setBettingTotalPages(
+        response?.data?.totalPages ||
+        response?.data?.pagination?.totalPages ||
+        response?.totalPages ||
+        Math.ceil((response?.data?.total || response?.data?.totalUsers || 0) / 10) ||
+        1
+      );
+      setBettingTotal(
+        response?.data?.total ||
+        response?.data?.totalUsers ||
+        response?.data?.pagination?.total ||
+        response?.totalUsers ||
+        0
+      );
     } catch (error) {
       toast.error("Failed to fetch betting users: " + error.message);
       setBettingUsers([]);
@@ -124,6 +143,19 @@ const TransactionHistory = () => {
       setLoading(false);
     }
   };
+
+  // Client-side filtered betting users based on search input
+  const filteredBettingUsers = bettingSearch.trim()
+    ? bettingUsers.filter((u) => {
+        const q = bettingSearch.toLowerCase();
+        return (
+          (u?.userName || "").toLowerCase().includes(q) ||
+          (u?.userMobile || "").toLowerCase().includes(q) ||
+          (u?.userEmail || "").toLowerCase().includes(q) ||
+          (u?.userId || "").toLowerCase().includes(q)
+        );
+      })
+    : bettingUsers;
 
   const openHistory = async (userId, pg = 1, filters = historyFilters) => {
     setHistoryModal(true);
@@ -199,9 +231,11 @@ const TransactionHistory = () => {
     if (activeTab === "user") {
       fetchTransactions(page, filters);
     } else {
-      fetchBettingUsers();
+      fetchBettingUsers(bettingPage);
     }
   }, [page, activeTab]);
+
+
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -259,6 +293,53 @@ const TransactionHistory = () => {
           </nav>
         </div>
       </div>
+
+      {/* Game Transaction User Search */}
+      {activeTab === "game" && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Search size={20} className="text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Search User</h3>
+                <p className="text-sm text-gray-600">Search by username or mobile number</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="relative max-w-md">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={bettingSearch}
+                onChange={(e) => {
+                  setBettingSearch(e.target.value);
+                }}
+                placeholder="Search by username or mobile..."
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all duration-200"
+              />
+              {bettingSearch && (
+                <button
+                  onClick={() => {
+                    setBettingSearch("");
+                    fetchBettingUsers(1, "");
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            {bettingSearch && (
+              <p className="mt-2 text-sm text-purple-600 font-medium">
+                Searching for: &quot;{bettingSearch}&quot;
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
@@ -448,94 +529,94 @@ const TransactionHistory = () => {
               <div className="flex justify-between items-center">
                 <div className="flex gap-3">
                   <button
-                    onClick={applyFilters}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                  >
-                    <Search size={16} />
-                    Apply Filters
-                  </button>
+                  onClick={applyFilters}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                >
+                  <Search size={16} />
+                  Apply Filters
+                </button>
                   <button
-                    onClick={clearFilters}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
-                  >
-                    Clear Filters
-                  </button>
+                  onClick={clearFilters}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
+                >
+                  Clear Filters
+                </button>
                 </div>
 
                 <div className="flex gap-3">
                   {activeTab === "game" && (
-                    <button
-                      onClick={fetchBettingUsers}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                    >
-                      <RefreshCw size={16} />
-                      Refresh
-                    </button>
-                  )}
                   <button
-                    onClick={async () => {
-                      setDownloading(true);
-                      try {
-                        const payload = { ...filters };
-                        Object.keys(payload).forEach((key) => {
-                          if (
-                            payload[key] === "" ||
-                            payload[key] === null ||
-                            payload[key] === undefined
-                          ) {
-                            delete payload[key];
-                          }
-                        });
-                        const response = await apiHelper.post(
-                          "/transaction/getAllUser_TrxsHistory_Without_Pagination",
-                          payload,
-                        );
-                        const allData =
-                          response?.data?.transactions ||
-                          response?.transactions ||
-                          response?.data ||
-                          response ||
-                          [];
-                        const data = allData.map((t, i) => ({
-                          "S.No": i + 1,
-                          "Client Name":
-                            t?.clientName || t?.user?.clientName || "N/A",
-                          "Transaction Type": t?.transactionType || "N/A",
-                          Amount: t?.amount || 0,
-                          "Game Name": t?.gameName || "N/A",
-                          Mode: t?.mode || "N/A",
-                          Status: t?.status || "Pending",
-                          "Created At": t?.createdAt
-                            ? new Date(t.createdAt).toLocaleString("en-IN")
-                            : "N/A",
-                          "Updated At": t?.updatedAt
-                            ? new Date(t.updatedAt).toLocaleString("en-IN")
-                            : "N/A",
-                        }));
-                        const ws = XLSX.utils.json_to_sheet(data);
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-                        XLSX.writeFile(
-                          wb,
-                          `Transaction_History_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`,
-                        );
-                        toast.success(
-                          `Downloaded ${data.length} transactions successfully!`,
-                        );
-                      } catch (error) {
-                        toast.error(
-                          "Failed to download report: " + error.message,
-                        );
-                      } finally {
-                        setDownloading(false);
-                      }
-                    }}
-                    disabled={downloading}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                    onClick={() => fetchBettingUsers(1)}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
-                    <Download size={16} />
-                    {downloading ? "Downloading..." : "Download Report"}
+                    <RefreshCw size={16} />
+                    Refresh
                   </button>
+                )}
+                  <button
+                  onClick={async () => {
+                    setDownloading(true);
+                    try {
+                      const payload = { ...filters };
+                      Object.keys(payload).forEach((key) => {
+                        if (
+                          payload[key] === "" ||
+                          payload[key] === null ||
+                          payload[key] === undefined
+                        ) {
+                          delete payload[key];
+                        }
+                      });
+                      const response = await apiHelper.post(
+                        "/transaction/getAllUser_TrxsHistory_Without_Pagination",
+                        payload,
+                      );
+                      const allData =
+                        response?.data?.transactions ||
+                        response?.transactions ||
+                        response?.data ||
+                        response ||
+                        [];
+                      const data = allData.map((t, i) => ({
+                        "S.No": i + 1,
+                        "Client Name":
+                          t?.clientName || t?.user?.clientName || "N/A",
+                        "Transaction Type": t?.transactionType || "N/A",
+                        Amount: t?.amount || 0,
+                        "Game Name": t?.gameName || "N/A",
+                        Mode: t?.mode || "N/A",
+                        Status: t?.status || "Pending",
+                        "Created At": t?.createdAt
+                          ? new Date(t.createdAt).toLocaleString("en-IN")
+                          : "N/A",
+                        "Updated At": t?.updatedAt
+                          ? new Date(t.updatedAt).toLocaleString("en-IN")
+                          : "N/A",
+                      }));
+                      const ws = XLSX.utils.json_to_sheet(data);
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+                      XLSX.writeFile(
+                        wb,
+                        `Transaction_History_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`,
+                      );
+                      toast.success(
+                        `Downloaded ${data.length} transactions successfully!`,
+                      );
+                    } catch (error) {
+                      toast.error(
+                        "Failed to download report: " + error.message,
+                      );
+                    } finally {
+                      setDownloading(false);
+                    }
+                  }}
+                  disabled={downloading}
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                >
+                  <Download size={16} />
+                  {downloading ? "Downloading..." : "Download Report"}
+                </button>
                 </div>
               </div>
             </div>
@@ -546,7 +627,7 @@ const TransactionHistory = () => {
         <div className="gaming-card">
           {(() => {
             const userTxns = Array.isArray(transactions) ? transactions : [];
-            const gameTxns = Array.isArray(bettingUsers) ? bettingUsers : [];
+            const gameTxns = Array.isArray(filteredBettingUsers) ? filteredBettingUsers : [];
             const currentTransactions =
               activeTab === "user" ? userTxns : gameTxns;
 
@@ -652,7 +733,7 @@ const TransactionHistory = () => {
                           <p className="text-sm font-medium text-gray-900">
                             {activeTab === "user"
                               ? (page - 1) * 20 + index + 1
-                              : (gameTransactionPage - 1) * 20 + index + 1}
+                              : (bettingPage - 1) * 10 + index + 1}
                           </p>
                         </td>
 
@@ -840,115 +921,58 @@ const TransactionHistory = () => {
           })()}
 
           {/* Pagination Controls */}
-          {((activeTab === "user" && totalPages > 1) ||
-            (activeTab === "game" && gameTransactionTotalPages > 1)) && (
-              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200 gap-4">
-                <div className="text-sm text-gray-600">
-                  {activeTab === "user" ? (
-                    <>
-                      Showing page {page} of {totalPages} (Total:{" "}
-                      {totalTransactions} transactions)
-                    </>
-                  ) : (
-                    <>
-                      Showing page {gameTransactionPage} of{" "}
-                      {gameTransactionTotalPages} (Total: {gameTransactionTotal}{" "}
-                      transactions)
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      if (activeTab === "user") {
-                        setPage(page - 1);
-                      } else {
-                        setGameTransactionPage(gameTransactionPage - 1);
-                      }
-                    }}
-                    disabled={
-                      (activeTab === "user"
-                        ? page === 1
-                        : gameTransactionPage === 1) || loading
-                    }
-                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-
-                  <div className="flex gap-1">
-                    {Array.from(
-                      {
-                        length: Math.min(
-                          activeTab === "user"
-                            ? totalPages
-                            : gameTransactionTotalPages,
-                          5,
-                        ),
-                      },
-                      (_, i) => {
-                        const currentPage =
-                          activeTab === "user" ? page : gameTransactionPage;
-                        const currentTotalPages =
-                          activeTab === "user"
-                            ? totalPages
-                            : gameTransactionTotalPages;
-
-                        let pageNum;
-                        if (currentTotalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= currentTotalPages - 2) {
-                          pageNum = currentTotalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => {
-                              if (activeTab === "user") {
-                                setPage(pageNum);
-                              } else {
-                                setGameTransactionPage(pageNum);
-                              }
-                            }}
-                            disabled={loading}
-                            className={`px-3 py-2 text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${currentPage === pageNum
-                                ? "bg-blue-600 text-white"
-                                : "border border-gray-300 hover:bg-gray-50"
-                              }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      },
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      if (activeTab === "user") {
-                        setPage(page + 1);
-                      } else {
-                        setGameTransactionPage(gameTransactionPage + 1);
-                      }
-                    }}
-                    disabled={
-                      (activeTab === "user"
-                        ? page === totalPages
-                        : gameTransactionPage === gameTransactionTotalPages) ||
-                      loading
-                    }
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
+          {((activeTab === "user" && totalPages > 1) || activeTab === "game") && (
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-4 px-4 py-3 border-t border-gray-200 gap-3">
+              <div className="text-sm text-gray-500">
+                {activeTab === "user" ? (
+                  <>Page <span className="font-semibold text-gray-700">{page}</span> of <span className="font-semibold text-gray-700">{totalPages}</span> &nbsp;·&nbsp; {totalTransactions} total</>
+                ) : (
+                  <>Page <span className="font-semibold text-gray-700">{bettingPage}</span> of <span className="font-semibold text-gray-700">{bettingTotalPages}</span> &nbsp;·&nbsp; {bettingTotal} total users</>
+                )}
               </div>
-            )}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => activeTab === "user" ? setPage(page - 1) : fetchBettingUsers(bettingPage - 1)}
+                  disabled={(activeTab === "user" ? page === 1 : bettingPage === 1) || loading}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(activeTab === "user" ? totalPages : bettingTotalPages, 5) }, (_, i) => {
+                    const cp = activeTab === "user" ? page : bettingPage;
+                    const tp = activeTab === "user" ? totalPages : bettingTotalPages;
+                    let pageNum;
+                    if (tp <= 5) pageNum = i + 1;
+                    else if (cp <= 3) pageNum = i + 1;
+                    else if (cp >= tp - 2) pageNum = tp - 4 + i;
+                    else pageNum = cp - 2 + i;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => activeTab === "user" ? setPage(pageNum) : fetchBettingUsers(pageNum)}
+                        disabled={loading}
+                        className={`w-8 h-8 text-sm rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+                          (activeTab === "user" ? page : bettingPage) === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "border border-gray-300 hover:bg-gray-50 text-gray-700"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => activeTab === "user" ? setPage(page + 1) : fetchBettingUsers(bettingPage + 1)}
+                  disabled={(activeTab === "user" ? page === totalPages : bettingPage === bettingTotalPages) || loading}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
