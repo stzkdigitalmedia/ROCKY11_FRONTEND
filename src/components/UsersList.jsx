@@ -53,6 +53,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   const [maxAmount, setMaxAmount] = useState('');
   const [minCount, setMinCount] = useState('');
   const [maxCount, setMaxCount] = useState('');
+  const [activeFilter, setActiveFilter] = useState('');
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusUser, setBonusUser] = useState(null);
   const [bonusAmount, setBonusAmount] = useState('');
@@ -751,6 +752,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       if (maxAmount !== '') params.append('maxAmount', maxAmount);
       if (minCount !== '') params.append('minCount', minCount);
       if (maxCount !== '') params.append('maxCount', maxCount);
+      if (activeFilter !== '') params.append('isActive', activeFilter);
 
       const response = await apiHelper.get(
         `/user/getUsers?${params.toString()}`
@@ -800,7 +802,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, minAmount, maxAmount, minCount, maxCount]);
+  }, [searchTerm, minAmount, maxAmount, minCount, maxCount, activeFilter]);
 
 
   return (
@@ -846,6 +848,15 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
           onWheel={(e) => e.target.blur()}
           className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
+        <select
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value)}
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        >
+          <option value="">All</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
       </div>
 
       {/* Download Button */}
