@@ -114,13 +114,30 @@ const TransactionHistory = () => {
     }
   };
 
-  const fetchBettingUsers = async (pg = 1) => {
+  const fetchBettingUsers = async (pg = 1, search = bettingSearch) => {
     setLoading(true);
     setBettingPage(pg);
     try {
-      const response = await apiHelper.post("/getBettingUsers", { page: pg, limit: 10 });
-      console.log("getBettingUsers response:", response);
+      const payload = { page: pg, limit: 10 };
+      
+      // Try multiple parameter names that the backend might expect
+      if (search && search.trim()) {
+        const searchValue = search.trim();
+        payload.search = searchValue;
+        payload.query = searchValue;
+        payload.username = searchValue;
+        payload.mobile = searchValue;
+        payload.userName = searchValue;
+        payload.userMobile = searchValue;
+      }
+      
+      console.log('Fetching betting users with payload:', payload);
+      const response = await apiHelper.post("/getBettingUsers", payload);
+      console.log("getBettingUsers full response:", response);
       const data = response?.data?.users || response?.data?.data || response?.users || response?.data || [];
+      console.log('Extracted data:', data);
+      console.log('Data length:', data.length);
+      console.log('Is array?', Array.isArray(data));
       setBettingUsers(Array.isArray(data) ? data : []);
       setBettingTotalPages(
         response?.data?.totalPages ||
@@ -134,9 +151,11 @@ const TransactionHistory = () => {
         response?.data?.totalUsers ||
         response?.data?.pagination?.total ||
         response?.totalUsers ||
+        data.length ||
         0
       );
     } catch (error) {
+      console.error('Error fetching betting users:', error);
       toast.error("Failed to fetch betting users: " + error.message);
       setBettingUsers([]);
     } finally {
@@ -144,8 +163,11 @@ const TransactionHistory = () => {
     }
   };
 
-  // Client-side filtered betting users based on search input
-  const filteredBettingUsers = bettingSearch.trim()
+  // Use all betting users directly from API (backend handles search)
+  const filteredBettingUsers = bettingUsers;
+
+  // If backend doesn't support search, fallback to client-side filtering
+  const clientSideFilteredUsers = bettingSearch.trim()
     ? bettingUsers.filter((u) => {
         const q = bettingSearch.toLowerCase();
         return (
@@ -231,9 +253,22 @@ const TransactionHistory = () => {
     if (activeTab === "user") {
       fetchTransactions(page, filters);
     } else {
-      fetchBettingUsers(bettingPage);
+      // Don't fetch on initial load if there's no search term
+      fetchBettingUsers(bettingPage, bettingSearch);
     }
   }, [page, activeTab]);
+
+  // Auto-search with debounce when user types in game transactions tab
+  useEffect(() => {
+    if (activeTab !== "game") return;
+    
+    const debounceTimer = setTimeout(() => {
+      setBettingPage(1);
+      fetchBettingUsers(1, bettingSearch);
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(debounceTimer);
+  }, [bettingSearch, activeTab]);
 
 
 
@@ -317,13 +352,20 @@ const TransactionHistory = () => {
                 onChange={(e) => {
                   setBettingSearch(e.target.value);
                 }}
-                placeholder="Search by username or mobile..."
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    setBettingPage(1);
+                    fetchBettingUsers(1, bettingSearch);
+                  }
+                }}
+                placeholder="Search by username or mobile... (auto-search after typing)"
                 className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all duration-200"
               />
               {bettingSearch && (
                 <button
                   onClick={() => {
                     setBettingSearch("");
+                    setBettingPage(1);
                     fetchBettingUsers(1, "");
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -332,11 +374,23 @@ const TransactionHistory = () => {
                 </button>
               )}
             </div>
-            {bettingSearch && (
-              <p className="mt-2 text-sm text-purple-600 font-medium">
-                Searching for: &quot;{bettingSearch}&quot;
-              </p>
-            )}
+            <div className="mt-3 flex gap-2 items-center">
+              <button
+                onClick={() => {
+                  setBettingPage(1);
+                  fetchBettingUsers(1, bettingSearch);
+                }}
+                disabled={loading}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+              {bettingSearch && (
+                <p className="flex items-center text-sm text-purple-600 font-medium">
+                  Searching for: &quot;{bettingSearch}&quot; - Found {bettingTotal} users
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -546,7 +600,7 @@ const TransactionHistory = () => {
                 <div className="flex gap-3">
                   {activeTab === "game" && (
                   <button
-                    onClick={() => fetchBettingUsers(1)}
+                    onClick={() => fetchBettingUsers(1, bettingSearch)}
                     className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     <RefreshCw size={16} />
@@ -932,7 +986,7 @@ const TransactionHistory = () => {
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => activeTab === "user" ? setPage(page - 1) : fetchBettingUsers(bettingPage - 1)}
+                  onClick={() => activeTab === "user" ? setPage(page - 1) : fetchBettingUsers(bettingPage - 1, bettingSearch)}
                   disabled={(activeTab === "user" ? page === 1 : bettingPage === 1) || loading}
                   className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
@@ -950,7 +1004,7 @@ const TransactionHistory = () => {
                     return (
                       <button
                         key={pageNum}
-                        onClick={() => activeTab === "user" ? setPage(pageNum) : fetchBettingUsers(pageNum)}
+                        onClick={() => activeTab === "user" ? setPage(pageNum) : fetchBettingUsers(pageNum, bettingSearch)}
                         disabled={loading}
                         className={`w-8 h-8 text-sm rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
                           (activeTab === "user" ? page : bettingPage) === pageNum
@@ -964,7 +1018,7 @@ const TransactionHistory = () => {
                   })}
                 </div>
                 <button
-                  onClick={() => activeTab === "user" ? setPage(page + 1) : fetchBettingUsers(bettingPage + 1)}
+                  onClick={() => activeTab === "user" ? setPage(page + 1) : fetchBettingUsers(bettingPage + 1, bettingSearch)}
                   disabled={(activeTab === "user" ? page === totalPages : bettingPage === bettingTotalPages) || loading}
                   className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
