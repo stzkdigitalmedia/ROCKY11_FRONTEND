@@ -11,6 +11,13 @@ const allMenuItems = [
   { id: 'role-management',     label: 'Role Management',      icon: Shield,          path: '/role-management',     roles: ['SA', 'SubAdmin'] },
   { id: 'overview',            label: 'Overview',             icon: BarChart2,       path: '/overview',            roles: ['SA', 'SubAdmin', 'TierRole'] },
   { id: 'allinreq',            label: 'Instant Payout Req',   icon: Zap,             path: '/allinreq',            roles: ['SA', 'SubAdmin', 'TierRole'] },
+   {
+    id: "casino-activities",
+    label: "Casino Activities",
+    icon: Gamepad2,
+    path: "/casino-activities",
+    roles: ["SA", "SubAdmin"],
+  },
     {
     id: "casino",
     label: "Casino",

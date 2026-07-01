@@ -75,6 +75,7 @@ import DemoPage from "./pages/DemoPage";
 import Casino from "./pages/Casino";
 import CasinoAdmin from "./pages/CasinoAdmin";
 import GamePage from "./pages/GamePage";
+import CasinoActivities from "./pages/CasinoActivities";
 const ToastContext = createContext();
 
 export const useToastContext = () => {
@@ -368,6 +369,14 @@ function App() {
               element={
                 <SuperAdminRoute>
                   <CasinoAdmin />
+                </SuperAdminRoute>
+              }
+            />
+            <Route
+              path="/casino-activities"
+              element={
+                <SuperAdminRoute>
+                  <CasinoActivities />
                 </SuperAdminRoute>
               }
             />
