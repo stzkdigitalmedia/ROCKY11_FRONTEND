@@ -50,7 +50,7 @@ const LoginForm = () => {
 
       toast.success('Login successful!');
 
-        // Set announcement flag BEFORE navigation
+      // Set announcement flag BEFORE navigation
       sessionStorage.setItem('showAnnouncement', 'true');
 
       // Set announcement flag BEFORE navigation
@@ -66,6 +66,10 @@ const LoginForm = () => {
       } else {
         navigate('/user-dashboard', { replace: true });
       }
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } catch (error) {
       toast.error('Login failed: ' + (error?.message || 'Unknown error'));
     } finally {
