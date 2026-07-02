@@ -4,6 +4,8 @@ import { useToastContext } from "../App";
 import { Search, Filter, Settings, X, Download, RefreshCw } from "lucide-react";
 import * as XLSX from "xlsx";
 
+const currencySymbol = (currency) => currency === 'USDT' ? '₮' : '₹';
+
 const TransactionHistory = () => {
   const [activeTab, setActiveTab] = useState("user");
   const [transactions, setTransactions] = useState([]);
@@ -42,6 +44,22 @@ const TransactionHistory = () => {
   const [bettingTotalPages, setBettingTotalPages] = useState(1);
   const [bettingTotal, setBettingTotal] = useState(0);
   const [bettingSearch, setBettingSearch] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const [bettingFilters, setBettingFilters] = useState({ startDate: today, endDate: today });
+
+  const [exchangeBets, setExchangeBets] = useState([]);
+  const [exchangePage, setExchangePage] = useState(1);
+  const [exchangeTotalPages, setExchangeTotalPages] = useState(1);
+  const [exchangeTotal, setExchangeTotal] = useState(0);
+  const [exchangeLoading, setExchangeLoading] = useState(false);
+  const [exchangeFilters, setExchangeFilters] = useState({
+    clientName: "",
+    sportName: "",
+    status: "",
+    startDate: "",
+    endDate: "",
+    selectedCurrency: "",
+  });
 
   // Filter states for user transactions
   const [filters, setFilters] = useState({
@@ -54,6 +72,7 @@ const TransactionHistory = () => {
     endDate: "",
     mode: "",
     gameName: "",
+    selectedCurrency: "",
   });
 
   const toast = useToastContext();
@@ -114,12 +133,15 @@ const TransactionHistory = () => {
     }
   };
 
-  const fetchBettingUsers = async (pg = 1, search = bettingSearch) => {
+  const fetchBettingUsers = async (pg = 1, search = bettingSearch, filters = bettingFilters) => {
     setLoading(true);
     setBettingPage(pg);
     try {
       const payload = { page: pg, limit: 10 };
-      
+
+      if (filters.startDate) payload.startDate = filters.startDate;
+      if (filters.endDate) payload.endDate = filters.endDate;
+
       // Try multiple parameter names that the backend might expect
       if (search && search.trim()) {
         const searchValue = search.trim();
@@ -130,7 +152,7 @@ const TransactionHistory = () => {
         payload.userName = searchValue;
         payload.userMobile = searchValue;
       }
-      
+
       console.log('Fetching betting users with payload:', payload);
       const response = await apiHelper.post("/getBettingUsers", payload);
       console.log("getBettingUsers full response:", response);
@@ -163,20 +185,75 @@ const TransactionHistory = () => {
     }
   };
 
+  const fetchExchangeBets = async (pg = 1, currentFilters = exchangeFilters) => {
+    setExchangeLoading(true);
+    setExchangePage(pg);
+    try {
+      console.log(`Fetching exchange bets for page ${pg}...`, currentFilters);
+
+      const params = new URLSearchParams();
+      params.append("page", pg.toString());
+      params.append("limit", "20");
+
+      if (currentFilters.clientName) params.append("clientName", currentFilters.clientName);
+      if (currentFilters.sportName) params.append("sportName", currentFilters.sportName);
+      if (currentFilters.status) params.append("status", currentFilters.status.toUpperCase());
+      if (currentFilters.startDate) params.append("startDate", currentFilters.startDate);
+      if (currentFilters.endDate) params.append("endDate", currentFilters.endDate);
+      if (currentFilters.selectedCurrency) params.append("selectedCurrency", currentFilters.selectedCurrency);
+
+      const response = await apiHelper.get(
+        `/exchange/admin/list-bets?${params.toString()}`
+      );
+      console.log("Exchange API response:", response);
+
+      const data =
+        response?.data?.bets ||
+        response?.data?.data ||
+        response?.data?.results ||
+        response?.data ||
+        response?.bets ||
+        (Array.isArray(response) ? response : []);
+
+      const total =
+        response?.data?.totalCount ||
+        response?.data?.total ||
+        response?.data?.count ||
+        response?.totalCount ||
+        response?.total ||
+        (Array.isArray(data) ? data.length : 0);
+
+      setExchangeBets(Array.isArray(data) ? data : []);
+      setExchangeTotalPages(
+        response?.data?.totalPages ||
+        response?.totalPages ||
+        Math.ceil(total / 20) ||
+        1
+      );
+      setExchangeTotal(total);
+    } catch (error) {
+      console.error("Error fetching exchange bets:", error);
+      toast.error("Failed to fetch exchange bets: " + error.message);
+      setExchangeBets([]);
+    } finally {
+      setExchangeLoading(false);
+    }
+  };
+
   // Use all betting users directly from API (backend handles search)
   const filteredBettingUsers = bettingUsers;
 
   // If backend doesn't support search, fallback to client-side filtering
   const clientSideFilteredUsers = bettingSearch.trim()
     ? bettingUsers.filter((u) => {
-        const q = bettingSearch.toLowerCase();
-        return (
-          (u?.userName || "").toLowerCase().includes(q) ||
-          (u?.userMobile || "").toLowerCase().includes(q) ||
-          (u?.userEmail || "").toLowerCase().includes(q) ||
-          (u?.userId || "").toLowerCase().includes(q)
-        );
-      })
+      const q = bettingSearch.toLowerCase();
+      return (
+        (u?.userName || "").toLowerCase().includes(q) ||
+        (u?.userMobile || "").toLowerCase().includes(q) ||
+        (u?.userEmail || "").toLowerCase().includes(q) ||
+        (u?.userId || "").toLowerCase().includes(q)
+      );
+    })
     : bettingUsers;
 
   const openHistory = async (userId, pg = 1, filters = historyFilters) => {
@@ -243,6 +320,7 @@ const TransactionHistory = () => {
       endDate: "",
       mode: "",
       gameName: "",
+      selectedCurrency: "",
     };
     setFilters(clearedFilters);
     setPage(1);
@@ -252,22 +330,16 @@ const TransactionHistory = () => {
   useEffect(() => {
     if (activeTab === "user") {
       fetchTransactions(page, filters);
-    } else {
-      // Don't fetch on initial load if there's no search term
+    } else if (activeTab === "game") {
       fetchBettingUsers(bettingPage, bettingSearch);
+    } else if (activeTab === "exchange") {
+      fetchExchangeBets(exchangePage, exchangeFilters);
     }
-  }, [page, activeTab]);
+  }, [page, activeTab, exchangePage]);
 
   // Auto-search with debounce when user types in game transactions tab
   useEffect(() => {
     if (activeTab !== "game") return;
-    
-    const debounceTimer = setTimeout(() => {
-      setBettingPage(1);
-      fetchBettingUsers(1, bettingSearch);
-    }, 500); // Wait 500ms after user stops typing
-
-    return () => clearTimeout(debounceTimer);
   }, [bettingSearch, activeTab]);
 
 
@@ -306,8 +378,8 @@ const TransactionHistory = () => {
                 setGameTransactionPage(1);
               }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "user"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               User Transactions
@@ -319,77 +391,249 @@ const TransactionHistory = () => {
                 setGameTransactionPage(1);
               }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "game"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               Game Transactions
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("exchange");
+                setExchangePage(1);
+              }}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "exchange"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              Exchange Bets
             </button>
           </nav>
         </div>
       </div>
 
-      {/* Game Transaction User Search */}
+      {/* Game Transaction Filters */}
       {activeTab === "game" && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Filter size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Game Transaction Filters</h3>
+                  <p className="text-sm text-gray-600">Filter by date range or search by user</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-blue-600 font-bold text-xl">{bettingTotal}</p>
+                <p className="text-gray-500 text-xs">Total Users</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              {/* Start Date */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Start Date</label>
+                <div
+                  className="relative cursor-pointer"
+                  onClick={() => document.getElementById('gameStartDate').showPicker?.()}
+                >
+                  <input
+                    id="gameStartDate"
+                    type="date"
+                    value={bettingFilters.startDate}
+                    onChange={(e) => setBettingFilters(p => ({ ...p, startDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-gray-50 hover:bg-white transition-colors cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">End Date</label>
+                <div
+                  className="relative cursor-pointer"
+                  onClick={() => document.getElementById('gameEndDate').showPicker?.()}
+                >
+                  <input
+                    id="gameEndDate"
+                    type="date"
+                    value={bettingFilters.endDate}
+                    onChange={(e) => setBettingFilters(p => ({ ...p, endDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-gray-50 hover:bg-white transition-colors cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Search User</label>
+                <div className="relative">
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={bettingSearch}
+                    onChange={(e) => setBettingSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (setBettingPage(1), fetchBettingUsers(1, bettingSearch, bettingFilters))}
+                    placeholder="Username or mobile number..."
+                    className="w-full pl-9 pr-9 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-gray-50 hover:bg-white transition-colors"
+                  />
+                  {bettingSearch && (
+                    <button
+                      onClick={() => { setBettingSearch(""); setBettingPage(1); fetchBettingUsers(1, "", bettingFilters); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Search size={20} className="text-purple-600" />
+              <button
+                onClick={() => { setBettingPage(1); fetchBettingUsers(1, bettingSearch, bettingFilters); }}
+                disabled={loading}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all"
+              >
+                <Search size={15} />
+                {loading ? "Searching..." : "Apply Filters"}
+              </button>
+              <button
+                onClick={() => {
+                  const reset = { startDate: today, endDate: today };
+                  setBettingFilters(reset);
+                  setBettingSearch("");
+                  setBettingPage(1);
+                  fetchBettingUsers(1, "", reset);
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-semibold transition-all"
+              >
+                <RefreshCw size={15} />
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exchange Filters */}
+      {activeTab === "exchange" && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Filter size={20} className="text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Search User</h3>
-                <p className="text-sm text-gray-600">Search by username or mobile number</p>
+                <h3 className="text-lg font-semibold text-gray-900">Exchange Bet Filters</h3>
+                <p className="text-sm text-gray-600">Filter exchange bets by name, sport, date, or status</p>
               </div>
             </div>
           </div>
           <div className="p-6">
-            <div className="relative max-w-md">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={bettingSearch}
-                onChange={(e) => {
-                  setBettingSearch(e.target.value);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    setBettingPage(1);
-                    fetchBettingUsers(1, bettingSearch);
-                  }
-                }}
-                placeholder="Search by username or mobile... (auto-search after typing)"
-                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all duration-200"
-              />
-              {bettingSearch && (
-                <button
-                  onClick={() => {
-                    setBettingSearch("");
-                    setBettingPage(1);
-                    fetchBettingUsers(1, "");
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                <input
+                  type="text"
+                  placeholder="Search by client name"
+                  value={exchangeFilters.clientName}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, clientName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sport</label>
+                <input
+                  type="text"
+                  placeholder="Search by sport"
+                  value={exchangeFilters.sportName}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, sportName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={exchangeFilters.startDate}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, startDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={exchangeFilters.endDate}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, endDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={exchangeFilters.status}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, status: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white font-semibold"
                 >
-                  <X size={16} />
-                </button>
-              )}
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="settled">Settled</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <select
+                  value={exchangeFilters.selectedCurrency}
+                  onChange={(e) => setExchangeFilters(p => ({ ...p, selectedCurrency: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white font-semibold"
+                >
+                  <option value="">All</option>
+                  <option value="INR">INR</option>
+                  <option value="USDT">USDT</option>
+                </select>
+              </div>
             </div>
-            <div className="mt-3 flex gap-2 items-center">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
-                  setBettingPage(1);
-                  fetchBettingUsers(1, bettingSearch);
+                  setExchangePage(1);
+                  fetchExchangeBets(1, exchangeFilters);
                 }}
-                disabled={loading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
               >
-                {loading ? 'Searching...' : 'Search'}
+                <Search size={18} />
+                Apply Filters
               </button>
-              {bettingSearch && (
-                <p className="flex items-center text-sm text-purple-600 font-medium">
-                  Searching for: &quot;{bettingSearch}&quot; - Found {bettingTotal} users
-                </p>
-              )}
+              <button
+                onClick={() => {
+                  const cleared = {
+                    clientName: "",
+                    sportName: "",
+                    status: "",
+                    startDate: "",
+                    endDate: "",
+                    selectedCurrency: "",
+                  };
+                  setExchangeFilters(cleared);
+                  setExchangePage(1);
+                  fetchExchangeBets(1, cleared);
+                }}
+                className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Clear
+              </button>
             </div>
           </div>
         </div>
@@ -551,7 +795,7 @@ const TransactionHistory = () => {
                       <option value="">All Modes</option>
                       <option value="PowerPay">PowerPay</option>
                       <option value="Wallet">Wallet</option>
-                      <option value="ROCKY11">MANUALLY</option>
+                      <option value="DR">MANUALLY</option>
                       <option value="Bonus">Bonus</option>
                     </select>
                   </div>
@@ -575,6 +819,21 @@ const TransactionHistory = () => {
                       ))}
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Currency
+                    </label>
+                    <select
+                      value={filters.selectedCurrency}
+                      onChange={(e) => handleFilterChange("selectedCurrency", e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    >
+                      <option value="">All</option>
+                      <option value="INR">INR</option>
+                      <option value="USDT">USDT</option>
+                    </select>
+                  </div>
                 </>
               ) : null}
             </div>
@@ -583,94 +842,94 @@ const TransactionHistory = () => {
               <div className="flex justify-between items-center">
                 <div className="flex gap-3">
                   <button
-                  onClick={applyFilters}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                >
-                  <Search size={16} />
-                  Apply Filters
-                </button>
+                    onClick={applyFilters}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                  >
+                    <Search size={16} />
+                    Apply Filters
+                  </button>
                   <button
-                  onClick={clearFilters}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
-                >
-                  Clear Filters
-                </button>
+                    onClick={clearFilters}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
+                  >
+                    Clear Filters
+                  </button>
                 </div>
 
                 <div className="flex gap-3">
                   {activeTab === "game" && (
+                    <button
+                      onClick={() => fetchBettingUsers(1, bettingSearch)}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                    >
+                      <RefreshCw size={16} />
+                      Refresh
+                    </button>
+                  )}
                   <button
-                    onClick={() => fetchBettingUsers(1, bettingSearch)}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                    onClick={async () => {
+                      setDownloading(true);
+                      try {
+                        const payload = { ...filters };
+                        Object.keys(payload).forEach((key) => {
+                          if (
+                            payload[key] === "" ||
+                            payload[key] === null ||
+                            payload[key] === undefined
+                          ) {
+                            delete payload[key];
+                          }
+                        });
+                        const response = await apiHelper.post(
+                          "/transaction/getAllUser_TrxsHistory_Without_Pagination",
+                          payload,
+                        );
+                        const allData =
+                          response?.data?.transactions ||
+                          response?.transactions ||
+                          response?.data ||
+                          response ||
+                          [];
+                        const data = allData.map((t, i) => ({
+                          "S.No": i + 1,
+                          "Client Name":
+                            t?.clientName || t?.user?.clientName || "N/A",
+                          "Transaction Type": t?.transactionType || "N/A",
+                          Amount: t?.amount || 0,
+                          "Game Name": t?.gameName || "N/A",
+                          Mode: t?.mode === "DR" ? "MANUALLY" : t?.mode || "N/A",
+                          Status: t?.status || "Pending",
+                          "Created At": t?.createdAt
+                            ? new Date(t.createdAt).toLocaleString("en-IN")
+                            : "N/A",
+                          "Updated At": t?.updatedAt
+                            ? new Date(t.updatedAt).toLocaleString("en-IN")
+                            : "N/A",
+                        }));
+                        const ws = XLSX.utils.json_to_sheet(data);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+                        XLSX.writeFile(
+                          wb,
+                          `Transaction_History_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`,
+                        );
+                        toast.success(
+                          `Downloaded ${data.length} transactions successfully!`,
+                        );
+                      } catch (error) {
+                        toast.error(
+                          "Failed to download report: " + error.message,
+                        );
+                      } finally {
+                        setDownloading(false);
+                      }
+                    }}
+                    disabled={downloading}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
-                    <RefreshCw size={16} />
-                    Refresh
+                    <Download size={16} />
+                    {downloading ? "Downloading..." : "Download Report"}
                   </button>
-                )}
-                  <button
-                  onClick={async () => {
-                    setDownloading(true);
-                    try {
-                      const payload = { ...filters };
-                      Object.keys(payload).forEach((key) => {
-                        if (
-                          payload[key] === "" ||
-                          payload[key] === null ||
-                          payload[key] === undefined
-                        ) {
-                          delete payload[key];
-                        }
-                      });
-                      const response = await apiHelper.post(
-                        "/transaction/getAllUser_TrxsHistory_Without_Pagination",
-                        payload,
-                      );
-                      const allData =
-                        response?.data?.transactions ||
-                        response?.transactions ||
-                        response?.data ||
-                        response ||
-                        [];
-                      const data = allData.map((t, i) => ({
-                        "S.No": i + 1,
-                        "Client Name":
-                          t?.clientName || t?.user?.clientName || "N/A",
-                        "Transaction Type": t?.transactionType || "N/A",
-                        Amount: t?.amount || 0,
-                        "Game Name": t?.gameName || "N/A",
-                        Mode: t?.mode || "N/A",
-                        Status: t?.status || "Pending",
-                        "Created At": t?.createdAt
-                          ? new Date(t.createdAt).toLocaleString("en-IN")
-                          : "N/A",
-                        "Updated At": t?.updatedAt
-                          ? new Date(t.updatedAt).toLocaleString("en-IN")
-                          : "N/A",
-                      }));
-                      const ws = XLSX.utils.json_to_sheet(data);
-                      const wb = XLSX.utils.book_new();
-                      XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-                      XLSX.writeFile(
-                        wb,
-                        `Transaction_History_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`,
-                      );
-                      toast.success(
-                        `Downloaded ${data.length} transactions successfully!`,
-                      );
-                    } catch (error) {
-                      toast.error(
-                        "Failed to download report: " + error.message,
-                      );
-                    } finally {
-                      setDownloading(false);
-                    }
-                  }}
-                  disabled={downloading}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                >
-                  <Download size={16} />
-                  {downloading ? "Downloading..." : "Download Report"}
-                </button>
                 </div>
               </div>
             </div>
@@ -680,6 +939,105 @@ const TransactionHistory = () => {
         {/* Transactions Table */}
         <div className="gaming-card">
           {(() => {
+            if (activeTab === "exchange") {
+              if (exchangeLoading) {
+                return (
+                  <div className="text-center py-8">
+                    <div
+                      className="loading-spinner mx-auto mb-4"
+                      style={{ width: "32px", height: "32px" }}
+                    ></div>
+                    <p className="text-gray-600">Loading exchange bets...</p>
+                  </div>
+                );
+              }
+
+              if (exchangeBets.length === 0) {
+                return (
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="text-lg mb-2">No exchange bets found</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="w-full overflow-hidden">
+                  <table className="w-full table-auto border-collapse">
+                    <thead className="bg-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">#</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">User Details</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Event Name</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Market Name</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Selection Name</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Sport Name</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Bet Type & Odds</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Odds Size</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Stake</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Liability</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Status</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Result</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Settled</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-tight">Bet Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {exchangeBets.map((bet, index) => (
+                        <tr key={bet._id || index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="py-2 px-2 text-[11px] text-gray-900 font-medium">
+                            {(exchangePage - 1) * 20 + index + 1}
+                          </td>
+                          <td className="py-2 px-2">
+                            <div className="flex flex-col max-w-[100px]">
+                              <p className="font-bold text-gray-900 text-[11px] leading-tight break-words">{bet.clientName || "N/A"}</p>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2">
+                            <p className="text-[11px] text-gray-900 leading-tight break-words max-w-[120px]">{bet.eventName || "N/A"}</p>
+                          </td>
+                          <td className="py-2 px-2 text-[11px] text-gray-900 leading-tight break-words max-w-[80px]">{bet.marketName || "N/A"}</td>
+                          <td className="py-2 px-2 text-[11px] font-bold text-blue-600 leading-tight break-words max-w-[80px]">{bet.selectionName || "N/A"}</td>
+                          <td className="py-2 px-2 text-[11px] text-gray-800 break-words">{bet.sportName || "N/A"}</td>
+                          <td className="py-2 px-2">
+                            <div className={`inline-flex flex-col sm:flex-row items-center gap-1 px-1.5 py-1 rounded font-bold text-gray-900 ${(bet.betType || bet.type)?.toUpperCase() === 'LAY' ? 'bg-pink-200' : 'bg-blue-200'
+                              }`}>
+                              <span className="text-[9px] uppercase">{(bet.betType || bet.type)?.toUpperCase()}</span>
+                              <span className="text-[11px] font-mono">{bet.odds}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 text-[11px] text-gray-900 font-mono">{bet.size || "N/A"}</td>
+                          <td className="py-2 px-2 text-[11px] font-bold text-gray-900 whitespace-nowrap">
+                            {currencySymbol(bet.currency)}{Math.round(bet.stake || bet.amount || 0)}
+                          </td>
+                          <td className="py-2 px-2 text-[11px] font-bold text-orange-600 whitespace-nowrap">
+                            {currencySymbol(bet.currency)}{Math.round(bet.liability || 0)}
+                          </td>
+                          <td className="py-2 px-2">
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${bet.status?.toUpperCase() === 'WON' ? 'bg-green-100 text-green-700' :
+                                bet.status?.toUpperCase() === 'LOST' ? 'bg-red-100 text-red-700' :
+                                  bet.status?.toUpperCase() === 'PENDING' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                              }`}>
+                              {bet.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-[11px] text-gray-700 leading-tight break-words">{bet.result || "Pending"}</td>
+                          <td className="py-2 px-2 text-[11px] font-bold text-indigo-600 whitespace-nowrap">
+                            {currencySymbol(bet.currency)}{Math.round(bet.settledAmount || 0)}
+                          </td>
+                          <td className="py-2 px-2 text-[10px] text-gray-600">
+                            <div className="flex flex-col">
+                              <span className="whitespace-nowrap">{bet.createdAt ? new Date(bet.createdAt).toLocaleDateString("en-IN") : "N/A"}</span>
+                              <span className="text-[9px] text-gray-400">{bet.createdAt ? new Date(bet.createdAt).toLocaleTimeString("en-IN") : ""}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            }
+
             const userTxns = Array.isArray(transactions) ? transactions : [];
             const gameTxns = Array.isArray(filteredBettingUsers) ? filteredBettingUsers : [];
             const currentTransactions =
@@ -816,8 +1174,8 @@ const TransactionHistory = () => {
                             <td className="py-4 px-4">
                               <span
                                 className={`badge ${transaction?.transactionType === "Deposit"
-                                    ? "badge-green"
-                                    : "badge-blue"
+                                  ? "badge-green"
+                                  : "badge-blue"
                                   }`}
                               >
                                 {transaction?.transactionType || "N/A"}
@@ -825,7 +1183,7 @@ const TransactionHistory = () => {
                             </td>
                             <td className="py-4 px-4">
                               <p className="text-sm font-semibold text-green-600">
-                                ₹{transaction?.amount || 0}
+                                {currencySymbol(transaction?.currency)}{transaction?.amount || 0}
                               </p>
                             </td>
                             <td className="py-4 px-4">
@@ -835,16 +1193,16 @@ const TransactionHistory = () => {
                             </td>
                             <td className="py-4 px-4">
                               <p className="text-sm text-gray-900">
-                                {transaction?.mode || "N/A"}
+                                {transaction?.mode === "DR" ? "MANUALLY" : transaction?.mode || "N/A"}
                               </p>
                             </td>
                             <td className="py-4 px-4">
                               <span
                                 className={`badge ${transaction?.status === "Accept"
-                                    ? "badge-green"
-                                    : transaction?.status === "Reject"
-                                      ? "badge-red"
-                                      : "badge-blue"
+                                  ? "badge-green"
+                                  : transaction?.status === "Reject"
+                                    ? "badge-red"
+                                    : "badge-blue"
                                   }`}
                               >
                                 {transaction?.status || "Pending"}
@@ -925,12 +1283,12 @@ const TransactionHistory = () => {
                             </td>
                             <td className="py-4 px-4">
                               <p className="text-sm font-semibold text-red-600">
-                                ₹{transaction?.totalBetAmount || 0}
+                                {currencySymbol(transaction?.currency)}{transaction?.totalBetAmount || 0}
                               </p>
                             </td>
                             <td className="py-4 px-4">
                               <p className="text-sm font-semibold text-green-600">
-                                ₹{transaction?.totalWinAmount || 0}
+                                {currencySymbol(transaction?.currency)}{transaction?.totalWinAmount || 0}
                               </p>
                             </td>
                             <td className="py-4 px-4">
@@ -945,7 +1303,7 @@ const TransactionHistory = () => {
                             </td>
                             <td className="py-4 px-4">
                               <p className="text-sm font-semibold text-blue-600">
-                                ₹{transaction?.ggr || 0}
+                                {currencySymbol(transaction?.currency)}{transaction?.ggr || 0}
                               </p>
                             </td>
                             <td className="py-4 px-4">
@@ -975,27 +1333,38 @@ const TransactionHistory = () => {
           })()}
 
           {/* Pagination Controls */}
-          {((activeTab === "user" && totalPages > 1) || activeTab === "game") && (
+          {((activeTab === "user" && totalPages > 1) || activeTab === "game" || (activeTab === "exchange" && exchangeTotalPages > 1)) && (
             <div className="flex flex-col sm:flex-row justify-between items-center mt-4 px-4 py-3 border-t border-gray-200 gap-3">
               <div className="text-sm text-gray-500">
                 {activeTab === "user" ? (
                   <>Page <span className="font-semibold text-gray-700">{page}</span> of <span className="font-semibold text-gray-700">{totalPages}</span> &nbsp;·&nbsp; {totalTransactions} total</>
-                ) : (
+                ) : activeTab === "game" ? (
                   <>Page <span className="font-semibold text-gray-700">{bettingPage}</span> of <span className="font-semibold text-gray-700">{bettingTotalPages}</span> &nbsp;·&nbsp; {bettingTotal} total users</>
+                ) : (
+                  <>Page <span className="font-semibold text-gray-700">{exchangePage}</span> of <span className="font-semibold text-gray-700">{exchangeTotalPages}</span> &nbsp;·&nbsp; {exchangeTotal} total bets</>
                 )}
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => activeTab === "user" ? setPage(page - 1) : fetchBettingUsers(bettingPage - 1, bettingSearch)}
-                  disabled={(activeTab === "user" ? page === 1 : bettingPage === 1) || loading}
+                  onClick={() => {
+                    if (activeTab === "user") setPage(page - 1);
+                    else if (activeTab === "game") fetchBettingUsers(bettingPage - 1, bettingSearch);
+                    else if (activeTab === "exchange") fetchExchangeBets(exchangePage - 1);
+                  }}
+                  disabled={
+                    (activeTab === "user" ? page === 1 :
+                      activeTab === "game" ? bettingPage === 1 :
+                        exchangePage === 1) ||
+                    loading || exchangeLoading
+                  }
                   className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(activeTab === "user" ? totalPages : bettingTotalPages, 5) }, (_, i) => {
-                    const cp = activeTab === "user" ? page : bettingPage;
-                    const tp = activeTab === "user" ? totalPages : bettingTotalPages;
+                  {Array.from({ length: Math.min(activeTab === "user" ? totalPages : activeTab === "game" ? bettingTotalPages : exchangeTotalPages, 5) }, (_, i) => {
+                    const cp = activeTab === "user" ? page : activeTab === "game" ? bettingPage : exchangePage;
+                    const tp = activeTab === "user" ? totalPages : activeTab === "game" ? bettingTotalPages : exchangeTotalPages;
                     let pageNum;
                     if (tp <= 5) pageNum = i + 1;
                     else if (cp <= 3) pageNum = i + 1;
@@ -1004,13 +1373,16 @@ const TransactionHistory = () => {
                     return (
                       <button
                         key={pageNum}
-                        onClick={() => activeTab === "user" ? setPage(pageNum) : fetchBettingUsers(pageNum, bettingSearch)}
-                        disabled={loading}
-                        className={`w-8 h-8 text-sm rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
-                          (activeTab === "user" ? page : bettingPage) === pageNum
+                        onClick={() => {
+                          if (activeTab === "user") setPage(pageNum);
+                          else if (activeTab === "game") fetchBettingUsers(pageNum, bettingSearch);
+                          else if (activeTab === "exchange") fetchExchangeBets(pageNum);
+                        }}
+                        disabled={loading || exchangeLoading}
+                        className={`w-8 h-8 text-sm rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${(activeTab === "user" ? page : activeTab === "game" ? bettingPage : exchangePage) === pageNum
                             ? "bg-blue-600 text-white"
                             : "border border-gray-300 hover:bg-gray-50 text-gray-700"
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
@@ -1018,8 +1390,17 @@ const TransactionHistory = () => {
                   })}
                 </div>
                 <button
-                  onClick={() => activeTab === "user" ? setPage(page + 1) : fetchBettingUsers(bettingPage + 1, bettingSearch)}
-                  disabled={(activeTab === "user" ? page === totalPages : bettingPage === bettingTotalPages) || loading}
+                  onClick={() => {
+                    if (activeTab === "user") setPage(page + 1);
+                    else if (activeTab === "game") fetchBettingUsers(bettingPage + 1, bettingSearch);
+                    else if (activeTab === "exchange") fetchExchangeBets(exchangePage + 1);
+                  }}
+                  disabled={
+                    (activeTab === "user" ? page === totalPages :
+                      activeTab === "game" ? bettingPage === bettingTotalPages :
+                        exchangePage === exchangeTotalPages) ||
+                    loading || exchangeLoading
+                  }
                   className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
@@ -1220,10 +1601,10 @@ const TransactionHistory = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 font-semibold text-green-600">
-                          ₹{t?.amount || 0}
+                          {currencySymbol(t?.currency)}{t?.amount || 0}
                         </td>
                         <td className="py-3 px-4 font-semibold text-blue-600">
-                          ₹{Number(t?.balanceAfter || 0).toFixed(2)}
+                          {currencySymbol(t?.currency)}{Number(t?.balanceAfter || 0).toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-gray-900">
                           {t?.gameName || t?.gameDetails?.game_name || "N/A"}
@@ -1285,8 +1666,8 @@ const TransactionHistory = () => {
                           }
                           disabled={historyLoading}
                           className={`px-3 py-2 text-sm rounded-lg disabled:opacity-50 ${historyPage === pageNum
-                              ? "bg-blue-600 text-white"
-                              : "border border-gray-300 hover:bg-white"
+                            ? "bg-blue-600 text-white"
+                            : "border border-gray-300 hover:bg-white"
                             }`}
                         >
                           {pageNum}
@@ -1331,7 +1712,7 @@ const TransactionHistory = () => {
                 Transaction ID: {selectedTransaction?._id}
               </p>
               <p className="text-sm text-gray-600">
-                Amount: ₹{selectedTransaction?.amount}
+                Amount: {currencySymbol(selectedTransaction?.currency)}{selectedTransaction?.amount}
               </p>
               <p className="text-sm text-gray-600">
                 User: {selectedTransaction?.clientName}
