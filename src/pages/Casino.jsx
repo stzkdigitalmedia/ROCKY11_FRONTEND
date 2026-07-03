@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -27,16 +27,6 @@ import {
   Maximize2,
   RotateCcw as RefreshIcon,
   ArrowLeft,
-  Plane,
-  Film,
-  Gem,
-  Globe,
-  Sparkles,
-  Target,
-  Rocket,
-  Shuffle,
-  Clover,
-  Wallet2,
 } from "lucide-react";
 import BottomNavigation from "../components/BottomNavigation";
 import LanguageSelector from "../components/LanguageSelector";
@@ -84,15 +74,15 @@ const PROVIDER_IMAGES = {
   // aura: auraImg,
   // awc: awcImg,
   betcore: betcoreImg,
-  crashslot:crashslot,
-  crash88:crash88,
+  crashslot: crashslot,
+  crash88: crash88,
   drgs: drgs,
   betgames: betgamesImg,
   ezugi: ezugiImg,
   creed: creedImg,
-  randora:randora,
+  randora: randora,
   darwin: darwinImg,
-  jacktop:jacktop,
+  jacktop: jacktop,
   mac88: Mac88,
 
   // dcbet: dcbetImg,
@@ -117,62 +107,56 @@ const PROVIDER_IMAGES = {
   // popok: popok,
 };
 const PROVIDER_ICONS = {
-  spribe: Target,
-  evolution: Film,
-  pragmatic: Gem,
-  "pragmatic play": Gem,
-  netent: Globe,
-  playtech: Joystick,
-  microgaming: Dices,
-  habanero: Flame,
-  pgsoft: Sparkles,
-  "pg soft": Sparkles,
-  yggdrasil: Star,
-  quickspin: Zap,
-  nolimit: Flame,
-  "nolimit city": Flame,
-  relax: Star,
-  "relax gaming": Star,
-  hacksaw: Zap,
-  push: Rocket,
-  "push gaming": Rocket,
-  betsoft: Spade,
-  booongo: Crown,
-  kagaming: Trophy,
-  "ka gaming": Trophy,
-  playson: Gamepad2,
-  spinomenal: Shuffle,
-  bgaming: Gamepad2,
-  onlyplay: Dices,
-  wazdan: Star,
-  thunderkick: Zap,
-  elk: Trophy,
-  "elk studios": Trophy,
-  blueprint: Grid2x2,
-  redtiger: Crown,
-  "red tiger": Crown,
-  isoftbet: Monitor,
-  ezugi: CircleDot,
-  vivo: Tv2,
-  "vivo gaming": Tv2,
-  superspade: Spade,
-  "super spade": Spade,
-  jili: Sparkles,
-  cq9: Target,
-  fachai: Clover,
-  joker: Spade,
-  spadegaming: Spade,
-  "spade gaming": Spade,
-  aviator: Plane,
-  mac88: Dices,
-  "mac 88": Dices,
-  rich88: Wallet2,
-  jacktop: Crown,
-  jackpot: Crown,
+  spribe: "🎯",
+  evolution: "🎬",
+  pragmatic: "💎",
+  "pragmatic play": "💎",
+  netent: "🌐",
+  playtech: "🕹️",
+  microgaming: "🎰",
+  habanero: "🌶️",
+  pgsoft: "🐉",
+  "pg soft": "🐉",
+  yggdrasil: "🌳",
+  quickspin: "⚡",
+  nolimit: "🔥",
+  "nolimit city": "🔥",
+  relax: "😎",
+  "relax gaming": "😎",
+  hacksaw: "🪚",
+  push: "🚀",
+  "push gaming": "🚀",
+  betsoft: "🃏",
+  booongo: "🎪",
+  kagaming: "🀄",
+  "ka gaming": "🀄",
+  playson: "🎭",
+  spinomenal: "🌀",
+  bgaming: "🎮",
+  onlyplay: "🎲",
+  wazdan: "⭐",
+  thunderkick: "⚡",
+  elk: "🦌",
+  "elk studios": "🦌",
+  blueprint: "📐",
+  redtiger: "🐯",
+  "red tiger": "🐯",
+  isoftbet: "💻",
+  ezugi: "🎡",
+  vivo: "📱",
+  "vivo gaming": "📱",
+  superspade: "♠️",
+  "super spade": "♠️",
+  jili: "🌟",
+  cq9: "🎯",
+  fachai: "🀄",
+  joker: "🃏",
+  spadegaming: "♠️",
+  "spade gaming": "♠️",
 };
 const getProviderDisplay = (name) => ({
   img: PROVIDER_IMAGES[name?.toLowerCase()] || null,
-  IconComponent: PROVIDER_ICONS[name?.toLowerCase()] || Gamepad2,
+  icon: PROVIDER_ICONS[name?.toLowerCase()] || "🎮",
 });
 
 const CATEGORY_ICONS = {
@@ -230,16 +214,15 @@ const CatIcon = ({ name, size = 14, className = "" }) => {
   return <Icon size={size} className={className} />;
 };
 
-const ProviderImg = ({ src, name, IconComponent, isActive }) => {
+const ProviderImg = ({ src, name, icon, isActive }) => {
   const [failed, setFailed] = useState(false);
-  if (failed || !src) {
+  if (failed) {
     return (
       <span
-        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5 px-2"
-        style={{ color: isActive ? "#fff" : "#fff" }}
+        className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1 px-2"
+        style={{ color: isActive ? "#1477b0" : "#fff" }}
       >
-        {IconComponent && <IconComponent size={14} />}
-        {name}
+        {icon} {name}
       </span>
     );
   }
@@ -247,12 +230,9 @@ const ProviderImg = ({ src, name, IconComponent, isActive }) => {
     <img
       src={src}
       alt={name}
-      className="w-full h-full object-contain p-1.5 rounded-lg transition-all duration-200 group-hover:brightness-0 group-hover:invert"
+      className="w-full h-full object-contain p-1.5 rounded-lg"
       loading="lazy"
       onError={() => setFailed(true)}
-      style={{
-        filter: isActive ? 'brightness(0) invert(1)' : 'none'
-      }}
     />
   );
 };
@@ -266,6 +246,9 @@ const Casino = () => {
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchDebounceRef = useRef(null);
   const [allLoading, setAllLoading] = useState(false);
   const [catGames, setCatGames] = useState([]);
   const [catLoading, setCatLoading] = useState(false);
@@ -385,7 +368,7 @@ const Casino = () => {
           res?.data?.userAnnouncement || res?.userAnnouncement || "",
         ),
       )
-      .catch(() => {});
+      .catch(() => { });
     fetchCategories();
     fetchProviders();
     fetchLobbyGames();
@@ -468,13 +451,16 @@ const Casino = () => {
       const sections = gamesByCategory.map((categoryData) => ({
         category: categoryData.category,
         games: categoryData.games || [],
-        count: categoryData.total || 0,
+        count: categoryData.total || categoryData.games?.length || 0,
         page: 1,
         loaded: true,
       }));
 
-      console.log("Created sections:", sections);
-      setSuperCatSections(sections);
+      // Sort sections by game count in descending order
+      const sortedSections = [...sections].sort((a, b) => b.count - a.count);
+
+      console.log("Created sorted sections:", sortedSections);
+      setSuperCatSections(sortedSections);
     } catch (error) {
       console.error("Error in handleSuperCatClick:", error);
       // If no games found, show empty state
@@ -519,29 +505,29 @@ const Casino = () => {
         setProviders(cachedProviders);
         setProvidersLoading(false);
         return;
-      } catch {}
+      } catch { }
     }
     try {
       console.log('🔍 Fetching providers from unique-providers API...');
-      
+
       // Use the direct unique-providers API endpoint
       const res = await apiHelper.get("/game/games/unique-providers");
       console.log('📋 Unique-providers API response:', res?.data);
-      
+
       // Extract providers from response
       const providersData = res?.data?.providers || res?.providers || res?.data || [];
       console.log('📊 Raw providers data:', providersData);
-      
+
       if (!Array.isArray(providersData)) {
         console.log('⚠️ Providers data is not an array:', typeof providersData);
         setProviders([]);
         return;
       }
-      
+
       // Process providers - simple approach
       const processedProviders = providersData.map((provider, index) => {
         const providerName = typeof provider === 'string' ? provider : (provider.provider_name || provider.name || provider);
-        
+
         return {
           provider_name: providerName,
           name: providerName,
@@ -552,7 +538,7 @@ const Casino = () => {
           ...provider // Keep all original data if it's an object
         };
       });
-      
+
       // Sort by display order or alphabetically
       processedProviders.sort((a, b) => {
         if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
@@ -560,13 +546,13 @@ const Casino = () => {
         }
         return a.name.localeCompare(b.name);
       });
-      
+
       console.log('📊 Processed providers:', processedProviders.length);
       console.log('📋 Provider names:', processedProviders.map(p => p.name));
-      
+
       setProviders(processedProviders);
       sessionStorage.setItem("casino_providers_v6", JSON.stringify(processedProviders));
-      
+
     } catch (e) {
       console.error('❌ Failed to fetch providers from unique-providers API:', e);
       setProviders([]);
@@ -583,7 +569,7 @@ const Casino = () => {
       try {
         setCategories(JSON.parse(cached));
         return;
-      } catch {}
+      } catch { }
     }
     categoriesFetching = true;
     try {
@@ -661,6 +647,33 @@ const Casino = () => {
       setCatLoading(false);
     }
   };
+
+  const handleSearch = useCallback(async (query) => {
+    setSearch(query);
+    if (!query.trim()) { setSearchResults([]); return; }
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await apiHelper.post("/game/games/search", { search: query.trim(), query: query.trim() });
+        const rawData = res?.data || res;
+        const gamesList = Array.isArray(rawData)
+          ? rawData
+          : Array.isArray(rawData?.games?.data)
+            ? rawData.games.data
+            : Array.isArray(rawData?.games)
+              ? rawData.games
+              : Array.isArray(rawData?.results)
+                ? rawData.results
+                : [];
+        setSearchResults(gamesList);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
+  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -866,48 +879,49 @@ const Casino = () => {
       >
         {/* Header */}
         <div
-          className="relative px-3 py-3 mb-3"
+          className="relative px-1 py-2 -mb-2"
           style={{ background: "#0e0e0e" }}
         >
-          {/* Row 1: Avatar + Marquee+Search + Lang - all in one line */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Row 1: Avatar | Marquee+Search | Lang */}
+          <div className="flex items-center gap-2 mb-2">
             {/* Avatar */}
             <Link
               to="/profile"
-              className="flex-shrink-0 hover:opacity-80 transition-opacity"
+              className="flex flex-col items-start hover:opacity-80 transition-opacity flex-shrink-0"
             >
               <div
-                className="w-8 h-8 border border-white rounded-full flex items-center justify-center"
+                className="w-8 h-8 sm:w-9 sm:h-9 border border-white mt- rounded-full flex items-center justify-center"
                 style={{
                   background: "linear-gradient(to bottom, #1477b0, #264e69)",
                 }}
               >
-                <span className="text-white font-semibold text-xs">
+                <span className="text-white font-semibold text-sm">
                   {user?.clientName?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               </div>
+              {/* <p className="text-white font-semibold text-[13px] notranslate">{user?.clientName}</p> */}
             </Link>
 
             {/* Marquee + Search together */}
-            <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 rounded-lg sm:rounded-xl px-1.5 sm:px-2 py-1.5 flex-1 min-w-0 overflow-hidden">
-              <span className="text-xs sm:text-sm flex-shrink-0">📢</span>
+            <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-2 py-1 flex-1 min-w-0 overflow-hidden">
+              <span className="text-sm flex-shrink-0">📢</span>
               <div className="overflow-hidden flex-1 min-w-0">
                 <marquee
-                  className="text-[10px] sm:text-xs font-medium text-white"
+                  className="text-xs font-medium text-white"
                   onMouseOver={(e) => e.target.stop()}
                   onMouseOut={(e) => e.target.start()}
                 >
                   {userAnnouncement}
                 </marquee>
               </div>
-              {/* <button
+              <button
                 onClick={() => {
                   setSearchOpen((o) => !o);
                   if (!searchOpen)
                     setTimeout(() => searchInputRef.current?.focus(), 50);
-                  else setSearch("");
+                  else { setSearch(""); setSearchResults([]); }
                 }}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200"
+                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200"
                 style={{
                   background: searchOpen
                     ? "rgba(255,255,255,0.9)"
@@ -915,24 +929,27 @@ const Casino = () => {
                 }}
               >
                 <Search
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3"
+                  className="w-3 h-3"
                   style={{ color: searchOpen ? "#1477b0" : "#fff" }}
                 />
-              </button> */}
+              </button>
             </div>
 
-            {/* Lang - same size as avatar */}
-            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+            {/* Lang */}
+            <div className="flex-shrink-0">
               <LanguageSelector />
             </div>
           </div>
 
           {/* Expandable search */}
           <div
-            className="overflow-hidden transition-all duration-300 ease-in-out"
+            className="transition-all duration-300 ease-in-out"
             style={{
               maxHeight: searchOpen ? "44px" : "0px",
               opacity: searchOpen ? 1 : 0,
+              overflow: searchOpen ? "visible" : "hidden",
+              position: "relative",
+              zIndex: 50
             }}
           >
             <div
@@ -948,23 +965,70 @@ const Casino = () => {
                 type="text"
                 placeholder="Search games..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="flex-1 text-sm text-white placeholder-white/40 outline-none bg-transparent"
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => { setSearch(""); setSearchResults([]); }}
                   className="ml-2 text-white/50 hover:text-white text-xs"
                 >
                   ✕
                 </button>
               )}
             </div>
+
+            {/* Search Results Dropdown */}
+            {search && (
+              <div
+                className="absolute left-0 right-0 z-50 rounded-xl overflow-hidden p-1"
+                style={{
+                  background: "#111111",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: "0 10px 25px -5px rgba(0,0,0,0.8)",
+                  top: "42px"
+                }}
+              >
+                {searchLoading ? (
+                  <div className="flex items-center gap-2 px-4 py-4 justify-center">
+                    <div className="w-5 h-5 border-2 border-[#1477b0] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs text-gray-400">Searching...</span>
+                  </div>
+                ) : !Array.isArray(searchResults) || searchResults.length === 0 ? (
+                  <p className="text-xs text-gray-500 px-4 py-4 text-center">No games found for "{search}"</p>
+                ) : (
+                  <div className="max-h-[320px] overflow-y-auto hide-scrollbar">
+                    {searchResults.map((game) => (
+                      <div
+                        key={game.game_id || game._id}
+                        onClick={() => { handleLaunchGame(game); setSearchOpen(false); setSearch(""); setSearchResults([]); }}
+                        className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors duration-150 rounded-lg"
+                      >
+                        {game.url_thumb ? (
+                          <img
+                            src={game.url_thumb}
+                            alt={game.game_name}
+                            className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 text-xl font-bold" style={{ background: "linear-gradient(135deg, #1477b0, #264e69)" }}>🎮</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-extrabold uppercase tracking-wide truncate">{game.game_name}</p>
+                          <p className="text-[#f59e0b] text-xs font-bold uppercase mt-0.5 tracking-wider truncate">{game.provider_name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Providers strip */}
           {providersLoading ? (
-            <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
+            <div className="flex gap-1.5 mt-2 overflow-x-auto hide-scrollbar pb-1">
               <div
                 className="flex-shrink-0 px-3 py-1 rounded-lg bg-white/10 animate-pulse"
                 style={{ width: "60px", height: "41px" }}
@@ -978,7 +1042,7 @@ const Casino = () => {
               ))}
             </div>
           ) : providers.length > 0 ? (
-            <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
+            <div className="flex gap-1.5 mt-2 overflow-x-auto hide-scrollbar pb-1">
               <button
                 onClick={() => {
                   setActiveProvider(null);
@@ -1001,7 +1065,7 @@ const Casino = () => {
               {providers.map((p) => {
                 const name =
                   typeof p === "object" ? p.provider_name || p.name || p : p;
-                const { img, IconComponent } = getProviderDisplay(name);
+                const { img, icon } = getProviderDisplay(name);
                 const isActive = activeProvider === name;
                 return (
                   <button
@@ -1018,7 +1082,7 @@ const Casino = () => {
                         fetchProviderGames(name, 1);
                       }
                     }}
-                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden group hover:bg-gradient-to-r hover:from-[#1477b0] hover:to-[#264e69]"
+                    className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 overflow-hidden hover:scale-105"
                     style={{
                       width: img ? "130px" : "auto",
                       height: "41px",
@@ -1039,13 +1103,12 @@ const Casino = () => {
                       <ProviderImg
                         src={img}
                         name={name}
-                        IconComponent={IconComponent}
+                        icon={icon}
                         isActive={isActive}
                       />
                     ) : (
-                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1.5">
-                        {IconComponent && <IconComponent size={14} />}
-                        {name}
+                      <span className="text-[11px] font-semibold whitespace-nowrap flex items-center gap-1">
+                        {icon} {name}
                       </span>
                     )}
                   </button>
@@ -1059,8 +1122,10 @@ const Casino = () => {
           )}
         </div>
 
+        <hr className="my-2" style={{ borderColor: 'rgba(20,119,176,0.4)', borderWidth: '0.5px' }} />
+
         {/* Category strip — super categories first, then raw categories */}
-        <div className="flex gap-2 overflow-x-auto mb-3 pb-2 px-1">
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-3 pb-2 px-1">
           {/* <button
             onClick={() => handleTabChange("All")}
             className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all duration-300 border transform hover:scale-105 ${
@@ -1154,39 +1219,35 @@ const Casino = () => {
               // Show all categories with games in single horizontal slides (like image layout)
               <div className="space-y-6">
                 {superCatSections.map((section) => (
-                  <div
-                    key={section.category}
-                    className="rounded-xl p-3 sm:p-4 border"
-                    style={{ background: "#1b1b1b", borderColor: "rgba(255,255,255,0.08)" }}
-                  >
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <CatIcon name={section.category} size={16} className="text-[#1477b0]" />
-                        <h3 className="text-sm sm:text-base font-bold text-white capitalize">{section.category}</h3>
-                        <span className="text-[10px] sm:text-xs text-gray-500">({section.count})</span>
+                  <div key={section.category} className="mb-5">
+                    <div className="flex items-center justify-between mb-2.5 px-1">
+                      <div className="flex items-center gap-1.5">
+                        <CatIcon name={section.category} size={15} className="text-[#1477b0]" />
+                        <h3 className="text-sm font-bold text-white capitalize">{section.category}</h3>
+                        <span className="text-[10px] text-gray-500">({section.count})</span>
                       </div>
                       <button
                         onClick={() => { setActiveTab(section.category); setActiveSuperCat(null); fetchCategoryGames(section.category, 1); }}
-                        className="text-[10px] sm:text-xs text-[#1477b0] hover:text-blue-400 font-semibold"
+                        className="text-[10px] text-[#1477b0] hover:text-blue-400 font-semibold"
                       >
                         All →
                       </button>
                     </div>
 
                     {/* Horizontal scrollable games */}
-                    <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2">
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1.5 px-1">
                       {section.games
                         .filter((g) =>
                           search
                             ? g.game_name
-                                .toLowerCase()
-                                .includes(search.toLowerCase())
+                              .toLowerCase()
+                              .includes(search.toLowerCase())
                             : true,
                         )
                         .map((game) => (
                           <div
                             key={game?.game_id || game?._id}
-                            className="flex-shrink-0 w-[110px] sm:w-[140px]"
+                            className="flex-shrink-0 w-[calc((100vw-32px)/3)] sm:w-[140px]"
                           >
                             <GameCard
                               game={game}
@@ -1217,7 +1278,7 @@ const Casino = () => {
                 <div className="mb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-1 h-4 rounded-full" style={{ background: "#1477b0" }} />
-                    <p className="text-sm font-bold text-white">🔥 Featured Games</p>
+                    <p className="text-sm font-bold text-white"> Featured Games</p>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {lobbyGames.map((game) => (
@@ -1466,15 +1527,14 @@ const GameCard = ({ game, onClick, launchingGameId, selectedGameId }) => {
   return (
     <div
       onClick={() => !isAnyGameLaunching && onClick(game)}
-      className={`rounded-lg sm:rounded-xl overflow-hidden cursor-pointer group relative transition-all duration-200 ${
-        isAnyGameLaunching
-          ? isLaunching
-            ? "opacity-100 scale-[0.97]"
-            : "opacity-40 cursor-not-allowed"
-          : isSelected
+      className={`rounded-lg sm:rounded-xl overflow-hidden cursor-pointer group relative transition-all duration-200 ${isAnyGameLaunching
+        ? isLaunching
+          ? "opacity-100 scale-[0.97]"
+          : "opacity-40 cursor-not-allowed"
+        : isSelected
           ? "scale-[0.97]"
           : "hover:scale-105"
-      }`}
+        }`}
       style={{
         background: "#1a1a1a",
         border: isSelected || isLaunching
