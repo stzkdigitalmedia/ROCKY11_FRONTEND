@@ -32,13 +32,62 @@ const LoginForm = () => {
     setFormData({ ...formData, [e?.target?.name]: e?.target?.value });
   };
 
+  
+  //----Get Location Helper-------------
+  const getCoordinates = () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve({ latitude: null, longitude: null });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn("Geolocation warning:", error);
+          resolve({ latitude: null, longitude: null });
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await apiHelper.post('/auth/login', formData);
+       // 1. Check if location is compulsory for this user
+      let isLocationCompulsory = false;
+      try {
+        const checkRes = await apiHelper.post('/auth/verifyUserLocationStatus', {
+          loginType: formData.loginType
+        });
 
+        isLocationCompulsory = !!checkRes?.isLocationCompulsory;
+
+      } catch (checkErr) {
+        console.warn("Failed to check location requirement, defaulting to false:", checkErr);
+      }
+
+      // 2. Fetch coordinates only if compulsory
+      let coords = { latitude: null, longitude: null };
+      if (isLocationCompulsory) {
+        coords = await getCoordinates();
+      }
+
+      const payload = {
+        ...formData,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      };
+
+      const response = await apiHelper.post('/auth/login', payload);
+      
       const userData = response?.user || response?.data || response;
       const userRole = userData?.role || userData?.userType || 'User';
 

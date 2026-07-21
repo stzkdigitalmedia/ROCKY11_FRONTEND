@@ -117,7 +117,7 @@ const SimpleRegister = () => {
           navigate('/user-dashboard');
         }
       } catch (loginError) {
-        toast.error('Registration successful but auto-login failed: ' + (loginError?.message || 'Please login manually'));
+         navigate('/login');
       }
     } catch (error) {
       toast.error('Registration failed: ' + (error?.message || 'Unknown error'));

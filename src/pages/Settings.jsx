@@ -27,6 +27,8 @@ const Settings = () => {
   const [bannerToggleLoading, setBannerToggleLoading] = useState(false);
   const [isShowVideo, setIsShowVideo] = useState(false);
   const [videoToggleLoading, setVideoToggleLoading] = useState(false);
+  const [isRegisterUserLocationAllow, setIsRegisterUserLocationAllow] = useState(false);
+  const [locationToggleLoading, setLocationToggleLoading] = useState(false);
   const toast = useToastContext();
 
   const fetchAnnouncement = async () => {
@@ -161,12 +163,29 @@ const Settings = () => {
       const response = await apiHelper.get('/systemSetting/getSystemSetting');
       const settingsData = response?.data;
       setSystemSettings(settingsData ? [settingsData] : []);
+      setIsRegisterUserLocationAllow(settingsData?.isRegisterUserLocationAllow ?? false);
       console.log(settingsData)
     } catch (error) {
       toast.error('Failed to fetch system settings');
       setSystemSettings([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const toggleRegisterUserLocation = async () => {
+    const setting = systemSettings[0];
+    if (!setting?._id) return;
+    setLocationToggleLoading(true);
+    try {
+      await apiHelper.put(`/systemSetting/toggleRegisterUserLocationAllow/${setting._id}`);
+      setIsRegisterUserLocationAllow(prev => !prev);
+      toast.success('Location setting updated!');
+    } catch (error) {
+      toast.error('Failed to update location setting');
+    } finally {
+      setLocationToggleLoading(false);
     }
   };
 
@@ -260,6 +279,26 @@ const Settings = () => {
           <div className="space-y-6">
             <div>
               <SettingsPanel />
+            </div>
+
+            {/* Register User Location Allow */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Register User Location Allow</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Allow location access for registered users.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isRegisterUserLocationAllow}
+                    onChange={toggleRegisterUserLocation}
+                    disabled={locationToggleLoading}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                </label>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

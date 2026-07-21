@@ -76,6 +76,7 @@ import Casino from "./pages/Casino";
 import CasinoAdmin from "./pages/CasinoAdmin";
 import GamePage from "./pages/GamePage";
 import CasinoActivities from "./pages/CasinoActivities";
+import LocationRules from "./pages/LocationRules";
 const ToastContext = createContext();
 
 export const useToastContext = () => {
@@ -129,6 +130,13 @@ function App() {
                 <AllInOneReq />
               </SuperAdminRoute>
             } />
+
+            <Route path="/location-rules" element={
+              <SuperAdminRoute>
+                <LocationRules />
+              </SuperAdminRoute>
+            } />
+
             <Route path="/peer/banks" element={
               <PeerRoute>
                 <PeerBanks />

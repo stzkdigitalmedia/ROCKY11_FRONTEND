@@ -70,6 +70,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
   // const [assignTierLoading, setAssignTierLoading] = useState(false);
 
   const [sendingNotification, setSendingNotification] = useState(null);
+    const [togglingLocationId, setTogglingLocationId] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [sendingMultiple, setSendingMultiple] = useState(false);
   const [userInfoModal, setUserInfoModal] = useState(null);
@@ -729,6 +730,19 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
       toast.error('Failed to download Excel file: ' + error.message);
     }
   };
+  
+  const toggleLocationCompulsory = async (user) => {
+    const id = user?.id || user?._id;
+    setTogglingLocationId(id);
+    try {
+      await apiHelper.patch(`/user/changeLocationCompulsoryStatus/${id}`);
+      setUsers(prev => prev.map(u => (u?.id || u?._id) === id ? { ...u, isLocationCompulsory: !u.isLocationCompulsory } : u));
+    } catch (error) {
+      toast.error('Failed to update location status: ' + error.message);
+    } finally {
+      setTogglingLocationId(null);
+    }
+  };
 
   const toggleUserStatus = async (user) => {
     try {
@@ -906,6 +920,7 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Role</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Deposit<br/>count</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
+              <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Location</th>
               <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
               {(authUser?.role !== 'TierRole' || true) && (
                 <th className="text-left py-3 px-2 sm:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus</th>
@@ -1021,6 +1036,17 @@ const UsersList = ({ onUserDeleted, onUsersCountChange, onBalanceSumChange }) =>
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
+                    </td>
+                    <td className="py-4 px-2 sm:px-4 hidden lg:table-cell">
+                      <button
+                        onClick={() => toggleLocationCompulsory(user)}
+                        disabled={togglingLocationId === (user?.id || user?._id)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${user?.isLocationCompulsory ? 'bg-green-500' : 'bg-gray-300'
+                          }`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${user?.isLocationCompulsory ? 'translate-x-6' : 'translate-x-1'
+                          }`} />
+                      </button>
                     </td>
                     <td className="py-4 px-2 sm:px-4">
                       <button
