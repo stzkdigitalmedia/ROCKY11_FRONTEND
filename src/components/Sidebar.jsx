@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap, Bell, DollarSign, MapPin } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Settings, LogOut, Menu, X, Shield, FileText, History, MessageSquare, Layers, Gift, Users, BarChart2, Zap, Bell, DollarSign, MapPin, Smartphone } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const allMenuItems = [
@@ -9,6 +9,7 @@ const allMenuItems = [
   { id: 'referral',            label: 'Referral',             icon: Users,           path: '/referral',            roles: ['SA', 'SubAdmin'] },
   { id: 'referral-earning',    label: 'Refer & Earn',         icon: Gift,            path: '/referral-earning',    roles: ['SA', 'SubAdmin'] },
   { id: 'location-rules', label: 'Location Rules', icon: MapPin, path: '/location-rules', roles: ['SA'] },
+  { id: 'fraud-mobiles', label: 'Fraud Mobiles', icon: Smartphone, path: '/fraud-mobiles', roles: ['SA', 'SubAdmin'] },
   { id: 'role-management',     label: 'Role Management',      icon: Shield,          path: '/role-management',     roles: ['SA', 'SubAdmin'] },
   { id: 'overview',            label: 'Overview',             icon: BarChart2,       path: '/overview',            roles: ['SA', 'SubAdmin', 'TierRole'] },
   { id: 'allinreq',            label: 'Instant Payout Req',   icon: Zap,             path: '/allinreq',            roles: ['SA', 'SubAdmin', 'TierRole'] },

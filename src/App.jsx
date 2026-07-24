@@ -77,6 +77,7 @@ import CasinoAdmin from "./pages/CasinoAdmin";
 import GamePage from "./pages/GamePage";
 import CasinoActivities from "./pages/CasinoActivities";
 import LocationRules from "./pages/LocationRules";
+import FraudMobiles from './pages/FraudMobiles';
 const ToastContext = createContext();
 
 export const useToastContext = () => {
@@ -134,6 +135,12 @@ function App() {
             <Route path="/location-rules" element={
               <SuperAdminRoute>
                 <LocationRules />
+              </SuperAdminRoute>
+            } />
+
+            <Route path="/fraud-mobiles" element={
+              <SuperAdminRoute>
+                <FraudMobiles />
               </SuperAdminRoute>
             } />
 

@@ -20,7 +20,7 @@ const CreateRuleModal = ({ onClose, onSuccess }) => {
     const fetchUsers = async () => {
       setUsersLoading(true);
       try {
-        const res = await apiHelper.get('/user/getCompulsaryLocation_user');
+        const res = await apiHelper.get(`/user/getCompulsaryLocation_user?search=${encodeURIComponent(search)}`);
         setUsers(res?.data || []);
       } catch (err) {
         console.error('Failed to fetch users:', err);
@@ -28,13 +28,9 @@ const CreateRuleModal = ({ onClose, onSuccess }) => {
         setUsersLoading(false);
       }
     };
-    fetchUsers();
-  }, []);
-
-  const filteredUsers = users.filter(u =>
-    (u.clientName || '').toLowerCase().includes(search.toLowerCase()) ||
-    (u.phone || '').includes(search)
-  );
+    const timer = setTimeout(fetchUsers, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const handleUserSelect = (u) => {
     setSearch(`${u.clientName} — ${u.phone}`);
@@ -92,9 +88,9 @@ const CreateRuleModal = ({ onClose, onSuccess }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               autoComplete="off"
             />
-            {dropdownOpen && filteredUsers.length > 0 && (
+            {dropdownOpen && users.length > 0 && (
               <ul className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-                {filteredUsers.map((u) => (
+                {users.map((u) => (
                   <li
                     key={u._id}
                     onMouseDown={() => handleUserSelect(u)}
